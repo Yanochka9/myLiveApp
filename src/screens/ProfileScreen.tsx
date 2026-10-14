@@ -39,7 +39,7 @@ export function ProfileScreen({ user, demo, onSignOut }: Props) {
       </div>
       {demo && (
         <p className="form-caption">
-          Чтобы данные синхронизировались между устройствами, задайте переменные VITE_FIREBASE_* в настройках Vercel (см. README).
+          Чтобы данные синхронизировались между устройствами, задайте переменные VITE_FIREBASE_* в настройках Netlify (см. README).
         </p>
       )}
 

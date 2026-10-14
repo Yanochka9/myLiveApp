@@ -27,7 +27,7 @@ npm run dev
 3. **Build → Firestore Database**: создайте базу в production mode.
 4. **Firestore → Rules**: вставьте содержимое [`firestore.rules`](firestore.rules). Каждый пользователь видит только свои данные. Можно опубликовать и через CLI: `npx firebase-tools deploy --only firestore:rules`.
 5. **Project settings → General → Your apps → Web app**: скопируйте конфиг в `.env.local` по образцу [`.env.example`](.env.example).
-6. **Authentication → Settings → Authorized domains**: добавьте домен Vercel, например `my-app.vercel.app`.
+6. **Authentication → Settings → Authorized domains**: добавьте домен Netlify, например `my-app.netlify.app`.
 
 Структура данных:
 
@@ -36,11 +36,18 @@ users/{uid}/notes/{id}  text, tint, pinned, createdAt, updatedAt
 users/{uid}/tasks/{id}  title, date (YYYY-MM-DD), time (HH:mm|null), area (work|life), done, details, createdAt
 ```
 
-## Деплой на Vercel
+## Деплой на Netlify
 
-1. Импортируйте репозиторий в Vercel. Фреймворк Vite определится сам, настройки лежат в [`vercel.json`](vercel.json).
-2. **Settings → Environment Variables**: добавьте все `VITE_FIREBASE_*` из `.env.example`.
-3. Задеплойте проект.
+1. В Netlify нажмите **Add new site → Import an existing project** и выберите этот репозиторий. Сборка, папка `dist`, SPA-редиректы и заголовки кэша уже описаны в [`netlify.toml`](netlify.toml).
+2. **Site configuration → Environment variables**: добавьте все `VITE_FIREBASE_*` из `.env.example`. Значения подставляются при сборке, поэтому после их изменения нужен новый деплой: **Deploys → Trigger deploy**.
+3. Задеплойте сайт и добавьте его домен в Firebase (шаг 6 выше).
+
+Вручную, без Git:
+
+```bash
+npm run build
+npx netlify-cli deploy --prod --dir=dist
+```
 
 ## Установка на iPhone
 
