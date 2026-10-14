@@ -53,3 +53,13 @@ export function relativeDayTitle(key: string): string {
   if (key === addDays(today, -1)) return 'Вчера'
   return `${formatWeekday(key)}, ${formatDayMonth(key)}`
 }
+
+/** Заголовок экрана дня: «Сегодня» + «Вторник, 14 октября» или «Пятница» + «17 октября» */
+export function dayHeading(key: string): { title: string; subtitle: string } {
+  const today = todayKey()
+  const rel = key === today ? 'Сегодня' : key === addDays(today, 1) ? 'Завтра' : key === addDays(today, -1) ? 'Вчера' : null
+  if (rel) return { title: rel, subtitle: `${formatWeekday(key)}, ${formatDayMonth(key)}` }
+  const year = fromKey(key).getFullYear()
+  const suffix = year !== new Date().getFullYear() ? ` ${year}` : ''
+  return { title: formatWeekday(key), subtitle: formatDayMonth(key) + suffix }
+}

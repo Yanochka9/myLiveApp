@@ -25,6 +25,9 @@ import {
 } from 'firebase/firestore'
 import type { AppUser, Note, Store, Task } from './types'
 import { sortNotes, sortTasks } from './sort'
+import { toast } from '../components/toast'
+
+const onWriteError = () => toast('Не удалось сохранить изменения')
 
 const config = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -81,22 +84,22 @@ export function createFirestoreStore(uid: string): Store {
     // Записи не ждут ответа сервера: локальный кэш сразу отдаёт изменения в onSnapshot.
     async addNote(input) {
       const now = Date.now()
-      void addDoc(notesCol, { ...input, createdAt: now, updatedAt: now })
+      addDoc(notesCol, { ...input, createdAt: now, updatedAt: now }).catch(onWriteError)
     },
     async updateNote(id, patch) {
-      void updateDoc(doc(notesCol, id), { ...patch, updatedAt: Date.now() })
+      updateDoc(doc(notesCol, id), { ...patch, updatedAt: Date.now() }).catch(onWriteError)
     },
     async deleteNote(id) {
-      void deleteDoc(doc(notesCol, id))
+      deleteDoc(doc(notesCol, id)).catch(onWriteError)
     },
     async addTask(input) {
-      void addDoc(tasksCol, { ...input, done: false, createdAt: Date.now() })
+      addDoc(tasksCol, { ...input, done: false, createdAt: Date.now() }).catch(onWriteError)
     },
     async updateTask(id, patch) {
-      void updateDoc(doc(tasksCol, id), patch)
+      updateDoc(doc(tasksCol, id), patch).catch(onWriteError)
     },
     async deleteTask(id) {
-      void deleteDoc(doc(tasksCol, id))
+      deleteDoc(doc(tasksCol, id)).catch(onWriteError)
     },
   }
 }
