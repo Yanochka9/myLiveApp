@@ -26,7 +26,7 @@ npm run dev
 2. **Build → Authentication → Sign-in method**: включите **Email/Password**.
 3. **Build → Firestore Database**: создайте базу в production mode.
 4. **Firestore → Rules**: вставьте содержимое [`firestore.rules`](firestore.rules). Каждый пользователь видит только свои данные. Можно опубликовать и через CLI: `npx firebase-tools deploy --only firestore:rules`.
-5. **Project settings → General → Your apps → Web app**: скопируйте конфиг в `.env.local` по образцу [`.env.example`](.env.example).
+5. Конфиг проекта `myliveapp-8d16a` уже вписан в [`src/data/firebase.ts`](src/data/firebase.ts). Он не секретный, данные защищают правила Firestore. Чтобы подключить другой проект, задайте переменные `VITE_FIREBASE_*` по образцу [`.env.example`](.env.example).
 6. **Authentication → Settings → Authorized domains**: добавьте домен Netlify, например `my-app.netlify.app`.
 
 Структура данных:
@@ -39,8 +39,7 @@ users/{uid}/tasks/{id}  title, date (YYYY-MM-DD), time (HH:mm|null), area (work|
 ## Деплой на Netlify
 
 1. В Netlify нажмите **Add new site → Import an existing project** и выберите этот репозиторий. Сборка, папка `dist`, SPA-редиректы и заголовки кэша уже описаны в [`netlify.toml`](netlify.toml).
-2. **Site configuration → Environment variables**: добавьте все `VITE_FIREBASE_*` из `.env.example`. Значения подставляются при сборке, поэтому после их изменения нужен новый деплой: **Deploys → Trigger deploy**.
-3. Задеплойте сайт и добавьте его домен в Firebase (шаг 6 выше).
+2. Задеплойте сайт и добавьте его домен в Firebase (шаг 6 выше). Переменные окружения в Netlify не нужны: конфиг Firebase уже в коде.
 
 Вручную, без Git:
 

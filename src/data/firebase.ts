@@ -29,13 +29,16 @@ import { toast } from '../components/toast'
 
 const onWriteError = () => toast('Не удалось сохранить изменения')
 
+// Веб-конфиг Firebase не секретный: он всё равно виден в браузере, а данные защищают
+// правила Firestore (firestore.rules). Переменные VITE_FIREBASE_* при желании переопределяют его.
+const env = import.meta.env
 const config = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  apiKey: env.VITE_FIREBASE_API_KEY || 'AIzaSyCWdqG0U1qh-iy7TLB7n-RoxemlW3DBJAU',
+  authDomain: env.VITE_FIREBASE_AUTH_DOMAIN || 'myliveapp-8d16a.firebaseapp.com',
+  projectId: env.VITE_FIREBASE_PROJECT_ID || 'myliveapp-8d16a',
+  storageBucket: env.VITE_FIREBASE_STORAGE_BUCKET || 'myliveapp-8d16a.firebasestorage.app',
+  messagingSenderId: env.VITE_FIREBASE_MESSAGING_SENDER_ID || '906684148288',
+  appId: env.VITE_FIREBASE_APP_ID || '1:906684148288:web:36dd42aa7a5e15e2898da5',
 }
 
 export const firebaseEnabled = Boolean(config.apiKey && config.projectId && config.appId)
