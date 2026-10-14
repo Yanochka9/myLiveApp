@@ -9,3 +9,7 @@ dev-dist
 .DS_Store
 .claude/
 .instance/
+
+# Ключи сервисных аккаунтов — никогда не коммитить
+*firebase-adminsdk*.json
+service-account*.json

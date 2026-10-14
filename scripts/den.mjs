@@ -1,78 +1,27 @@
 #!/usr/bin/env node
-// Управление данными планера из терминала через REST API Firebase.
-// Входит под аккаунтом пользователя — правила Firestore пускают только в его данные.
+// Управление данными планера из терминала с полным (admin) доступом к проекту Firebase.
 //
-//   DEN_EMAIL=... DEN_PASSWORD=... node scripts/den.mjs <команда>
+//   GOOGLE_APPLICATION_CREDENTIALS=/путь/к/ключу.json DEN_USER=почта@пример.ru node scripts/den.mjs <команда>
 //
-//   list                                   — все заметки и задачи
+// Ключ сервисного аккаунта НЕ хранится в репозитории (см. .gitignore).
+//
+//   users                                  — список аккаунтов
+//   create-user <почта> <пароль>           — завести аккаунт
+//   list                                   — заметки и задачи пользователя DEN_USER
 //   note "текст" [--tint pink] [--unpin]   — новая заметка (tint: plain|yellow|green|blue|pink)
 //   task "название" --date 2026-10-15 [--time 10:00] [--area work|life] [--details "..."]
 //   done <taskId> | undone <taskId>
 //   rm-note <id> | rm-task <id>
 //   import file.json                       — {"notes":[...],"tasks":[...]} пачкой
 
-const API_KEY = process.env.DEN_API_KEY || 'AIzaSyCWdqG0U1qh-iy7TLB7n-RoxemlW3DBJAU'
-const PROJECT = process.env.DEN_PROJECT || 'myliveapp-8d16a'
-const FS = `https://firestore.googleapis.com/v1/projects/${PROJECT}/databases/(default)/documents`
+import { readFile } from 'node:fs/promises'
+import { applicationDefault, initializeApp } from 'firebase-admin/app'
+import { getAuth } from 'firebase-admin/auth'
+import { getFirestore } from 'firebase-admin/firestore'
 
-const { DEN_EMAIL: email, DEN_PASSWORD: password } = process.env
-if (!email || !password) {
-  console.error('Нужны DEN_EMAIL и DEN_PASSWORD')
-  process.exit(1)
-}
-
-async function req(url, opts = {}) {
-  const res = await fetch(url, { ...opts, headers: { 'Content-Type': 'application/json', ...opts.headers } })
-  const body = await res.json().catch(() => ({}))
-  if (!res.ok) throw new Error(`${res.status} ${body.error?.message ?? body.error?.status ?? ''}`)
-  return body
-}
-
-const auth = await req(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${API_KEY}`, {
-  method: 'POST',
-  body: JSON.stringify({ email, password, returnSecureToken: true }),
-})
-const H = { Authorization: `Bearer ${auth.idToken}` }
-const base = `${FS}/users/${auth.localId}`
-
-// Firestore REST <-> обычные объекты
-const enc = (v) =>
-  v === null ? { nullValue: null }
-  : typeof v === 'boolean' ? { booleanValue: v }
-  : typeof v === 'number' ? (Number.isInteger(v) ? { integerValue: String(v) } : { doubleValue: v })
-  : { stringValue: String(v) }
-const dec = (f) =>
-  'nullValue' in f ? null : 'booleanValue' in f ? f.booleanValue : 'integerValue' in f ? Number(f.integerValue)
-  : 'doubleValue' in f ? f.doubleValue : f.stringValue
-const toFields = (o) => ({ fields: Object.fromEntries(Object.entries(o).map(([k, v]) => [k, enc(v)])) })
-const fromDoc = (d) => ({ id: d.name.split('/').pop(), ...Object.fromEntries(Object.entries(d.fields ?? {}).map(([k, v]) => [k, dec(v)])) })
-
-async function listCol(col) {
-  const out = []
-  let pageToken = ''
-  do {
-    const r = await req(`${base}/${col}?pageSize=300${pageToken ? `&pageToken=${pageToken}` : ''}`, { headers: H })
-    out.push(...(r.documents ?? []).map(fromDoc))
-    pageToken = r.nextPageToken ?? ''
-  } while (pageToken)
-  return out
-}
-const create = (col, data) => req(`${base}/${col}`, { method: 'POST', headers: H, body: JSON.stringify(toFields(data)) }).then(fromDoc)
-const patch = (col, id, data) =>
-  req(`${base}/${col}/${id}?${Object.keys(data).map((k) => `updateMask.fieldPaths=${k}`).join('&')}`, {
-    method: 'PATCH', headers: H, body: JSON.stringify(toFields(data)),
-  })
-// precondition: без неё Firestore «успешно» удаляет и несуществующий документ
-const remove = (col, id) => req(`${base}/${col}/${id}?currentDocument.exists=true`, { method: 'DELETE', headers: H })
-
-const newNote = (n) => {
-  const now = Date.now()
-  return { text: n.text, tint: n.tint ?? 'plain', pinned: n.pinned ?? true, createdAt: now, updatedAt: now }
-}
-const newTask = (t) => ({
-  title: t.title, date: t.date, time: t.time ?? null, area: t.area ?? 'work',
-  done: t.done ?? false, details: t.details ?? '', createdAt: Date.now(),
-})
+initializeApp({ credential: applicationDefault(), projectId: process.env.DEN_PROJECT || 'myliveapp-8d16a' })
+const auth = getAuth()
+const db = getFirestore()
 
 const [cmd, ...rest] = process.argv.slice(2)
 const flag = (name) => {
@@ -81,40 +30,98 @@ const flag = (name) => {
 }
 const has = (name) => rest.includes(`--${name}`)
 
+async function userRef() {
+  const email = process.env.DEN_USER
+  if (!email) throw new Error('Укажите DEN_USER=почта пользователя')
+  const user = await auth.getUserByEmail(email)
+  return db.doc(`users/${user.uid}`)
+}
+
+const newNote = (n) => {
+  const now = Date.now()
+  return { text: n.text, tint: n.tint ?? 'plain', pinned: n.pinned ?? true, createdAt: now, updatedAt: now }
+}
+const newTask = (t) => ({
+  title: t.title,
+  date: t.date,
+  time: t.time ?? null,
+  area: t.area ?? 'work',
+  done: t.done ?? false,
+  details: t.details ?? '',
+  createdAt: Date.now(),
+})
+
+/** Удаляет один документ; ошибка, если его нет. */
+async function removeOne(col, id) {
+  const ref = (await userRef()).collection(col).doc(id)
+  if (!(await ref.get()).exists) throw new Error(`Нет такого документа: ${col}/${id}`)
+  await ref.delete()
+  console.log('удалено')
+}
+
 switch (cmd) {
-  case 'list': {
-    const [notes, tasks] = await Promise.all([listCol('notes'), listCol('tasks')])
-    console.log(`Заметки (${notes.length}):`)
-    for (const n of notes) console.log(`  ${n.id}  ${n.pinned ? '📌' : '  '} [${n.tint}] ${n.text.replace(/\n/g, ' / ')}`)
-    console.log(`Задачи (${tasks.length}):`)
-    for (const t of tasks.sort((a, b) => (a.date + (a.time ?? '99')).localeCompare(b.date + (b.time ?? '99'))))
-      console.log(`  ${t.id}  ${t.done ? '✓' : '○'} ${t.date} ${t.time ?? '     '} ${t.area === 'work' ? 'Работа' : 'Личное'}  ${t.title}${t.details ? ' — ' + t.details : ''}`)
+  case 'users': {
+    for (const u of (await auth.listUsers(1000)).users) console.log(`${u.email}  ${u.uid}  создан ${u.metadata.creationTime}`)
     break
   }
-  case 'note':
-    console.log('+', (await create('notes', newNote({ text: rest[0], tint: flag('tint'), pinned: !has('unpin') }))).id)
+  case 'create-user': {
+    const u = await auth.createUser({ email: rest[0], password: rest[1] })
+    console.log('создан', u.email, u.uid)
     break
-  case 'task':
-    console.log('+', (await create('tasks', newTask({ title: rest[0], date: flag('date'), time: flag('time'), area: flag('area'), details: flag('details') }))).id)
+  }
+  case 'list': {
+    const ref = await userRef()
+    const [notes, tasks] = await Promise.all([ref.collection('notes').get(), ref.collection('tasks').get()])
+    console.log(`Заметки (${notes.size}):`)
+    notes.forEach((d) => {
+      const n = d.data()
+      console.log(`  ${d.id}  ${n.pinned ? '📌' : '  '} [${n.tint}] ${n.text.replace(/\n/g, ' / ')}`)
+    })
+    console.log(`Задачи (${tasks.size}):`)
+    tasks.docs
+      .map((d) => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => (a.date + (a.time ?? '99')).localeCompare(b.date + (b.time ?? '99')))
+      .forEach((t) =>
+        console.log(
+          `  ${t.id}  ${t.done ? '✓' : '○'} ${t.date} ${t.time ?? '     '} ${t.area === 'work' ? 'Работа' : 'Личное'}  ${t.title}${t.details ? ' — ' + t.details : ''}`,
+        ),
+      )
     break
+  }
+  case 'note': {
+    const doc = await (await userRef()).collection('notes').add(newNote({ text: rest[0], tint: flag('tint'), pinned: !has('unpin') }))
+    console.log('+', doc.id)
+    break
+  }
+  case 'task': {
+    const doc = await (await userRef())
+      .collection('tasks')
+      .add(newTask({ title: rest[0], date: flag('date'), time: flag('time'), area: flag('area'), details: flag('details') }))
+    console.log('+', doc.id)
+    break
+  }
   case 'done':
   case 'undone':
-    await patch('tasks', rest[0], { done: cmd === 'done' })
+    await (await userRef()).collection('tasks').doc(rest[0]).update({ done: cmd === 'done' })
     console.log('ok')
     break
   case 'rm-note':
-    await remove('notes', rest[0]); console.log('удалено'); break
+    await removeOne('notes', rest[0])
+    break
   case 'rm-task':
-    await remove('tasks', rest[0]); console.log('удалено'); break
+    await removeOne('tasks', rest[0])
+    break
   case 'import': {
-    const { readFile } = await import('node:fs/promises')
     const data = JSON.parse(await readFile(rest[0], 'utf8'))
-    for (const n of data.notes ?? []) await create('notes', newNote(n))
-    for (const t of data.tasks ?? []) await create('tasks', newTask(t))
+    const ref = await userRef()
+    const batch = db.batch()
+    for (const n of data.notes ?? []) batch.set(ref.collection('notes').doc(), newNote(n))
+    for (const t of data.tasks ?? []) batch.set(ref.collection('tasks').doc(), newTask(t))
+    await batch.commit()
     console.log(`добавлено: заметок ${data.notes?.length ?? 0}, задач ${data.tasks?.length ?? 0}`)
     break
   }
   default:
-    console.error('Команды: list | note | task | done | undone | rm-note | rm-task | import')
+    console.error('Команды: users | create-user | list | note | task | done | undone | rm-note | rm-task | import')
     process.exit(1)
 }
