@@ -30,35 +30,26 @@ chains.append(f"{''.join(parts)}concat=n={len(segs)}:v=0:a=1,highpass=f=80,afftd
               f"apad=whole_dur={TOTAL:.3f}[voice]")
 labels.append('[voice]')
 
-# --- sfx events ---
+# --- sfx events: user's transition pack (B2B2.mov), quiet, only on key moments ---
+B2 = SP + '/assets/b2'
+PEAK.update({'riser': 4.0, 'click1': .11, 'click2': .13, 'click3': .10, 'click4': .16, 'click5': .13})
 ev = []  # (time_of_peak, id, vol)
-ev += [(HOOK_END, '790', 0.55), (HOOK_END, '1430', 0.9), (HOOK_END, '2299', 0.8)]
 shots = build_shots()
-broll = {'stock', 'hlg', 'scheme'}
-wh = ['1490', '1489', '1492']; k = 0
-for p, q in zip(shots, shots[1:]):
-    t = q['o0']
-    if abs(t - HOOK_END) < 0.01 or q['kind'] == 'endplate':
-        continue
-    if q['kind'] in broll or p['kind'] in broll:
-        ev.append((t, wh[k % 3], 0.42 if p['kind'] == 'aroll' or q['kind'] == 'aroll' else 0.28)); k += 1
-    else:
-        ev.append((t, '166', 0.25))
-ev.append((T['flashes'][1], '1143', 0.85))
-ev.append((T['header'][0] + 0.1, '166', 0.3))
-ev.append((T['ellipse'][0] + 0.05, '3005', 0.5)); ev.append((T['ellipse'][2] + 0.12, '3005', 0.5))
-ev.append((T['scheme'][0], '2595', 0.45)); ev.append((T['scheme'][2], '1457', 0.3))
-ev.append((T['chain'][0], '3005', 0.4)); ev.append((T['chain'][2], '3005', 0.5))
-a, hit, lab, _ = T['counter']
-for j in range(10):
-    ev.append((a + (hit - a) * j / 10, '2568', 0.35))
-ev.append((hit, '2299', 0.9)); ev.append((lab, '3005', 0.5))
-ev.append((T['address'][0] + 0.2, '1489', 0.35)); ev.append((T['address'][0] + 0.35, '3005', 0.4))
-ev.append((MAIN_DUR, '1486', 0.5))
-for j in range(4):
-    ev.append((MAIN_DUR + 0.25 + j * 0.12, '3005', 0.3))
+ev.append((HOOK_END, 'riser', 0.034))                       # hook -> main
+ev.append((T['header'][0] + 0.05, 'click1', 0.04))
+ev.append((T['flashes'][1], 'click2', 0.05))                # "сгорела"
+ev.append((T['ellipse'][2] + 0.12, 'click4', 0.04))         # ЗАДИРЫ
+ev.append((T['scheme'][0], '2595', 0.033))                   # variator scheme
+ev.append((T['scheme'][2], '1457', 0.05))
+ev.append((T['chain'][2], 'click5', 0.04))                  # ИЗНОС ЦЕПИ
+ev.append((T['counter'][1], 'click2', 0.05))                # ×20
+ev.append((T['address'][0] + 0.3, 'click3', 0.045))
+for j in range(4):                                          # end plate lines
+    ev.append((MAIN_DUR + 0.25 + j * 0.12, ['click1', 'click5', 'click4', 'click3'][j], 0.035))
+ev.append((MAIN_DUR + 1.05, 'click1', 0.03))
 for n, (t, sid, vol) in enumerate(ev):
-    i = add_input(f'{SFX}/{sid}.mp3')
+    path = f'{B2}/{sid}.wav' if sid in ('riser',) or sid.startswith('click') else f'{SFX}/{sid}.mp3'
+    i = add_input(path)
     d = max(0, t - PEAK[sid])
     chains.append(f"[{i}:a]aresample=48000,aformat=channel_layouts=stereo,volume={vol},"
                   f"adelay={int(d * 1000)}:all=1[e{n}]")
@@ -67,25 +58,23 @@ for n, (t, sid, vol) in enumerate(ev):
 # --- hook drone ---
 i = add_input(f'{SFX}/2749.mp3', ('-ss', '20'))
 chains.append(f"[{i}:a]atrim=0:{HOOK_END + 0.4:.3f},aresample=48000,aformat=channel_layouts=stereo,"
-              f"volume=0.4,afade=t=in:d=1.0,afade=t=out:st={HOOK_END - 0.1:.3f}:d=0.5[drone]")
+              f"volume=0.05,afade=t=in:d=1.0,afade=t=out:st={HOOK_END - 0.1:.3f}:d=0.5[drone]")
 labels.append('[drone]')
 
 # --- workshop ambience under the bench shots ---
 for n, s in enumerate(x for x in shots if x['src'] and '8842' in x['src']):
     i = add_input(f'{SRC}/8842.mov', ('-ss', f"{s['cin']:.3f}"))
     d = s['o1'] - s['o0']
-    chains.append(f"[{i}:a:0]atrim=0:{d:.3f},aresample=48000,aformat=channel_layouts=stereo,volume=0.5,"
+    chains.append(f"[{i}:a:0]atrim=0:{d:.3f},aresample=48000,aformat=channel_layouts=stereo,volume=0.25,"
                   f"afade=t=in:d=0.15,afade=t=out:st={d - 0.2:.3f}:d=0.2,adelay={int(s['o0'] * 1000)}:all=1[amb{n}]")
     labels.append(f'[amb{n}]')
 
-# --- music: drop lands on the hook flash, louder on the end plate ---
+# --- music: faint intro under the hook, drop on the flash, audible bed under the voice ---
 if with_music:
-    i = add_input(MUS, ('-ss', '11.64'))
-    g1, g2, md = 0.17, 0.62, TOTAL - HOOK_END
-    ramp = f"{g1}+({g2}-{g1})*clip((t-{MAIN_DUR - HOOK_END - 0.3:.3f})/0.6\\,0\\,1)"
-    chains.append(f"[{i}:a]atrim=0:{md:.3f},aresample=48000,aformat=channel_layouts=stereo,"
-                  f"volume='{ramp}':eval=frame,afade=t=out:st={md - 0.8:.3f}:d=0.8,"
-                  f"adelay={int(HOOK_END * 1000)}:all=1[mus]")
+    i = add_input(MUS, ('-ss', f'{11.64 - HOOK_END:.3f}'))
+    vol = (f"if(lt(t\\,{HOOK_END:.3f})\\,0.19\\,0.19+(0.5-0.19)*clip((t-{MAIN_DUR - 0.3:.3f})/0.6\\,0\\,1))")
+    chains.append(f"[{i}:a]atrim=0:{TOTAL:.3f},aresample=48000,aformat=channel_layouts=stereo,highpass=f=110,"
+                  f"volume='{vol}':eval=frame,afade=t=in:d=1.2,afade=t=out:st={TOTAL - 0.8:.3f}:d=0.8[mus]")
     labels.append('[mus]')
 
 chains.append(f"{''.join(labels)}amix=inputs={len(labels)}:normalize=0:duration=first,"
