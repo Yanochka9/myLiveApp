@@ -7,7 +7,8 @@ dev-dist
 .vercel
 *.tsbuildinfo
 .DS_Store
-.claude/
+.claude/*
+!.claude/settings.json
 .instance/
 
 # Ключи сервисных аккаунтов — никогда не коммитить

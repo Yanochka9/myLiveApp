@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__iHatePosting__list_accounts",
+      "mcp__iHatePosting__whoami",
+      "mcp__iHatePosting__list_posts",
+      "mcp__iHatePosting__get_post",
+      "mcp__iHatePosting__get_analytics",
+      "mcp__iHatePosting__get_platform_rules",
+      "mcp__iHatePosting__validate_post",
+      "mcp__iHatePosting__list_media",
+      "mcp__iHatePosting__create_post",
+      "mcp__iHatePosting__update_post",
+      "mcp__iHatePosting__reschedule_post",
+      "mcp__iHatePosting__retry_post"
+    ]
+  }
+}
