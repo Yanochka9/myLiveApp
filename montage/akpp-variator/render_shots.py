@@ -31,7 +31,7 @@ def cmd(i, s):
         vf = (f"fps={FPS},scale=1440:2560,"
               f"zoompan=z='1+0.16*on/{n}':d=1:x='iw/2-(iw/zoom/2)':y='ih*0.3-(ih/zoom*0.3)':s=1080x1920:fps={FPS},"
               "hue=s=0.12,eq=contrast=0.92:brightness=-0.05,curves=all='0/0.07 1/0.9',"
-              "noise=alls=24:allf=t,vignette=PI/3.6")
+              "vignette=PI/3.6")
     elif k == 'aroll':
         crop = "scale=1080:1920" if s['zoom'] == 0 else "crop=1600:2844:280:230,scale=1080:1920"
         vf = f"fps={FPS},{crop}:flags=lanczos,{GRADE},unsharp=5:5:0.35"

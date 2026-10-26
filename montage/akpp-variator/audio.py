@@ -1,4 +1,4 @@
-"""Audio mix: cut voice, SFX on transitions, hook drone, workshop ambience, music bed."""
+"""Audio mix: raw voice (no processing), quiet SFX on key moments, hook drone, music bed."""
 import json, subprocess, sys
 from edl import segs, outs, m, HOOK_END, MAIN_DUR, TOTAL, SP, build_shots
 from gfx_t import T
@@ -25,8 +25,7 @@ for i, (a, b) in enumerate(segs):
     chains.append(f"[{v}:a:0]atrim={a:.4f}:{b:.4f},asetpts=PTS-STARTPTS,afade=t=in:d=0.012,"
                   f"afade=t=out:st={b - a - 0.012:.4f}:d=0.012[s{i}]")
     parts.append(f"[s{i}]")
-chains.append(f"{''.join(parts)}concat=n={len(segs)}:v=0:a=1,highpass=f=80,afftdn=nf=-32,"
-              f"acompressor=threshold=-22dB:ratio=3:attack=5:release=90:makeup=2,"
+chains.append(f"{''.join(parts)}concat=n={len(segs)}:v=0:a=1,"
               f"apad=whole_dur={TOTAL:.3f}[voice]")
 labels.append('[voice]')
 
@@ -61,24 +60,26 @@ chains.append(f"[{i}:a]atrim=0:{HOOK_END + 0.4:.3f},aresample=48000,aformat=chan
               f"volume=0.05,afade=t=in:d=1.0,afade=t=out:st={HOOK_END - 0.1:.3f}:d=0.5[drone]")
 labels.append('[drone]')
 
-# --- workshop ambience under the bench shots ---
-for n, s in enumerate(x for x in shots if x['src'] and '8842' in x['src']):
-    i = add_input(f'{SRC}/8842.mov', ('-ss', f"{s['cin']:.3f}"))
-    d = s['o1'] - s['o0']
-    chains.append(f"[{i}:a:0]atrim=0:{d:.3f},aresample=48000,aformat=channel_layouts=stereo,volume=0.25,"
-                  f"afade=t=in:d=0.15,afade=t=out:st={d - 0.2:.3f}:d=0.2,adelay={int(s['o0'] * 1000)}:all=1[amb{n}]")
-    labels.append(f'[amb{n}]')
-
-# --- music: faint intro under the hook, drop on the flash, audible bed under the voice ---
+# --- music: starts on the first main shot (drop on the flash), quiet bed under the voice ---
 if with_music:
-    i = add_input(MUS, ('-ss', f'{11.64 - HOOK_END:.3f}'))
-    vol = (f"if(lt(t\\,{HOOK_END:.3f})\\,0.19\\,0.19+(0.5-0.19)*clip((t-{MAIN_DUR - 0.3:.3f})/0.6\\,0\\,1))")
-    chains.append(f"[{i}:a]atrim=0:{TOTAL:.3f},aresample=48000,aformat=channel_layouts=stereo,highpass=f=110,"
-                  f"volume='{vol}':eval=frame,afade=t=in:d=1.2,afade=t=out:st={TOTAL - 0.8:.3f}:d=0.8[mus]")
+    i = add_input(MUS, ('-ss', '11.64'))
+    md = TOTAL - HOOK_END
+    vol = f"0.10+(0.4-0.10)*clip((t-{MAIN_DUR - HOOK_END - 0.3:.3f})/0.6\\,0\\,1)"
+    chains.append(f"[{i}:a]atrim=0:{md:.3f},aresample=48000,aformat=channel_layouts=stereo,highpass=f=110,"
+                  f"volume='{vol}':eval=frame,afade=t=out:st={md - 0.8:.3f}:d=0.8,"
+                  f"adelay={int(HOOK_END * 1000)}:all=1[mus]")
     labels.append('[mus]')
 
+# --- counter: quiet rising blips while the digits climb ---
+ca, chit = T['counter'][0], T['counter'][1]
+D = (chit - ca) / 10
+i = add_input(f"aevalsrc=0.5*sin(2*PI*(650+95*floor(t/{D:.4f}))*t)*exp(-38*mod(t\\,{D:.4f}))*lt(t\\,{10 * D:.4f}):s=48000:d={10 * D + 0.1:.3f}",
+              ('-f', 'lavfi'))
+chains.append(f"[{i}:a]aformat=channel_layouts=stereo,volume=0.05,adelay={int(ca * 1000)}:all=1[blips]")
+labels.append('[blips]')
+
 chains.append(f"{''.join(labels)}amix=inputs={len(labels)}:normalize=0:duration=first,"
-              f"loudnorm=I=-14:TP=-1.5:LRA=11,aresample=48000[out]")
+              f"aresample=48000[out]")
 script = SP + '/build/mix.filter'
 open(script, 'w').write(';\n'.join(chains))
 cmd = ['ffmpeg', '-loglevel', 'error', '-y', *inputs, '-filter_complex_script', script,

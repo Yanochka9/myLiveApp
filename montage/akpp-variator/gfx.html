@@ -43,29 +43,16 @@ function labelBox(s, x, y, t0, t, size = 46) {
   g.shadowBlur = 0; text(s, 0, 2, size, '#fff'); g.restore();
 }
 
-// ---------- REC overlay (hook) ----------
+// ---------- recording timer (hook): phone-camera style, nothing else ----------
 function drawRec(t) {
   const [a, b] = T.rec; if (!inWin(t, a, b)) return;
   g.save(); g.globalAlpha = clamp((b - t) / 0.12);
-  g.strokeStyle = 'rgba(255,255,255,0.92)'; g.lineWidth = 7; g.lineCap = 'square';
-  const m = 70, L = 90;
-  [[m, 230, 1, 1], [W - m, 230, -1, 1], [m, H - 300, 1, -1], [W - m, H - 300, -1, -1]].forEach(([x, y, sx, sy]) => {
-    g.beginPath(); g.moveTo(x, y + sy * L); g.lineTo(x, y); g.lineTo(x + sx * L, y); g.stroke();
-  });
-  // crosshair
-  g.lineWidth = 3; g.beginPath(); g.moveTo(W / 2 - 26, H / 2); g.lineTo(W / 2 + 26, H / 2);
-  g.moveTo(W / 2, H / 2 - 26); g.lineTo(W / 2, H / 2 + 26); g.stroke();
-  g.shadowColor = 'rgba(0,0,0,0.6)'; g.shadowBlur = 8;
-  if (Math.floor(t * 1.6) % 2 === 0) { g.fillStyle = '#ff2a2a'; g.beginPath(); g.arc(m + 40, 300, 17, 0, 7); g.fill(); }
-  g.font = '700 46px "JetBrains Mono"'; g.textBaseline = 'middle'; g.textAlign = 'left'; g.fillStyle = '#fff';
-  g.fillText('REC', m + 72, 302);
-  const fr = Math.floor(t * 30) % 30, sec = Math.floor(t) + 17, mm = 42;
-  g.textAlign = 'right';
-  g.fillText(`00:${mm}:${String(sec).padStart(2, '0')}:${String(fr).padStart(2, '0')}`, W - m - 30, 302);
-  g.font = '700 34px "JetBrains Mono"'; g.textAlign = 'left'; g.fillText('4K  30FPS', m + 30, H - 360);
-  // battery
-  const bx = W - m - 150, by = H - 382; g.lineWidth = 4; g.strokeStyle = '#fff'; g.strokeRect(bx, by, 96, 44);
-  g.fillStyle = '#fff'; g.fillRect(bx + 98, by + 13, 9, 18); for (let i = 0; i < 2; i++) g.fillRect(bx + 8 + i * 28, by + 8, 22, 28);
+  const s = Math.floor(t + 3);
+  const label = `00:00:${String(s).padStart(2, '0')}`;
+  g.font = '600 40px Inter'; g.textAlign = 'center'; g.textBaseline = 'middle';
+  const w = g.measureText(label).width + 44, h = 60, x = (W - w) / 2, y = 128;
+  g.fillStyle = '#FF3B30'; rrect(x, y, w, h, 14); g.fill();
+  g.fillStyle = '#fff'; g.fillText(label, W / 2, y + h / 2 + 2);
   g.restore();
 }
 
@@ -207,10 +194,6 @@ function drawChain(t) {
   [[x0 - grow, y0 - grow, 1, 1], [x1 + grow, y0 - grow, -1, 1], [x0 - grow, y1 + grow, 1, -1], [x1 + grow, y1 + grow, -1, -1]].forEach(([x, y, sx, sy]) => {
     g.beginPath(); g.moveTo(x, y + sy * L); g.lineTo(x, y); g.lineTo(x + sx * L, y); g.stroke();
   });
-  // scan line
-  const sy = y0 + ((t - a) * 600) % (y1 - y0);
-  const sg = g.createLinearGradient(0, sy - 40, 0, sy + 4); sg.addColorStop(0, 'rgba(240,41,47,0)'); sg.addColorStop(1, 'rgba(240,41,47,0.55)');
-  g.shadowBlur = 0; g.fillStyle = sg; g.fillRect(x0, sy - 40, x1 - x0, 44);
   g.restore();
   g.save(); g.globalAlpha = e; labelBox('ИЗНОС ЦЕПИ', W / 2, 470, lt, t, 50); g.restore();
 }
@@ -274,6 +257,6 @@ function drawFrame(t) {
   drawFlash(t);
 }
 window.setup = async (tl) => { T = tl; await document.fonts.load('900 40px UB'); await document.fonts.load('800 40px UE');
-  await document.fonts.load('700 40px "JetBrains Mono"'); if (!logo.complete) await new Promise(r => logo.onload = r); return true; };
+  await document.fonts.load('600 40px Inter'); if (!logo.complete) await new Promise(r => logo.onload = r); return true; };
 window.frame = (i) => { drawFrame(i / T.fps); return c.toDataURL('image/png'); };
 </script></body></html>
