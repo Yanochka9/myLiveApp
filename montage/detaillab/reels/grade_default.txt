@@ -1,0 +1,1 @@
+lut3d=../assets/look.cube,eq=contrast=1.03:saturation=1.04

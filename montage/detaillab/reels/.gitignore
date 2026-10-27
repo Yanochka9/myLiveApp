@@ -1,0 +1,8 @@
+/src/
+/out/
+/wav/
+/music/
+/words_medium.json
+/segs.json
+/grade.txt
+__pycache__/
