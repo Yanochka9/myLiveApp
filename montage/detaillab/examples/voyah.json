@@ -5,6 +5,7 @@
  "music_start": 8,
  "music_vol": 0.22,
  "hook_plate": "hook",
+ "lut_mix": 0.45,
  "endcard_bg_time": 95.0,
  "fix_words": {
   "воя": "voyah",

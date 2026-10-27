@@ -24,6 +24,17 @@ FONTS = f"{A}/fonts"
 W, H, FPS = 1080, 1920, 30
 GOLD = (242, 193, 78)
 GRADE = f"lut3d={A}/look.cube,eq=contrast=1.03:saturation=1.04,unsharp=5:5:0.4"
+PLATE_HOLD = 2.5             # сколько висит плашка темы (последняя — до конца)
+PLATE_FADE = 0.3
+
+
+def grade(cfg):
+    """LUT с силой lut_mix (1.0 — как Leopard; под другой свет обычно 0.4–0.6)."""
+    mix = cfg.get("lut_mix", 1.0)
+    if mix >= 1:
+        return GRADE
+    return (f"split[g0][g1];[g1]lut3d={A}/look.cube[g2];[g0][g2]blend=all_mode=normal:all_opacity={mix},"
+            f"eq=contrast=1.05,unsharp=5:5:0.4")
 SUB_Y, PLATE_Y = 1205, 1268
 GAP, KEEP = 0.50, 0.14       # паузы длиннее GAP сжимаем, у слова оставляем KEEP
 ENDCARD = 1.6
@@ -185,7 +196,7 @@ def build(cfg):
         f = f"{w}/seg/s{i:03d}.mov"
         vs = a if v is None else v
         run(f"ffmpeg -v error -y -ss {vs:.3f} -t {d:.3f} -i {proxy} -ss {a:.3f} -t {d:.3f} -i {proxy} -map 0:v -map 1:a "
-            f"-vf \"crop=iw/{z}:ih/{z},scale={W}:{H}:flags=lanczos,setsar=1,fps={FPS},{GRADE}\" "
+            f"-vf \"crop=iw/{z}:ih/{z},scale={W}:{H}:flags=lanczos,setsar=1,fps={FPS},{grade(cfg)}\" "
             f"-af afade=t=in:d=0.015,afade=t=out:st={max(d - 0.025, 0):.3f}:d=0.025 "
             f"-c:v libx264 -preset fast -crf 15 -pix_fmt yuv420p -c:a pcm_s16le -ar 48000 -ac 2 -shortest {f}")
         dd = dur(f)
@@ -193,7 +204,7 @@ def build(cfg):
     body = o
 
     # заставка: размытый кадр + логотип
-    run(f"ffmpeg -v error -y -ss {cfg.get('endcard_bg_time', segs[-1][0])} -i {proxy} -frames:v 1 -vf \"{GRADE}\" {w}/last.png")
+    run(f"ffmpeg -v error -y -ss {cfg.get('endcard_bg_time', segs[-1][0])} -i {proxy} -frames:v 1 -vf \"{grade(cfg)}\" {w}/last.png")
     run(f"ffmpeg -v error -y -loop 1 -t {ENDCARD} -i {w}/last.png -loop 1 -t {ENDCARD} -i {A}/endcard.png "
         f"-f lavfi -t {ENDCARD} -i anullsrc=r=48000:cl=stereo "
         f"-filter_complex \"[0]scale={W}:{H},boxblur=30:3,eq=brightness=-0.3,fps={FPS}[bg];[1]format=rgba,fade=t=in:st=0:d=0.35:alpha=1[l];[bg][l]overlay=0:0,format=yuv420p[v]\" "
@@ -224,6 +235,7 @@ def build(cfg):
     for k in range(len(pops)):
         inputs.append(f"-i {A}/sfx/{'s5' if k == len(pops) - 1 else ('s2' if k % 2 == 0 else 's4')}.mp3")
     chain, last, n = [], "[0:v]", len(inputs)
+    last_plate = max(spans, key=lambda g: spans[g][0])
     for grp, lines in cfg["plates"].items():
         if grp not in spans:
             continue
@@ -231,9 +243,16 @@ def build(cfg):
         plate_png(lines, p)
         st, en = spans[grp]
         if grp == hook:
+            if not cfg.get("hook_plate_show", False):  # хук без плашки
+                continue
             en = hook_end - 0.05
+        elif grp != last_plate:
+            en = min(en, st + cfg.get("plate_hold", PLATE_HOLD))
         inputs.append(f"-loop 1 -t {total:.2f} -i {p}")
-        chain.append(f"[{n}:v]format=rgba[p{n}]")
+        fade = f",fade=t=in:st={st:.2f}:d=0.25:alpha=1"
+        if grp != last_plate:
+            fade += f",fade=t=out:st={en - PLATE_FADE:.2f}:d={PLATE_FADE}:alpha=1"
+        chain.append(f"[{n}:v]format=rgba{fade}[p{n}]")
         chain.append(f"{last}[p{n}]overlay=(W-w)/2:{PLATE_Y}:enable='between(t,{st:.2f},{en:.2f})'[v{n}]")
         last = f"[v{n}]"; n += 1
     for k, (t, peak, din, dout) in enumerate([(hook_end, 1.0, 0.12, 0.30)] + [(t, 0.6, 0.06, 0.22) for t in pops]):
