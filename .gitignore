@@ -9,6 +9,7 @@ dev-dist
 .DS_Store
 .claude/*
 !.claude/settings.json
+!.claude/skills/
 .instance/
 
 # Ключи сервисных аккаунтов — никогда не коммитить
