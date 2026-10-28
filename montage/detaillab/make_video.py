@@ -40,7 +40,8 @@ def grade(cfg):
             f"eq=contrast=1.05,unsharp=5:5:0.4")
 
 
-SUB_Y, PLATE_Y = 1205, 1268
+SUB_Y, PLATE_Y = 1205, 1290
+SAFE_X, SAFE_W = 470, 800    # центр и макс. ширина текста: правее x≈900 — кнопки TikTok
 GAP, KEEP = 0.50, 0.14       # паузы длиннее GAP сжимаем, у слова оставляем KEEP
 ENDCARD = 1.6
 FLASH_LEAD = 1.4             # длина нарастания «вжуха» до вспышки
@@ -174,7 +175,7 @@ def build_subs(timeline, allw, fix, path, db, n_words=1, hook_end=0.0, title=Non
         txt = " ".join(w[2] for w in g).lower()
         big = st < hook_end  # на хуке крупнее
         sc0, sc1 = (112, 120) if big else (94, 100)
-        lines.append(f"Dialogue: 0,{ass_time(st)},{ass_time(en)},Sub,,0,0,0,,{{\\q2\\pos(540,{SUB_Y})\\fscx{sc0}\\fscy{sc0}\\t(0,90,\\fscx{sc1}\\fscy{sc1})}}{txt}")
+        lines.append(f"Dialogue: 0,{ass_time(st)},{ass_time(en)},Sub,,0,0,0,,{{\\q2\\pos({SAFE_X},{SUB_Y})\\fscx{sc0}\\fscy{sc0}\\t(0,90,\\fscx{sc1}\\fscy{sc1})}}{txt}")
     if title:  # заголовок хука сверху: белый капс с тёмной обводкой, низ золотом; гаснет к вспышке
         en = hook_end - 0.05
         txt = f"{title[0]}\\N{{\\c&H{GOLD[2]:02X}{GOLD[1]:02X}{GOLD[0]:02X}&}}{title[1]}"
@@ -198,19 +199,19 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 def plate_png(lines, path):
     """Тёмная плашка с золотой рамкой: верхняя строка белая, нижняя золотая."""
     from PIL import ImageFilter
-    f1 = ImageFont.truetype(f"{FONTS}/Inter-Black.otf", 58)
-    pad_x, pad_y, gap = 54, 34, 14
+    f1 = ImageFont.truetype(f"{FONTS}/Inter-Black.otf", 44)
+    pad_x, pad_y, gap = 34, 20, 8
     tmp = ImageDraw.Draw(Image.new("RGBA", (10, 10)))
     sizes = [tmp.textbbox((0, 0), l, font=f1) for l in lines]
     tw = max(b[2] - b[0] for b in sizes)
     th = sum(b[3] - b[1] for b in sizes) + gap * (len(lines) - 1)
-    bw, bh = min(tw + pad_x * 2, W - 120), th + pad_y * 2
+    bw, bh = min(tw + pad_x * 2, SAFE_W), th + pad_y * 2
     img = Image.new("RGBA", (bw + 24, bh + 24), (0, 0, 0, 0))
     sh = Image.new("RGBA", img.size, (0, 0, 0, 0))
-    ImageDraw.Draw(sh).rounded_rectangle((12, 16, bw + 12, bh + 16), 36, fill=(0, 0, 0, 110))
+    ImageDraw.Draw(sh).rounded_rectangle((12, 16, bw + 12, bh + 16), 24, fill=(0, 0, 0, 90))
     img = Image.alpha_composite(img, sh.filter(ImageFilter.GaussianBlur(10)))
     d = ImageDraw.Draw(img)
-    d.rounded_rectangle((12, 12, bw + 12, bh + 12), 36, fill=(14, 14, 16, 205), outline=GOLD + (255,), width=3)
+    d.rounded_rectangle((12, 12, bw + 12, bh + 12), 24, fill=(14, 14, 16, 185), outline=GOLD + (255,), width=2)
     y = 12 + pad_y
     for i, (l, b) in enumerate(zip(lines, sizes)):
         col = GOLD + (255,) if i == len(lines) - 1 else (255, 255, 255, 255)
@@ -294,7 +295,7 @@ def build(cfg):
         if grp != last_plate:
             fade += f",fade=t=out:st={en - PLATE_FADE:.2f}:d={PLATE_FADE}:alpha=1"
         chain.append(f"[{n}:v]format=rgba{fade}[p{n}]")
-        chain.append(f"{last}[p{n}]overlay=(W-w)/2:{PLATE_Y}:enable='between(t,{st:.2f},{en:.2f})'[v{n}]")
+        chain.append(f"{last}[p{n}]overlay={SAFE_X}-w/2:{PLATE_Y}:enable='between(t,{st:.2f},{en:.2f})'[v{n}]")
         last = f"[v{n}]"; n += 1
     for k, (t, peak, din, dout) in enumerate([(hook_end, 1.0, 0.12, 0.30)] + [(t, 0.6, 0.06, 0.22) for t in pops]):
         chain.append(f"color=c=white:s={W}x{H}:d={total:.2f}:r={FPS},format=rgba,"
