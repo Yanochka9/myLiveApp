@@ -93,6 +93,10 @@ python3 make.py projects/new_car.json render      # финал -> out/new_car.mp
 | `label` | текст без подложки: `text`, `size`, `font`, `color` |
 | `callout` | плашка с линией-указателем: `text`, `point: [x, y]` |
 | `logo` | картинка: `file` (PNG с прозрачностью) |
+| `wipe` | шторка из волнистых цветных полос на стыке (идея из ролика Palisade): `text` (крупно, пока кадр закрыт), `bands`, `colors`; стык ставить на ~57 % длины шторки |
+| `circle` | обводка «маркером» вокруг детали: `rx`, `ry`, `width`, `color`, `draw` (время рисования) |
+| `icon` | дудл-иконка с покачиванием: `icon` = `snow` / `spark` / `sun` / `flame` / `heart`, `size`, `color` |
+| `counter` | число набегает до значения (как «187 л.с.» у Changan): `to`, `from`, `suffix`, `prefix`, `dur`, `size` |
 | `photo` | фото-карточка (полароид) с кадром из исходника падает с покачиванием: `clip`, `src`, `crop: [x, y, w, h]` (в кадре 1080×1920), `text`, `width`, `tilt` |
 | `3d` | `kind`: `rise` (буквы поднимаются и переворачиваются), `spin` (медленно вращается), `badge` (значок в диске), `slab` (3D-плашка с текстом), `pin` (метка на карте); `text` |
 

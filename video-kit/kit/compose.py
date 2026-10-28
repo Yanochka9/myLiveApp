@@ -168,6 +168,11 @@ class Gfx:
         return card
 
     @functools.lru_cache(maxsize=None)
+    def icon(self, kind, size, color):
+        im = doodle(kind, size, (*self.p.color(color), 255), (*self.p.color('dark'), 255))
+        return self.shadow(im, blur=8, off=(0, 4), op=0.35)
+
+    @functools.lru_cache(maxsize=None)
     def image(self, path):
         a = cv2.imread(self.p.asset(path), cv2.IMREAD_UNCHANGED)
         if a is None: raise SystemExit(f'image not found: {path}')
@@ -210,6 +215,62 @@ def draw_line(dst, p0, p1, prog, alpha, col, dot_col, width=5):
     dst[ya:yb, xa:xb] = dst[ya:yb, xa:xb] * (1 - al) + np.array(col, np.float32) * al
     if prog >= 0.98:
         cv2.circle(dst, (int(p1[0]), int(p1[1])), 7, tuple(float(c) for c in dot_col), -1, cv2.LINE_AA)
+
+
+def wobble_ellipse(cx, cy, rx, ry, seed=0, turns=1.12, n=120):
+    """hand-drawn ellipse: slightly irregular radius, overshoots the start like a marker stroke"""
+    rs = np.random.RandomState(seed); ph = rs.uniform(0, 6.28, 3); t = np.linspace(0, turns * 2 * np.pi, n) - 0.6
+    k = 1 + 0.035 * np.sin(2 * t + ph[0]) + 0.02 * np.sin(3 * t + ph[1]) + 0.04 * t / (turns * 2 * np.pi)
+    return np.stack([cx + rx * k * np.cos(t), cy + ry * k * np.sin(t)], 1)
+
+
+def draw_stroke(dst, pts, prog, alpha, col, width):
+    if alpha <= 0 or prog <= 0: return
+    pts = pts[:max(2, int(len(pts) * clamp(prog)))].astype(np.int32)
+    lay = np.zeros((H, W), np.uint8)
+    cv2.polylines(lay, [pts], False, 255, width, cv2.LINE_AA)
+    ys, xs = np.where(lay > 0)
+    if len(ys) == 0: return
+    ya, yb, xa, xb = ys.min(), ys.max() + 1, xs.min(), xs.max() + 1
+    al = lay[ya:yb, xa:xb].astype(np.float32)[..., None] / 255 * alpha
+    dst[ya:yb, xa:xb] = dst[ya:yb, xa:xb] * (1 - al) + np.array(col, np.float32) * al
+
+
+def doodle(kind, size, fill, line):
+    """small hand-drawn style icon: snow, spark, sun, flame, heart"""
+    S = size * 2; im = Image.new('RGBA', (S, S), (0, 0, 0, 0)); d = ImageDraw.Draw(im); c = S / 2; lw = max(4, S // 22)
+    if kind == 'snow':   # dark under-stroke, colour on top
+        for col, w in ((line, lw * 3), (fill, lw * 1.6)):
+            for k in range(6):
+                a = k * np.pi / 3; x, y = c + np.cos(a) * S * 0.42, c + np.sin(a) * S * 0.42
+                d.line([(c, c), (x, y)], fill=col, width=int(w))
+                for sgn in (-1, 1):
+                    b = a + sgn * 0.7; mx, my = c + np.cos(a) * S * 0.27, c + np.sin(a) * S * 0.27
+                    d.line([(mx, my), (mx + np.cos(b) * S * 0.13, my + np.sin(b) * S * 0.13)], fill=col, width=int(w))
+    elif kind == 'spark':
+        r1, r2 = S * 0.45, S * 0.11
+        pts = [(c + (r1 if k % 2 == 0 else r2) * np.cos(k * np.pi / 4 - np.pi / 2), c + (r1 if k % 2 == 0 else r2) * np.sin(k * np.pi / 4 - np.pi / 2)) for k in range(8)]
+        d.polygon(pts, fill=fill, outline=line, width=lw)
+    elif kind == 'sun':
+        for col, w in ((line, lw * 3), (fill, lw * 1.6)):
+            for k in range(8):
+                a = k * np.pi / 4
+                d.line([(c + np.cos(a) * S * 0.3, c + np.sin(a) * S * 0.3), (c + np.cos(a) * S * 0.44, c + np.sin(a) * S * 0.44)], fill=col, width=int(w))
+        r = S * 0.21; d.ellipse((c - r, c - r, c + r, c + r), fill=fill, outline=line, width=lw)
+    elif kind == 'flame':
+        t = np.linspace(0, 2 * np.pi, 80)   # teardrop with the point up, smaller one inside
+        drop = lambda a, b, oy: [(c + a * np.sin(u) * np.sin(u / 2), c + oy - b * np.cos(u)) for u in t]
+        d.polygon(drop(S * 0.34, S * 0.42, S * 0.04), fill=fill, outline=line, width=lw)
+        d.polygon(drop(S * 0.15, S * 0.2, S * 0.24), fill=(255, 255, 255, 235))
+    elif kind == 'heart':
+        t = np.linspace(0, 2 * np.pi, 80)
+        pts = [(c + S * 0.026 * 16 * np.sin(u) ** 3, c - S * 0.026 * (13 * np.cos(u) - 5 * np.cos(2 * u) - 2 * np.cos(3 * u) - np.cos(4 * u))) for u in t]
+        d.polygon(pts, fill=fill, outline=line, width=lw)
+    return im.resize((size, size), Image.LANCZOS)
+
+
+def fmt_num(v, sep='\u2009'):
+    return f'{int(round(v)):,}'.replace(',', sep)
 
 
 # ================================================================== subtitles
@@ -490,6 +551,20 @@ class Comp:
             blend(dst, g.pill(el['text'], el.get('size', 44), el.get('style', 'accent'), el.get('font', 'xbold'), el.get('icon')), x, y, s, al)
         elif t == 'logo':
             blend(dst, g.image(el['file']), x, y, s * sc, al)
+        elif t == 'circle':   # marker circle drawn around a detail
+            u, v = (T - a) / el.get('draw', 0.35), clamp((b - T) / 0.2)
+            pts = wobble_ellipse(x, y, el.get('rx', 160), el.get('ry', 110), seed=int(a * 100))
+            draw_stroke(dst, pts, eo3(u), v * clamp(u * 4), self.p.color(el.get('color', 'accent')), el.get('width', 9))
+        elif t == 'icon':     # doodle icon pops and gently rocks
+            im = g.icon(el['icon'], el.get('size', 110), el.get('color', 'accent'))
+            ang = 8 * np.sin((T - a) * 4.2) * el.get('rock', 1.0)
+            blend(dst, im.rotate(ang, resample=Image.BICUBIC, expand=True), x, y, s * sc, al)
+        elif t == 'counter':  # number runs up to its value
+            u = eo3((T - a) / el.get('dur', 0.8))
+            txt = el.get('prefix', '') + fmt_num(el.get('from', 0) + (el['to'] - el.get('from', 0)) * u) + el.get('suffix', '')
+            blend(dst, g.label(txt, el.get('size', 120), el.get('font', 'black'), el.get('color', 'text')), x, y, s * sc, al)
+        elif t == 'wipe':     # wavy colour bands sweep across the cut, optional big text while covered
+            self.draw_wipe(dst, el, T, a, b)
         elif t == 'photo':   # polaroid drops in with a swing and settles at its tilt
             u, v = clamp((T - a) / 0.45), clamp((b - T) / 0.22)
             im = g.photo(el['clip'], float(el.get('src', 0.0)), tuple(el.get('crop', (90, 560, 900, 900))), el.get('width', 420),
@@ -497,6 +572,30 @@ class Comp:
             ang = el.get('tilt', -6) + (1 - eback(u, 1.4)) * el.get('swing', 12)
             im = g.shadow(im.rotate(ang, expand=True, resample=Image.BICUBIC), blur=18, off=(0, 12), op=0.4)
             blend(dst, im, x, y - (1 - eo3(u)) * 170, sc * (0.92 + 0.08 * eo3(u)) * (1 + 0.04 * (1 - v)), min(clamp(u * 2.5), v))
+
+    def draw_wipe(self, dst, el, T, a, b):
+        p = self.p; n = el.get('bands', 5); u = (T - a) / (b - a)
+        cols = [p.color(c) for c in el.get('colors', ['accent', 'accent_light', 'paper'])]
+        bw = W / n + 2; cover = 0.0
+        for i in range(n):
+            d = i * 0.04
+            ui = clamp((u - d) / 0.38); uo = clamp((u - 0.6 - d) / 0.24)
+            top = H * (1 - eio(ui)) - (H + 200) * eio(uo)   # slides up into the frame, then on up and out
+            if ui <= 0 or top > H: continue
+            yy = np.arange(0, H, 8, dtype=np.float32)
+            x0 = i * W / n
+            wave = 22 * np.sin(yy / 140 + T * 6)   # same wave on every edge, so neighbouring bands meet without gaps
+            poly = np.concatenate([np.stack([x0 + wave, yy], 1), np.stack([x0 + bw + wave[::-1], yy[::-1]], 1)])
+            m = np.zeros((H, W), np.uint8); cv2.fillPoly(m, [poly.astype(np.int32)], 255)
+            m[:max(0, int(top))] = 0; bot = int(top + H + 200)
+            if bot < H: m[bot:] = 0
+            al = m.astype(np.float32)[..., None] / 255
+            dst[:] = dst * (1 - al) + np.array(cols[i % len(cols)], np.float32) * al
+            cover += al.mean()
+        if el.get('text') and cover > 0.6:
+            k = clamp((cover - 0.6) / 0.3)
+            im = self.gfx.label(el['text'], el.get('size', 150), el.get('font', 'black'), el.get('text_color', 'dark'))
+            blend(dst, im, W / 2, H * 0.45, 0.9 + 0.1 * k, k)
 
     def render(self, T, it, raw):
         p = self.p
