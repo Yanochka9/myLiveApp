@@ -7,29 +7,41 @@
   },
   "output": "out/top3.mp4",
   "theme": {
-    "accent": "#E20E2A",
-    "accent_light": "#FF3448",
-    "dark": "#280608",
+    "accent": "#D9B26A",
+    "accent_light": "#F0D696",
+    "dark": "#1A1408",
     "light": "#FFFFFF",
-    "link": "#FF4658",
-    "flash": "#FF4050",
-    "glow": 10,
-    "vignette": 0.22,
+    "on_accent": "#1A1408",
+    "link": "#E8C76A",
+    "flash": "#F3D9A0",
+    "paper": "#FAF7F0",
+    "glow": 6,
+    "vignette": 0.24,
     "3d": {
-      "front": "#ED2030",
-      "side": "#700012",
-      "metallic": 0.35,
-      "roughness": 0.16,
-      "white": "#F9F7F7",
-      "dark": "#300006"
-    }
+      "front": "#E2B84E",
+      "side": "#6B4E12",
+      "metallic": 0.8,
+      "roughness": 0.18,
+      "white": "#FFF8EC",
+      "dark": "#1A1408"
+    },
+    "fonts": {
+      "black": "assets/fonts/Manrope-ExtraBold.ttf",
+      "xbold": "assets/fonts/Manrope-ExtraBold.ttf",
+      "bold": "assets/fonts/Manrope-Bold.ttf",
+      "semibold": "assets/fonts/Manrope-SemiBold.ttf",
+      "black_italic": "assets/fonts/Manrope-ExtraBold.ttf"
+    },
+    "on_light": "#1A1408"
   },
   "grade": {
-    "gamma": 1.08,
-    "contrast": 1.05,
-    "saturation": 1.06,
-    "warmth": 0.015,
-    "cool_shadows": 0.02
+    "lut": "assets/luts/refive_light.cube",
+    "lut_mix": 0.7,
+    "gamma": 0.97,
+    "contrast": 1.12,
+    "saturation": 1.08,
+    "warmth": 0.02,
+    "cool_shadows": 0.03
   },
   "subtitles": {
     "enabled": true,
@@ -37,7 +49,7 @@
     "y": 1330,
     "color": "#FFFFFF",
     "highlight": "accent",
-    "highlight_text": "#FFFFFF",
+    "highlight_text": "#1A1408",
     "mode": "karaoke",
     "max_words": 3,
     "max_chars": 17,
@@ -60,8 +72,8 @@
     ]
   },
   "music": {
-    "file": "work/top3/music.m4a",
-    "start": 5.0,
+    "file": "work/top3/music_fcd.m4a",
+    "start": 8.85,
     "volume": 0.14,
     "end_volume": 0.42
   },
@@ -161,26 +173,6 @@
       "zoom": [
         1.12,
         1.03
-      ]
-    },
-    {
-      "clip": "IMG_2187.MOV",
-      "src": 0.0,
-      "at": 11.0,
-      "until": 11.9,
-      "zoom": [
-        1.04,
-        1.12
-      ]
-    },
-    {
-      "clip": "IMG_2188.MOV",
-      "src": 0.2,
-      "at": 11.9,
-      "until": 12.95,
-      "zoom": [
-        1.1,
-        1.03
       ],
       "tout": "zoom"
     },
@@ -207,30 +199,6 @@
       "drift": [
         -20,
         20
-      ]
-    },
-    {
-      "clip": "IMG_2207.MOV",
-      "src": 0.2,
-      "at": 21.87,
-      "until": 23.1,
-      "zoom": [
-        1.12,
-        1.03
-      ]
-    },
-    {
-      "clip": "IMG_2198.MOV",
-      "src": 0.2,
-      "at": 23.1,
-      "until": 25.1,
-      "zoom": [
-        1.03,
-        1.12
-      ],
-      "drift": [
-        20,
-        -20
       ],
       "tout": "zoom"
     },
@@ -287,16 +255,6 @@
       "zoom": [
         1.12,
         1.03
-      ]
-    },
-    {
-      "clip": "IMG_2227.MOV",
-      "src": 0.2,
-      "at": 40.59,
-      "until": 42.97,
-      "zoom": [
-        1.03,
-        1.12
       ],
       "tout": "zoom"
     }
@@ -431,28 +389,6 @@
     },
     {
       "type": "pill",
-      "text": "CARPLAY",
-      "size": 48,
-      "style": "light",
-      "at": "w:carplay-0.05",
-      "until": 11.9,
-      "x": 540,
-      "y": 560,
-      "icon": "check"
-    },
-    {
-      "type": "pill",
-      "text": "УДЕРЖАНИЕ В ПОЛОСЕ",
-      "size": 46,
-      "style": "light",
-      "at": "w:удержание-0.05",
-      "until": 12.95,
-      "x": 540,
-      "y": 560,
-      "icon": "check"
-    },
-    {
-      "type": "pill",
       "text": "БЕЗ ПЕРВОНАЧАЛЬНОГО ВЗНОСА",
       "size": 44,
       "style": "accent",
@@ -568,34 +504,23 @@
     },
     {
       "type": "pill",
-      "text": "АВТОЗАПУСК С КЛЮЧА",
-      "size": 46,
-      "style": "accent",
-      "at": "w:автозапуск-0.05",
-      "until": 23.1,
-      "x": 540,
-      "y": 560,
-      "icon": "check"
-    },
-    {
-      "type": "pill",
       "text": "ДЛЯ МИНСКОЙ ЗИМЫ",
-      "size": 46,
+      "size": 40,
       "style": "light",
       "at": "w:минской-0.1",
       "until": 25.1,
-      "x": 540,
-      "y": 560
+      "x": 300,
+      "y": 470
     },
     {
       "type": "pill",
       "text": "ГЛАВНАЯ ОПЦИЯ",
-      "size": 46,
+      "size": 40,
       "style": "accent",
       "at": "w:главная-0.05",
       "until": 25.1,
-      "x": 540,
-      "y": 655,
+      "x": 300,
+      "y": 560,
       "icon": "check"
     },
     {
@@ -775,17 +700,6 @@
     },
     {
       "type": "pill",
-      "text": "ЦИФРОВАЯ ПРИБОРНАЯ ПАНЕЛЬ",
-      "size": 42,
-      "style": "light",
-      "at": "w:цифровая-0.05",
-      "until": 42.97,
-      "x": 540,
-      "y": 560,
-      "icon": "check"
-    },
-    {
-      "type": "pill",
       "text": "БЕЗ ПЕРВОНАЧАЛЬНОГО ВЗНОСА",
       "size": 44,
       "style": "accent",
@@ -902,6 +816,128 @@
       "until": "end",
       "x": 540,
       "y": 1250
+    },
+    {
+      "type": "photo",
+      "clip": "IMG_2187.MOV",
+      "src": 0.3,
+      "crop": [
+        0,
+        700,
+        760,
+        760
+      ],
+      "text": "CARPLAY",
+      "size": 36,
+      "width": 400,
+      "tilt": -6,
+      "at": "w:carplay-0.05",
+      "until": 11.9,
+      "x": 780,
+      "y": 740
+    },
+    {
+      "type": "photo",
+      "clip": "IMG_2188.MOV",
+      "src": 0.8,
+      "crop": [
+        60,
+        700,
+        960,
+        960
+      ],
+      "text": "УДЕРЖАНИЕ В ПОЛОСЕ",
+      "size": 36,
+      "width": 400,
+      "tilt": 5,
+      "at": "w:удержание-0.05",
+      "until": 12.95,
+      "x": 780,
+      "y": 740
+    },
+    {
+      "type": "photo",
+      "clip": "IMG_2207.MOV",
+      "src": 0.8,
+      "crop": [
+        100,
+        560,
+        700,
+        700
+      ],
+      "text": "АВТОЗАПУСК С КЛЮЧА",
+      "size": 36,
+      "width": 400,
+      "tilt": -5,
+      "at": "w:автозапуск-0.05",
+      "until": 25.1,
+      "x": 790,
+      "y": 740
+    },
+    {
+      "type": "photo",
+      "clip": "IMG_2227.MOV",
+      "src": 1.0,
+      "crop": [
+        180,
+        760,
+        700,
+        700
+      ],
+      "text": "ЦИФРОВАЯ ПРИБОРКА",
+      "size": 36,
+      "width": 400,
+      "tilt": -5,
+      "at": "w:цифровая-0.05",
+      "until": 42.97,
+      "x": 330,
+      "y": 640
+    }
+  ],
+  "sfx": [
+    {
+      "file": "assets/sfx/belavto_whoosh.wav",
+      "at": 4.47,
+      "peak": 2.0,
+      "gain": 0.08
+    },
+    {
+      "file": "assets/sfx/belavto_whoosh.wav",
+      "at": 17.25,
+      "peak": 2.0,
+      "gain": 0.08
+    },
+    {
+      "file": "assets/sfx/belavto_whoosh.wav",
+      "at": 29.53,
+      "peak": 2.0,
+      "gain": 0.08
+    },
+    {
+      "file": "assets/sfx/belavto_whoosh.wav",
+      "at": "speech_end",
+      "peak": 2.0,
+      "gain": 0.08
+    },
+    {
+      "file": "assets/sfx/belavto_click1.wav",
+      "at": "w:carplay-0.05",
+      "gain": 0.08
+    },
+    {
+      "file": "assets/sfx/belavto_click2.wav",
+      "at": "w:удержание-0.05",
+      "gain": 0.08
+    },
+    {
+      "file": "assets/sfx/belavto_click3.wav",
+      "at": "w:автозапуск-0.05",
+      "gain": 0.08
+    },
+    {
+      "file": "assets/sfx/belavto_click4.wav",
+      "at": "w:цифровая-0.05",
+      "gain": 0.08
     }
   ]
 }

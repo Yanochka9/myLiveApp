@@ -49,7 +49,9 @@ python3 make.py projects/new_car.json render      # финал -> out/new_car.mp
 | `glow`, `vignette` | свечение в углу кадра и затемнение краёв (0 — выключить) |
 | `3d.front`, `3d.side` | лицевая сторона и бока 3D-букв, значков, метки |
 | `3d.white`, `3d.dark` | текст на 3D-плашке, диск 3D-значка |
-| `fonts` | пути к шрифтам (`black`, `xbold`, `bold`, `semibold`, `black_italic`) |
+| `on_accent`, `on_light` | цвет текста на акцентных и на светлых плашках (для светлых акцентов вроде золота — тёмный) |
+| `paper` | рамка фото-карточек `photo` |
+| `fonts` | пути к шрифтам (`black`, `xbold`, `bold`, `semibold`, `black_italic`); свои шрифты — в `assets/fonts/` (есть Manrope) |
 
 Готовые палитры:
 
@@ -58,7 +60,13 @@ python3 make.py projects/new_car.json render      # финал -> out/new_car.mp
 "розовая":  {"accent": "#FF3E9A", "accent_light": "#FF7BBE", "dark": "#2A0818", "3d": {"front": "#FF5AAE", "side": "#7A0F45"}}
 "синяя":    {"accent": "#1E5BFF", "accent_light": "#4C82FF", "dark": "#0A1430", "3d": {"front": "#2F6BFF", "side": "#0B1F66"}}
 "золото":   {"accent": "#C9A23F", "accent_light": "#E8C76A", "dark": "#1C1608", "3d": {"front": "#E2B84E", "side": "#6B4E12", "metallic": 0.8}}
+"шампань":  см. projects/top3.json — золото + on_accent/on_light тёмные + шрифт Manrope + фильтр Refive 70 %
 ```
+
+### Цветокор — `grade`
+
+`gamma`, `contrast`, `saturation`, `warmth`, `cool_shadows` и фильтр `lut` (файл `.cube`, например `assets/luts/refive_light.cube` — «как Refive»)
+с силой `lut_mix` от 0 до 1.
 
 ### Субтитры — `subtitles`
 
@@ -85,6 +93,7 @@ python3 make.py projects/new_car.json render      # финал -> out/new_car.mp
 | `label` | текст без подложки: `text`, `size`, `font`, `color` |
 | `callout` | плашка с линией-указателем: `text`, `point: [x, y]` |
 | `logo` | картинка: `file` (PNG с прозрачностью) |
+| `photo` | фото-карточка (полароид) с кадром из исходника падает с покачиванием: `clip`, `src`, `crop: [x, y, w, h]` (в кадре 1080×1920), `text`, `width`, `tilt` |
 | `3d` | `kind`: `rise` (буквы поднимаются и переворачиваются), `spin` (медленно вращается), `badge` (значок в диске), `slab` (3D-плашка с текстом), `pin` (метка на карте); `text` |
 
 ### Время можно привязывать к словам
@@ -93,6 +102,12 @@ python3 make.py projects/new_car.json render      # финал -> out/new_car.mp
 - `"w:гарантии"` — начало слова «гарантии», `"w:подогрев#2"` — второе такое слово, `"w:решетка-0.1"` — на 0,1 с раньше;
 - `"we:слово"` — конец слова; `"+1.5"` (в `until`) — через 1,5 с после `at`;
 - `"speech_end"` — конец речи (начало финальной карточки), `"end"` — конец ролика.
+
+### Звуки переходов — `sfx`
+
+Только по просьбе пользователя и только из его пакета звуков (Белавто — `assets/sfx/belavto_*.wav`, вырезаны из `copy_B2B212EF…` в папке «музыка и звуки»):
+`{"file": "...", "at": 4.47 | "w:слово" | "speech_end", "peak": 2.0, "gain": 0.08}` — `peak` — секунда внутри файла, которая встаёт на `at`
+(у `belavto_whoosh.wav` пик на 2.0 с). Вжух — на смене блоков, щелчки (`belavto_click1–5`, `gain` ≈ 0.08) — на появлении фото-карточек.
 
 ### Музыка и голос
 

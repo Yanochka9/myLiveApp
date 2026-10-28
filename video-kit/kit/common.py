@@ -12,6 +12,9 @@ DEFAULT_THEME = {
     'dark': '#280608',            # dark pills
     'light': '#FFFFFF',           # light pills
     'text': '#FFFFFF',
+    'on_accent': '#FFFFFF',
+    'on_light': '#E20E2A',        # text on light pills (accent by default; dark for light accents like gold)
+    'paper': '#FAF8F4',           # frame of 'photo' polaroid cards       # text and check icon on accent pills (dark for light accents like gold)
     'link': '#FF4658',            # site / url colour on the end card
     'fonts': {
         'black': f'{INTER}/InterDisplay-Black.otf',
@@ -36,7 +39,8 @@ DEFAULT_SUBS = {
     'replace': {}, 'merge': [],
 }
 
-DEFAULT_GRADE = {'gamma': 1.08, 'contrast': 1.05, 'saturation': 1.06, 'warmth': 0.015, 'cool_shadows': 0.02}
+DEFAULT_GRADE = {'gamma': 1.08, 'contrast': 1.05, 'saturation': 1.06, 'warmth': 0.015, 'cool_shadows': 0.02,
+                 'lut': None, 'lut_mix': 1.0}   # lut: .cube file applied before eq/colorbalance, lut_mix: its strength 0..1
 
 
 def deep_merge(a, b):
@@ -96,7 +100,7 @@ class Project:
         return hexrgb(v)
 
     def font(self, key):
-        return self.theme['fonts'].get(key, key)
+        return self.asset(self.theme['fonts'].get(key, key))
 
     # ---------------------------------------------------------------- timeline
     def build_timeline(self):

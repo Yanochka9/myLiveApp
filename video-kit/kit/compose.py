@@ -127,16 +127,16 @@ class Gfx:
         iw = int(size * 1.15) if icon else 0
         w, h = tw + padx * 2 + iw, th + pady * 2
         if style == 'accent':
-            bg = self.rounded_grad(w, h, h // 2, p.color('accent_light'), p.color('accent')); fg = p.color('text')
+            bg = self.rounded_grad(w, h, h // 2, p.color('accent_light'), p.color('accent')); fg = p.color('on_accent')
         elif style == 'light':
-            l = p.color('light'); bg = self.rounded_grad(w, h, h // 2, l, tuple(int(c * 0.93) for c in l)); fg = p.color('accent')
+            l = p.color('light'); bg = self.rounded_grad(w, h, h // 2, l, tuple(int(c * 0.93) for c in l)); fg = p.color('on_light')
         else:
             dk = p.color('dark'); bg = self.rounded_grad(w, h, h // 2, tuple(min(255, c + 22) for c in dk), dk); fg = p.color('text')
         d = ImageDraw.Draw(bg)
         d.text((padx + iw - bb[0], pady - cap[1]), text, font=f, fill=fg)
         if icon == 'check':
             cx, cy, r = padx + iw * 0.38, h / 2, size * 0.42
-            circ, cc = (p.color('text'), p.color('accent')) if style == 'accent' else (p.color('accent'), p.color('text'))
+            circ, cc = (p.color('on_accent'), p.color('accent')) if style == 'accent' else (p.color('accent'), p.color('on_accent'))
             d.ellipse((cx - r, cy - r, cx + r, cy + r), fill=circ)
             d.line([(cx - r * 0.45, cy + r * 0.02), (cx - r * 0.1, cy + r * 0.38), (cx + r * 0.5, cy - r * 0.35)],
                    fill=cc, width=max(3, size // 9), joint='curve')
@@ -148,6 +148,24 @@ class Gfx:
         im = Image.new('RGBA', (bb[2] - bb[0] + 20, bb[3] - bb[1] + 20), (0, 0, 0, 0))
         ImageDraw.Draw(im).text((10 - bb[0], 10 - bb[1]), text, font=f, fill=self.p.color(color))
         return self.shadow(im, blur=10, off=(0, 5), op=0.45)
+
+    @functools.lru_cache(maxsize=None)
+    def photo(self, clip, src, crop, width, text, size, font):
+        """graded still of a clip framed as a polaroid with a caption; crop = (x, y, w, h) in the 1080x1920 frame"""
+        p = self.p
+        vf = f"scale={W}:{H}:flags=bicubic,{grade_filter(p, clip)},format=rgb24"
+        buf = subprocess.run(['ffmpeg', '-v', 'error', '-ss', f'{src:.3f}', '-i', p.clip(clip), '-vf', vf, '-frames:v', '1',
+                              '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-'], stdout=subprocess.PIPE, check=True).stdout
+        fr = Image.fromarray(np.frombuffer(buf, np.uint8).reshape(H, W, 3))
+        x, y, cw, ch = crop
+        ph = fr.crop((x, y, x + cw, y + ch)).resize((width, int(width * ch / cw)), Image.LANCZOS)
+        m = int(width * 0.05); cap = int(size * 2.1) if text else m
+        card = Image.new('RGBA', (width + 2 * m, ph.height + m + cap), (*p.color('paper'), 255))
+        card.paste(ph, (m, m))
+        if text:
+            f = self.font(font, size); bb = f.getbbox(text)
+            ImageDraw.Draw(card).text((m - bb[0], ph.height + m + (cap - (bb[3] - bb[1])) // 2 - bb[1]), text, font=f, fill=p.color('dark'))
+        return card
 
     @functools.lru_cache(maxsize=None)
     def image(self, path):
@@ -306,6 +324,11 @@ def grade_filter(p, clip):
     if probe(p.clip(clip))['hdr']:
         tone = ('zscale=t=linear:npl=203,format=gbrpf32le,zscale=p=bt709,tonemap=hable:desat=0,'
                 'zscale=t=bt709:m=bt709:r=tv,format=yuv420p,')
+    if g.get('lut'):
+        lut = p.asset(g['lut']).replace('\\', '/').replace(':', '\\:')
+        mix = clamp(float(g.get('lut_mix', 1.0)))
+        tone += (f"lut3d=file='{lut}'," if mix >= 0.999 else
+                 f"split[gx][gy];[gy]lut3d=file='{lut}'[gl];[gx][gl]blend=all_expr='A*{1 - mix:.3f}+B*{mix:.3f}',")
     return (tone + f"eq=gamma={g['gamma']}:contrast={g['contrast']}:saturation={g['saturation']},"
             f"colorbalance=rs={-g['cool_shadows'] / 2}:bs={g['cool_shadows']}:rh={g['warmth']}:bh={-g['warmth'] / 1.5}")
 
@@ -467,6 +490,13 @@ class Comp:
             blend(dst, g.pill(el['text'], el.get('size', 44), el.get('style', 'accent'), el.get('font', 'xbold'), el.get('icon')), x, y, s, al)
         elif t == 'logo':
             blend(dst, g.image(el['file']), x, y, s * sc, al)
+        elif t == 'photo':   # polaroid drops in with a swing and settles at its tilt
+            u, v = clamp((T - a) / 0.45), clamp((b - T) / 0.22)
+            im = g.photo(el['clip'], float(el.get('src', 0.0)), tuple(el.get('crop', (90, 560, 900, 900))), el.get('width', 420),
+                         el.get('text', ''), el.get('size', 38), el.get('font', 'xbold'))
+            ang = el.get('tilt', -6) + (1 - eback(u, 1.4)) * el.get('swing', 12)
+            im = g.shadow(im.rotate(ang, expand=True, resample=Image.BICUBIC), blur=18, off=(0, 12), op=0.4)
+            blend(dst, im, x, y - (1 - eo3(u)) * 170, sc * (0.92 + 0.08 * eo3(u)) * (1 + 0.04 * (1 - v)), min(clamp(u * 2.5), v))
 
     def render(self, T, it, raw):
         p = self.p
@@ -541,7 +571,19 @@ def build_audio(p, out):
         expr = f"if(lt(t,{se - 0.15}),{vol},if(lt(t,{se + 0.25}),{vol}+(t-{se - 0.15})/0.4*{ev - vol},{ev}))"
         filt.append(f"[{k}:a]atrim={st}:{st + T},asetpts=PTS-STARTPTS,aformat=sample_rates=48000:channel_layouts=stereo,"
                     f"afade=t=in:d=0.05,volume='{expr}':eval=frame,afade=t=out:st={T - 1.0}:d=1.0[mus]")
-        filt.append('[voice][mus]amix=inputs=2:normalize=0:duration=first,alimiter=limit=0.97:level=false[out]')
+        mix = ['[voice]', '[mus]']
+    else:
+        mix = ['[voice]']
+    n_in = k + (1 if len(mix) > 1 else 0)
+    for j, fx in enumerate(p.cfg.get('sfx', [])):   # transition sounds: 'peak' (s inside the file) lands on 'at'
+        at = p.t(fx['at']); pk = fx.get('peak', 0.0); d = at - pk
+        inputs += ['-i', p.asset(fx['file'])]
+        trim = f'atrim=start={-d:.3f},asetpts=PTS-STARTPTS,' if d < 0 else ''
+        filt.append(f"[{n_in + j}:a]{trim}aformat=sample_rates=48000:channel_layouts=stereo,volume={fx.get('gain', 0.1)},"
+                    f"adelay={max(d, 0) * 1000:.0f}:all=1[fx{j}]")
+        mix.append(f'[fx{j}]')
+    if len(mix) > 1:
+        filt.append(''.join(mix) + f'amix=inputs={len(mix)}:normalize=0:duration=first,alimiter=limit=0.97:level=false[out]')
     else:
         filt.append('[voice]alimiter=limit=0.97:level=false[out]')
     subprocess.run(['ffmpeg', '-v', 'error', '-y'] + inputs + ['-filter_complex', ';'.join(filt), '-map', '[out]',
