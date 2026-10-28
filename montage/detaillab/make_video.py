@@ -29,16 +29,23 @@ PLATE_FADE = 0.3
 
 
 def grade(cfg):
-    """LUT с силой lut_mix (1.0 — как Leopard; под другой свет обычно 0.4–0.6)."""
+    """LUT (`lut` в конфиге, по умолчанию look.cube) с силой lut_mix (1.0 — как Leopard)."""
     mix = cfg.get("lut_mix", 1.0)
+    lut = f"{A}/{cfg['lut']}" if cfg.get("lut") else f"{A}/look.cube"
+    if cfg.get("lut") and mix >= 1:
+        return f"lut3d={lut},unsharp=5:5:0.4"
     if mix >= 1:
         return GRADE
-    return (f"split[g0][g1];[g1]lut3d={A}/look.cube[g2];[g0][g2]blend=all_mode=normal:all_opacity={mix},"
+    return (f"split[g0][g1];[g1]lut3d={lut}[g2];[g0][g2]blend=all_mode=normal:all_opacity={mix},"
             f"eq=contrast=1.05,unsharp=5:5:0.4")
+
+
 SUB_Y, PLATE_Y = 1205, 1268
 GAP, KEEP = 0.50, 0.14       # паузы длиннее GAP сжимаем, у слова оставляем KEEP
 ENDCARD = 1.6
 FLASH_LEAD = 1.4             # длина нарастания «вжуха» до вспышки
+SUB_LEAD = 0.08              # субтитр чуть раньше звука — глаз успевает
+TITLE_Y = 360                # заголовок хука — на потолке, не на машине
 FIX = {"ее": "её", "пленки": "плёнки", "пленка": "плёнка", "пленочку": "плёнку", "идем": "идём",
        "антимоникюрчики": "антиманикюр", "антимуникюрчики": "антиманикюр"}
 
@@ -118,16 +125,38 @@ def ass_time(t):
     return f"{int(t // 3600)}:{int(t % 3600 // 60):02d}:{t % 60:05.2f}"
 
 
-def build_subs(timeline, allw, fix, path):
+def onsets(wav):
+    """Энергия голоса по 10 мс (дБ) — уточнять начало слов: Whisper ставит их на 0.1–0.5 с позже."""
+    wf = wave.open(wav)
+    a = np.frombuffer(wf.readframes(wf.getnframes()), dtype=np.int16).astype(np.float32) / 32768
+    hop = wf.getframerate() // 100
+    e = np.sqrt(np.mean(a[: len(a) // hop * hop].reshape(-1, hop) ** 2, axis=1))
+    return 20 * np.log10(e + 1e-6)
+
+
+def snap(t, db, lo):
+    """Начало звука перед словом: первый громкий кадр после тишины в окне [t-0.35, t+0.05]."""
+    i0, i1 = max(int((t - 0.35) * 100), int(lo * 100), 0), min(int((t + 0.05) * 100), len(db) - 1)
+    quiet = None
+    for i in range(i0, i1):
+        if db[i] < -40:
+            quiet = i
+        elif db[i] > -34 and quiet is not None:
+            return min(t, i / 100)
+    return t
+
+
+def build_subs(timeline, allw, fix, path, db, n_words=1, hook_end=0.0, title=None):
     items = []
     for si, (a, b, o) in enumerate(timeline):
         for x in allw:
             if a <= (x["s"] + x["e"]) / 2 <= b:
-                items.append([o + max(x["s"], a) - a, o + min(x["e"], b) - a, norm(x["w"], fix), si])
+                s0 = snap(max(x["s"], a), db, a)
+                items.append([o + max(s0 - SUB_LEAD, a) - a, o + min(x["e"], b) - a, norm(x["w"], fix), si])
     items = [i for i in items if i[2]]
     groups, cur = [], []
-    for it in items:  # 1–2 слова, не через склейку
-        if cur and (len(cur) == 2 or it[3] != cur[-1][3] or len(" ".join(c[2] for c in cur + [it])) > 14 or it[0] - cur[-1][1] > 0.3):
+    for it in items:  # n_words слов, не через склейку
+        if cur and (len(cur) == n_words or it[3] != cur[-1][3] or len(" ".join(c[2] for c in cur + [it])) > 14 or it[0] - cur[-1][1] > 0.3):
             groups.append(cur); cur = []
         cur.append(it)
     if cur:
@@ -139,7 +168,13 @@ def build_subs(timeline, allw, fix, path):
         en = groups[gi + 1][0][0] if gi + 1 < len(groups) else g[-1][1] + 0.3
         en = min(en, g[-1][1] + 0.5, end_body)
         txt = " ".join(w[2] for w in g).lower()
-        lines.append(f"Dialogue: 0,{ass_time(st)},{ass_time(en)},Sub,,0,0,0,,{{\\q2\\pos(540,{SUB_Y})\\fscx94\\fscy94\\t(0,90,\\fscx100\\fscy100)}}{txt}")
+        big = st < hook_end  # на хуке крупнее
+        sc0, sc1 = (112, 120) if big else (94, 100)
+        lines.append(f"Dialogue: 0,{ass_time(st)},{ass_time(en)},Sub,,0,0,0,,{{\\q2\\pos(540,{SUB_Y})\\fscx{sc0}\\fscy{sc0}\\t(0,90,\\fscx{sc1}\\fscy{sc1})}}{txt}")
+    if title:  # заголовок хука сверху: белый капс с тёмной обводкой, низ золотом; гаснет к вспышке
+        en = hook_end - 0.05
+        txt = f"{title[0]}\\N{{\\c&H{GOLD[2]:02X}{GOLD[1]:02X}{GOLD[0]:02X}&}}{title[1]}"
+        lines.append(f"Dialogue: 1,{ass_time(0)},{ass_time(en)},Title,,0,0,0,,{{\\q2\\pos(540,{TITLE_Y})\\fad(0,250)\\fscx80\\fscy80\\t(0,160,\\fscx100\\fscy100)}}{txt}")
     head = f"""[Script Info]
 PlayResX: {W}
 PlayResY: {H}
@@ -148,6 +183,7 @@ ScaledBorderAndShadow: yes
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
 Style: Sub,Montserrat ExtraBold,74,&H00FFFFFF,&H00FFFFFF,&H50000000,&H64000000,0,0,0,0,100,100,0,0,1,1.2,2.5,5,60,60,0,1
+Style: Title,Montserrat ExtraBold,124,&H00FFFFFF,&H00FFFFFF,&H00101010,&H78000000,0,0,0,0,100,100,0,0,1,6,5,5,50,50,0,1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
@@ -214,7 +250,6 @@ def build(cfg):
         fh.writelines(f"file '{f}'\n" for f in files)
     run(f"ffmpeg -v error -y -f concat -safe 0 -i {w}/list.txt -c copy {w}/joined.mov")
     total = body + ENDCARD
-    build_subs(timeline, allw, fix, f"{w}/subs.ass")
 
     spans, firsts = {}, []
     for st, en, part, plate in meta:
@@ -225,6 +260,8 @@ def build(cfg):
             spans[plate] = (min(s0, st), max(e0, en))
     hook = cfg.get("hook_plate", "hook")
     hook_end = spans[hook][1]
+    build_subs(timeline, allw, fix, f"{w}/subs.ass", onsets(f"{w}/audio.wav"), cfg.get("sub_words", 1),
+               hook_end, cfg.get("hook_title"))
 
     music = f"{w}/music.wav"
     if not os.path.exists(music):

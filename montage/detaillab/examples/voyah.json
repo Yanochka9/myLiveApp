@@ -5,7 +5,10 @@
  "music_start": 8,
  "music_vol": 0.22,
  "hook_plate": "hook",
- "lut_mix": 0.45,
+ "lut": "r5_light.cube",
+ "lut_mix": 1.0,
+ "hook_title": ["VOYAH COURAGE", "СЛОЖНЫЙ В ОКЛЕЙКЕ"],
+ "sub_words": 1,
  "endcard_bg_time": 95.0,
  "fix_words": {
   "воя": "voyah",
