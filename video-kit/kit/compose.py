@@ -164,6 +164,8 @@ class Gfx:
         card.paste(ph, (m, m))
         if text:
             f = self.font(font, size); bb = f.getbbox(text)
+            while bb[2] - bb[0] > width and size > 16:   # caption shrinks to the photo width
+                size -= 2; f = self.font(font, size); bb = f.getbbox(text)
             ImageDraw.Draw(card).text((m - bb[0], ph.height + m + (cap - (bb[3] - bb[1])) // 2 - bb[1]), text, font=f, fill=p.color('dark'))
         return card
 

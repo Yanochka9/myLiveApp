@@ -28,6 +28,7 @@ cp projects/trailblazer.json projects/new_car.json   # правим под но�
 python3 make.py projects/new_car.json fetch       # скачать исходники с Drive (+ музыку по поиску)
 python3 make.py projects/new_car.json analyze     # расшифровка речи + раскадровки всех клипов
 python3 make.py projects/new_car.json subs        # проверить субтитры
+python3 make.py projects/new_car.json check       # безопасная зона TikTok / Reels + ничего не закрывает лицо
 python3 make.py projects/new_car.json preview 1.5 8 20 33   # отдельные кадры -> work/new_car/preview/sheet.jpg
 python3 make.py projects/new_car.json draft       # быстрый черновик всего ролика
 python3 make.py projects/new_car.json render      # финал -> out/new_car.mp4

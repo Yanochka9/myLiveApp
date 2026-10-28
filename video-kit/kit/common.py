@@ -36,6 +36,7 @@ DEFAULT_SUBS = {
     'enabled': True, 'font': 'black', 'size': 64, 'y': 1330, 'color': '#FFFFFF',
     'highlight': 'accent', 'highlight_text': '#FFFFFF', 'mode': 'karaoke',
     'max_words': 3, 'max_chars': 17, 'uppercase': False, 'shadow': 0.55,
+    'margin': 150,                # side margin: phrases stay clear of the TikTok / Reels button column
     'replace': {}, 'merge': [],
 }
 

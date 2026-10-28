@@ -7,6 +7,7 @@
   python3 make.py <project.json> draft            whole video, fast 3D, lower quality
   python3 make.py <project.json> render           final video -> out/<name>.mp4
   python3 make.py <project.json> subs             print subtitle phrases with timings
+  python3 make.py <project.json> check            safe zone for TikTok / Reels + nothing over the presenter's face
 """
 import os, sys
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'kit'))
@@ -28,6 +29,8 @@ def main():
         from compose import subtitle_groups
         for g in subtitle_groups(p):
             print(f"{g['s']:6.2f}-{g['e']:6.2f}  " + ' | '.join(w[2] for w in g['words']))
+    elif cmd == 'check':
+        from check import check; check(p)
     elif cmd == 'preview':
         from compose import preview
         preview(p, [float(x) for x in rest if not x.startswith('--')], draft='--final' not in rest)
