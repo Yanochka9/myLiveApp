@@ -1,0 +1,109 @@
+{
+  "name": "wed",
+  "language": "ru",
+  "sources": {
+    "drive_folder": "https://drive.google.com/drive/folders/160OLv6UTTWdlHMyYtViljdtcL_rmjwpb",
+    "dir": "work/wed/src"
+  },
+  "output": "out/wed.mp4",
+  "theme": {
+    "accent": "#D9B26A",
+    "accent_light": "#F0D696",
+    "dark": "#1A1408",
+    "light": "#FFFFFF",
+    "on_accent": "#1A1408",
+    "link": "#E8C76A",
+    "flash": "#F3D9A0",
+    "paper": "#FAF7F0",
+    "glow": 6,
+    "vignette": 0.24,
+    "3d": {
+      "front": "#E2B84E",
+      "side": "#6B4E12",
+      "metallic": 0.8,
+      "roughness": 0.18,
+      "white": "#FFF8EC",
+      "dark": "#1A1408"
+    },
+    "fonts": {
+      "black": "assets/fonts/Manrope-ExtraBold.ttf",
+      "xbold": "assets/fonts/Manrope-ExtraBold.ttf",
+      "bold": "assets/fonts/Manrope-Bold.ttf",
+      "semibold": "assets/fonts/Manrope-SemiBold.ttf",
+      "black_italic": "assets/fonts/Manrope-ExtraBold.ttf"
+    },
+    "on_light": "#1A1408"
+  },
+  "grade": {
+    "lut": "assets/luts/refive_light.cube",
+    "lut_mix": 0.7,
+    "gamma": 0.97,
+    "contrast": 1.12,
+    "saturation": 1.08,
+    "warmth": 0.02,
+    "cool_shadows": 0.03
+  },
+  "subtitles": {
+    "enabled": true,
+    "size": 64,
+    "y": 1330,
+    "color": "#FFFFFF",
+    "highlight": "accent",
+    "highlight_text": "#1A1408",
+    "mode": "karaoke",
+    "max_words": 3,
+    "max_chars": 17,
+    "uppercase": false,
+    "replace": {
+      "Бьюи": "Buick",
+      "Конкорд": "Encore",
+      "1100": "1 100",
+      "нихуёво": ""
+    },
+    "merge": [
+      [
+        "1",
+        "2"
+      ],
+      [
+        "1",
+        "5"
+      ]
+    ]
+  },
+  "music": {
+    "file": "work/top3/music_fcd.m4a",
+    "start": 8.85,
+    "volume": 0.14,
+    "end_volume": 0.42
+  },
+  "voice": {
+    "target_lufs": -17.5
+  },
+  "aroll": [
+    {
+      "clip": "IMG_1298.MOV",
+      "in": 0,
+      "out": 5
+    }
+  ],
+  "cutaways": [],
+  "endcard": {
+    "clip": "IMG_1298.MOV",
+    "src": 0.0,
+    "duration": 2.54,
+    "speed": 0.55,
+    "zoom": [
+      1.06,
+      1.14
+    ],
+    "blur": 14,
+    "tint": "accent",
+    "darken": 0.38,
+    "tin": "flash"
+  },
+  "punch": [],
+  "mask_cleanup": {},
+  "elements": [],
+  "sfx": []
+}
