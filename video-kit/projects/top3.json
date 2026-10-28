@@ -1,0 +1,82 @@
+{
+  "name": "top3",
+  "language": "ru",
+  "sources": {
+    "drive_folder": "https://drive.google.com/drive/folders/1SHcBtzJ0bhHrHJU_MskwP83aHakVMJ8X",
+    "dir": "work/top3/src"
+  },
+  "output": "out/top3.mp4",
+  "theme": {
+    "accent": "#E20E2A",
+    "accent_light": "#FF3448",
+    "dark": "#280608",
+    "light": "#FFFFFF",
+    "link": "#FF4658",
+    "flash": "#FF4050",
+    "glow": 10,
+    "vignette": 0.22,
+    "3d": {
+      "front": "#ED2030",
+      "side": "#700012",
+      "metallic": 0.35,
+      "roughness": 0.16,
+      "white": "#F9F7F7",
+      "dark": "#300006"
+    }
+  },
+  "grade": {
+    "gamma": 1.08,
+    "contrast": 1.05,
+    "saturation": 1.06,
+    "warmth": 0.015,
+    "cool_shadows": 0.02
+  },
+  "subtitles": {
+    "enabled": true,
+    "size": 64,
+    "y": 1330,
+    "color": "#FFFFFF",
+    "highlight": "accent",
+    "highlight_text": "#FFFFFF",
+    "mode": "karaoke",
+    "max_words": 3,
+    "max_chars": 17,
+    "uppercase": false,
+    "replace": {},
+    "merge": []
+  },
+  "music": {
+    "file": "work/top3/music.m4a",
+    "start": 5.0,
+    "volume": 0.14,
+    "end_volume": 0.42
+  },
+  "voice": {
+    "target_lufs": -17.5
+  },
+  "aroll": [
+    {
+      "clip": "IMG_2176.MOV",
+      "in": 0,
+      "out": 5
+    }
+  ],
+  "cutaways": [],
+  "endcard": {
+    "clip": "IMG_2217.MOV",
+    "src": 0,
+    "duration": 2.54,
+    "speed": 0.55,
+    "zoom": [
+      1.06,
+      1.14
+    ],
+    "blur": 14,
+    "tint": "accent",
+    "darken": 0.38,
+    "tin": "flash"
+  },
+  "punch": [],
+  "mask_cleanup": {},
+  "elements": []
+}
