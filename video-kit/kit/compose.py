@@ -168,6 +168,34 @@ class Gfx:
         return card
 
     @functools.lru_cache(maxsize=None)
+    def gold(self, text, size, font='black', outline=0.06):
+        """text filled with the accent gradient (light top -> accent bottom), dark outline, soft shadow"""
+        p = self.p; f = self.font(font, size); bb = f.getbbox(text); ow = max(2, int(size * outline))
+        w, h = bb[2] - bb[0] + 2 * ow + 20, bb[3] - bb[1] + 2 * ow + 20
+        m = Image.new('L', (w, h), 0); ImageDraw.Draw(m).text((10 + ow - bb[0], 10 + ow - bb[1]), text, font=f, fill=255)
+        o = Image.new('L', (w, h), 0)
+        ImageDraw.Draw(o).text((10 + ow - bb[0], 10 + ow - bb[1]), text, font=f, fill=255, stroke_width=ow, stroke_fill=255)
+        g = self.rounded_grad(w, h, 0, p.color('accent_light'), p.color('accent'))
+        im = Image.new('RGBA', (w, h), (*p.color('dark'), 0)); im.putalpha(o)
+        g.putalpha(m); im.alpha_composite(g)
+        return self.shadow(im, blur=12, off=(0, 6), op=0.45)
+
+    @functools.lru_cache(maxsize=None)
+    def rank(self, n, size, word='МЕСТО'):
+        """place badge: gold disc with a big digit + dark pill with the word, overlapping"""
+        p = self.p; D = int(size * 1.7)
+        disc = self.rounded_grad(D, D, D // 2, p.color('accent_light'), p.color('accent'))
+        f = self.font('black', int(size * 1.15)); bb = f.getbbox(str(n))
+        ImageDraw.Draw(disc).text(((D - (bb[2] - bb[0])) / 2 - bb[0], (D - (bb[3] - bb[1])) / 2 - bb[1]), str(n), font=f, fill=p.color('dark'))
+        fw = self.font('black', int(size * 0.55)); wb = fw.getbbox(word); cap = fw.getbbox('НЁ')
+        ph = int(size * 0.95); pw = (wb[2] - wb[0]) + int(size * 0.9) + D // 2
+        dk = p.color('dark'); pill = self.rounded_grad(pw, ph, ph // 2, tuple(min(255, c + 22) for c in dk), dk)
+        ImageDraw.Draw(pill).text((D // 2 + int(size * 0.4) - wb[0], (ph - (cap[3] - cap[1])) / 2 - cap[1]), word, font=fw, fill=p.color('light'))
+        im = Image.new('RGBA', (D // 2 + pw, D), (0, 0, 0, 0))
+        im.alpha_composite(pill, (D // 2, (D - ph) // 2)); im.alpha_composite(disc, (0, 0))
+        return self.shadow(im, blur=16, off=(0, 8), op=0.4)
+
+    @functools.lru_cache(maxsize=None)
     def icon(self, kind, size, color):
         im = doodle(kind, size, (*self.p.color(color), 255), (*self.p.color('dark'), 255))
         return self.shadow(im, blur=8, off=(0, 4), op=0.35)
@@ -559,10 +587,22 @@ class Comp:
             im = g.icon(el['icon'], el.get('size', 110), el.get('color', 'accent'))
             ang = 8 * np.sin((T - a) * 4.2) * el.get('rock', 1.0)
             blend(dst, im.rotate(ang, resample=Image.BICUBIC, expand=True), x, y, s * sc, al)
-        elif t == 'counter':  # number runs up to its value
+        elif t == 'counter':  # number runs up to its value; style 'gold' + optional odometer bar under it
             u = eo3((T - a) / el.get('dur', 0.8))
             txt = el.get('prefix', '') + fmt_num(el.get('from', 0) + (el['to'] - el.get('from', 0)) * u) + el.get('suffix', '')
-            blend(dst, g.label(txt, el.get('size', 120), el.get('font', 'black'), el.get('color', 'text')), x, y, s * sc, al)
+            im = g.gold(txt, el.get('size', 120)) if el.get('style') == 'gold' else g.label(txt, el.get('size', 120), el.get('font', 'black'), el.get('color', 'text'))
+            blend(dst, im, x, y, s * sc, al)
+            if el.get('bar'):
+                bw, bh = el['bar'], max(10, el.get('size', 120) // 9); by = y + el.get('size', 120) * 0.72
+                bg = g.rounded_grad(bw, bh, bh // 2, self.p.color('dark'), self.p.color('dark'))
+                blend(dst, bg, x, by, s, al * 0.8)
+                fw = max(bh, int(bw * u))
+                fg = g.rounded_grad(fw, bh, bh // 2, self.p.color('accent_light'), self.p.color('accent'))
+                blend(dst, fg, x - bw / 2 + fw / 2, by, s, al)
+        elif t == 'gold':     # gradient-filled title text
+            blend(dst, g.gold(el['text'], el.get('size', 90), el.get('font', 'black')), x, y, s * sc, al)
+        elif t == 'rank':     # place badge
+            blend(dst, g.rank(el['n'], el.get('size', 100), el.get('word', 'МЕСТО')), x, y, s * sc, al)
         elif t == 'wipe':     # wavy colour bands sweep across the cut, optional big text while covered
             self.draw_wipe(dst, el, T, a, b)
         elif t == 'photo':   # polaroid drops in with a swing and settles at its tilt
