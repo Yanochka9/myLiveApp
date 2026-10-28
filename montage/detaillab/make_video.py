@@ -135,8 +135,8 @@ def onsets(wav):
 
 
 def snap(t, db, lo):
-    """Начало звука перед словом: первый громкий кадр после тишины в окне [t-0.35, t+0.05]."""
-    i0, i1 = max(int((t - 0.35) * 100), int(lo * 100), 0), min(int((t + 0.05) * 100), len(db) - 1)
+    """Начало звука перед словом: первый громкий кадр после тишины в окне [t-0.6, t+0.05], не раньше lo."""
+    i0, i1 = max(int((t - 0.6) * 100), int(lo * 100), 0), min(int((t + 0.05) * 100), len(db) - 1)
     quiet = None
     for i in range(i0, i1):
         if db[i] < -40:
@@ -149,14 +149,18 @@ def snap(t, db, lo):
 def build_subs(timeline, allw, fix, path, db, n_words=1, hook_end=0.0, title=None):
     items = []
     for si, (a, b, o) in enumerate(timeline):
+        prev = None  # не залезать на предыдущее слово
         for x in allw:
             if a <= (x["s"] + x["e"]) / 2 <= b:
-                s0 = snap(max(x["s"], a), db, a)
-                items.append([o + max(s0 - SUB_LEAD, a) - a, o + min(x["e"], b) - a, norm(x["w"], fix), si])
+                s0 = snap(max(x["s"], a), db, a if prev is None else prev + 0.15)
+                shown = max(s0 - SUB_LEAD, a if prev is None else prev + 0.12)
+                items.append([o + shown - a, o + min(x["e"], b) - a, norm(x["w"], fix), si])
+                prev = s0
     items = [i for i in items if i[2]]
     groups, cur = [], []
     for it in items:  # n_words слов, не через склейку
-        if cur and (len(cur) == n_words or it[3] != cur[-1][3] or len(" ".join(c[2] for c in cur + [it])) > 14 or it[0] - cur[-1][1] > 0.3):
+        short = it[0] - cur[-1][0] < 0.15 if cur else False  # слишком быстрое слово — вместе со следующим
+        if cur and ((len(cur) >= n_words and not short) or it[3] != cur[-1][3] or len(" ".join(c[2] for c in cur + [it])) > 14 or it[0] - cur[-1][1] > 0.3):
             groups.append(cur); cur = []
         cur.append(it)
     if cur:
