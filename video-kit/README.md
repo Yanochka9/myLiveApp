@@ -102,9 +102,10 @@ python3 -I kit/cover.py work/top3/src/IMG_2216.MOV 5.5 out/top3_cover.jpg "ТО�
 | `label` | текст без подложки: `text`, `size`, `font`, `color` |
 | `callout` | плашка с линией-указателем: `text`, `point: [x, y]` |
 | `logo` | картинка: `file` (PNG с прозрачностью) |
+| `measure` | размерная линия растёт от середины к краям, засечки и золотая подпись («5 МЕТРОВ»): `x0`, `x1`, `y`, `text`, `size` |
 | `wipe` | шторка из волнистых цветных полос на стыке (идея из ролика Palisade): `text` (крупно, пока кадр закрыт), `bands`, `colors`; стык ставить на ~57 % длины шторки |
 | `circle` | обводка «маркером» вокруг детали: `rx`, `ry`, `width`, `color`, `draw` (время рисования) |
-| `icon` | дудл-иконка с покачиванием: `icon` = `snow` / `spark` / `sun` / `flame` / `heart`, `size`, `color` |
+| `icon` | дудл-иконка с покачиванием: `icon` = `snow` / `spark` / `sun` / `flame` / `heart` / `paw` / `bag` / `stroller` / `mute`, `size`, `color` |
 | `counter` | число набегает до значения (как «187 л.с.» у Changan): `to`, `from`, `suffix`, `prefix`, `dur`, `size`; `style: "gold"` — золотой текст, `bar: 640` — полоса-одометр под числом |
 | `gold` | крупный текст с градиентом цвета темы и тёмным контуром: `text`, `size` |
 | `rank` | значок места: диск с цифрой + плашка «МЕСТО»: `n`, `size`, `word` |

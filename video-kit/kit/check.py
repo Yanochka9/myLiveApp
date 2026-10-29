@@ -88,7 +88,7 @@ def check(p):
                 cache[k] = [] if res is None else [tuple(v * 2 for v in r[:4]) for r in res]
             for fx, fy, fw, fh in cache[k]:
                 if x0 < fx + fw * 1.15 and x1 > fx - fw * 0.15 and y0 < fy + fh * 1.1 and y1 > fy - fh * 0.25:
-                    hits += 1; print(f"  {T:6.2f} {el['type']:7s} {el.get('text', '')} закрывает лицо ({fx:.0f},{fy:.0f})"); break
+                    hits += 1; print(f"  {T:6.2f} {el['type']:7s} {el.get('text', '')} закрывает лицо ({fx:.0f},{fy:.0f} {fw:.0f}x{fh:.0f}), элемент ({x0:.0f},{y0:.0f})-({x1:.0f},{y1:.0f})"); break
             else: continue
             break
     print('  лицо свободно' if not hits else f'  перекрытий: {hits}')

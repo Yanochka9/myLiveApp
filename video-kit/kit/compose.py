@@ -296,6 +296,26 @@ def doodle(kind, size, fill, line):
         t = np.linspace(0, 2 * np.pi, 80)
         pts = [(c + S * 0.026 * 16 * np.sin(u) ** 3, c - S * 0.026 * (13 * np.cos(u) - 5 * np.cos(2 * u) - 2 * np.cos(3 * u) - np.cos(4 * u))) for u in t]
         d.polygon(pts, fill=fill, outline=line, width=lw)
+    elif kind == 'paw':
+        d.ellipse((c - S * 0.2, c - S * 0.02, c + S * 0.2, c + S * 0.34), fill=fill, outline=line, width=lw)
+        for dx, dy in ((-0.3, -0.12), (-0.11, -0.3), (0.11, -0.3), (0.3, -0.12)):
+            x, y = c + dx * S, c + dy * S; r = S * 0.1
+            d.ellipse((x - r, y - r * 1.2, x + r, y + r * 1.2), fill=fill, outline=line, width=lw)
+    elif kind == 'bag':
+        d.arc((c - S * 0.18, c - S * 0.4, c + S * 0.18, c - S * 0.04), 180, 360, fill=line, width=lw * 2)
+        d.rounded_rectangle((c - S * 0.36, c - S * 0.2, c + S * 0.36, c + S * 0.38), S * 0.08, fill=fill, outline=line, width=lw)
+    elif kind == 'stroller':
+        d.pieslice((c - S * 0.36, c - S * 0.38, c + S * 0.24, c + S * 0.22), 180, 360, fill=fill, outline=line, width=lw)
+        d.rectangle((c - S * 0.36, c - S * 0.08, c + S * 0.24, c + S * 0.12), fill=fill, outline=line, width=lw)
+        d.line([(c + S * 0.24, c - S * 0.08), (c + S * 0.42, c - S * 0.36)], fill=line, width=lw)
+        for x in (-0.24, 0.12):
+            r = S * 0.1; d.ellipse((c + x * S - r, c + S * 0.24 - r, c + x * S + r, c + S * 0.24 + r), fill=fill, outline=line, width=lw)
+    elif kind == 'mute':
+        d.polygon([(c - S * 0.4, c - S * 0.12), (c - S * 0.24, c - S * 0.12), (c - S * 0.02, c - S * 0.34), (c - S * 0.02, c + S * 0.34),
+                   (c - S * 0.24, c + S * 0.12), (c - S * 0.4, c + S * 0.12)], fill=fill, outline=line, width=lw)
+        for col, w in ((line, lw * 3), (fill, int(lw * 1.6))):
+            d.line([(c + S * 0.1, c - S * 0.16), (c + S * 0.42, c + S * 0.16)], fill=col, width=w)
+            d.line([(c + S * 0.1, c + S * 0.16), (c + S * 0.42, c - S * 0.16)], fill=col, width=w)
     return im.resize((size, size), Image.LANCZOS)
 
 
@@ -605,6 +625,16 @@ class Comp:
             blend(dst, g.gold(el['text'], el.get('size', 90), el.get('font', 'black')), x, y, s * sc, al)
         elif t == 'rank':     # place badge
             blend(dst, g.rank(el['n'], el.get('size', 100), el.get('word', 'МЕСТО')), x, y, s * sc, al)
+        elif t == 'measure':  # dimension line grows from the middle to both ends, ticks + gold label
+            u, v = eo3((T - a) / el.get('draw', 0.5)), clamp((b - T) / 0.2)
+            x0, x1, yy = el['x0'], el['x1'], el['y']; cx = (x0 + x1) / 2; half = (x1 - x0) / 2 * u
+            col = self.p.color(el.get('color', 'accent')); w = el.get('width', 8)
+            for xa, xb in ((cx, cx - half), (cx, cx + half)):
+                draw_stroke(dst, np.array([[xa, yy], [xb, yy]]), 1.0, v, col, w)
+            if u > 0.98:
+                for xe in (x0, x1): draw_stroke(dst, np.array([[xe, yy - 34], [xe, yy + 34]]), 1.0, v, col, w)
+            if el.get('text'):
+                blend(dst, g.gold(el['text'], el.get('size', 110)), cx, yy - el.get('size', 110) * 0.75, s, al * clamp(u * 1.5))
         elif t == 'wipe':     # wavy colour bands sweep across the cut, optional big text while covered
             self.draw_wipe(dst, el, T, a, b)
         elif t == 'photo':   # polaroid drops in with a swing and settles at its tilt

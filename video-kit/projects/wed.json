@@ -7,41 +7,41 @@
   },
   "output": "out/wed.mp4",
   "theme": {
-    "accent": "#D9B26A",
-    "accent_light": "#F0D696",
-    "dark": "#1A1408",
+    "accent": "#C9CED6",
+    "accent_light": "#F4F6F9",
+    "dark": "#0E1116",
     "light": "#FFFFFF",
-    "on_accent": "#1A1408",
-    "link": "#E8C76A",
-    "flash": "#F3D9A0",
-    "paper": "#FAF7F0",
-    "glow": 6,
-    "vignette": 0.24,
+    "on_accent": "#0E1116",
+    "on_light": "#0E1116",
+    "link": "#DDE2EA",
+    "flash": "#E8ECF2",
+    "paper": "#F5F6F8",
+    "glow": 4,
+    "vignette": 0.26,
     "3d": {
-      "front": "#E2B84E",
-      "side": "#6B4E12",
-      "metallic": 0.8,
-      "roughness": 0.18,
-      "white": "#FFF8EC",
-      "dark": "#1A1408"
+      "front": "#EEF1F5",
+      "side": "#8A919C",
+      "metallic": 0.45,
+      "roughness": 0.22,
+      "white": "#FFFFFF",
+      "dark": "#0E1116"
     },
     "fonts": {
-      "black": "assets/fonts/Manrope-ExtraBold.ttf",
+      "black": "assets/fonts/Oswald-Bold.ttf",
       "xbold": "assets/fonts/Manrope-ExtraBold.ttf",
       "bold": "assets/fonts/Manrope-Bold.ttf",
       "semibold": "assets/fonts/Manrope-SemiBold.ttf",
-      "black_italic": "assets/fonts/Manrope-ExtraBold.ttf"
-    },
-    "on_light": "#1A1408"
+      "black_italic": "assets/fonts/Oswald-Bold.ttf"
+    }
   },
   "grade": {
     "lut": "assets/luts/refive_light.cube",
-    "lut_mix": 0.7,
-    "gamma": 0.97,
+    "lut_mix": 0.6,
+    "gamma": 0.98,
     "contrast": 1.12,
-    "saturation": 1.08,
-    "warmth": 0.02,
-    "cool_shadows": 0.03
+    "saturation": 0.92,
+    "warmth": -0.01,
+    "cool_shadows": 0.05
   },
   "subtitles": {
     "enabled": true,
@@ -49,31 +49,23 @@
     "y": 1330,
     "color": "#FFFFFF",
     "highlight": "accent",
-    "highlight_text": "#1A1408",
+    "highlight_text": "#0E1116",
     "mode": "karaoke",
     "max_words": 3,
     "max_chars": 17,
     "uppercase": false,
     "replace": {
-      "Бьюи": "Buick",
-      "Конкорд": "Encore",
-      "1100": "1 100",
-      "нихуёво": ""
+      "Рыбалка": "Рыбалко",
+      "4000": "4 000",
+      "2016": "2016",
+      "360": "360",
+      "все": "всё"
     },
-    "merge": [
-      [
-        "1",
-        "2"
-      ],
-      [
-        "1",
-        "5"
-      ]
-    ]
+    "merge": []
   },
   "music": {
-    "file": "work/top3/music_fcd.m4a",
-    "start": 8.85,
+    "file": "work/wed/music.m4a",
+    "start": 0.0,
     "volume": 0.14,
     "end_volume": 0.42
   },
@@ -82,14 +74,113 @@
   },
   "aroll": [
     {
+      "clip": "IMG_1285.MOV",
+      "in": 0.38,
+      "out": 4.35,
+      "zoom": [
+        1.0,
+        1.06
+      ]
+    },
+    {
+      "clip": "IMG_1287.MOV",
+      "in": 0.5,
+      "out": 6.25,
+      "zoom": [
+        1.0,
+        1.06
+      ]
+    },
+    {
+      "clip": "IMG_1293.MOV",
+      "in": 0.8,
+      "out": 6.95,
+      "zoom": [
+        1.0,
+        1.06
+      ]
+    },
+    {
+      "clip": "IMG_1294.MOV",
+      "in": 0.5,
+      "out": 6.55,
+      "zoom": [
+        1.0,
+        1.06
+      ]
+    },
+    {
+      "clip": "IMG_1296.MOV",
+      "in": 0.62,
+      "out": 1.75,
+      "zoom": [
+        1.04,
+        1.1
+      ]
+    },
+    {
       "clip": "IMG_1298.MOV",
-      "in": 0,
-      "out": 5
+      "in": 0.65,
+      "out": 10.6,
+      "zoom": [
+        1.0,
+        1.06
+      ]
     }
   ],
-  "cutaways": [],
+  "cutaways": [
+    {
+      "clip": "IMG_1299.MOV",
+      "src": 0.0,
+      "at": "w:5-0.05",
+      "until": 5.9,
+      "zoom": [
+        1.02,
+        1.08
+      ],
+      "tin": "zoom"
+    },
+    {
+      "clip": "IMG_1301.MOV",
+      "src": 0.0,
+      "at": "w:зато-0.05",
+      "until": 8.4,
+      "zoom": [
+        1.1,
+        1.02
+      ],
+      "drift": [
+        -20,
+        20
+      ],
+      "tout": "zoom"
+    },
+    {
+      "clip": "IMG_1304.MOV",
+      "src": 0.0,
+      "at": "w:коленками-0.05",
+      "until": 19.25,
+      "zoom": [
+        1.04,
+        1.12
+      ],
+      "tin": "zoom"
+    },
+    {
+      "clip": "IMG_1300.MOV",
+      "src": 0.0,
+      "at": "w:полный-0.05",
+      "until": 27.62,
+      "zoom": [
+        1.12,
+        1.03
+      ],
+      "tin": "zoom",
+      "tout": "zoom"
+    }
+  ],
   "endcard": {
-    "clip": "IMG_1298.MOV",
+    "clip": "IMG_1299.MOV",
     "src": 0.0,
     "duration": 2.54,
     "speed": 0.55,
@@ -102,8 +193,590 @@
     "darken": 0.38,
     "tin": "flash"
   },
-  "punch": [],
+  "punch": [
+    {
+      "at": "w:360",
+      "amount": 0.05
+    },
+    {
+      "at": "w:4000",
+      "amount": 0.06
+    }
+  ],
   "mask_cleanup": {},
-  "elements": [],
-  "sfx": []
+  "elements": [
+    {
+      "type": "3d",
+      "kind": "rise",
+      "text": "MERCEDES-BENZ",
+      "layer": "behind",
+      "at": 0.15,
+      "until": 3.97,
+      "x": 540,
+      "y": 545,
+      "scale": 0.62,
+      "canvas": [
+        1080,
+        400
+      ],
+      "frac": 0.9,
+      "fade_bottom": 0.0
+    },
+    {
+      "type": "3d",
+      "kind": "rise",
+      "text": "GLS",
+      "layer": "behind",
+      "at": 0.35,
+      "until": 3.97,
+      "x": 540,
+      "y": 760,
+      "scale": 0.9,
+      "canvas": [
+        1080,
+        700
+      ],
+      "frac": 0.62
+    },
+    {
+      "type": "measure",
+      "x0": 130,
+      "x1": 950,
+      "y": 760,
+      "text": "5 МЕТРОВ",
+      "size": 110,
+      "at": "w:5-0.05",
+      "until": 5.9
+    },
+    {
+      "type": "pill",
+      "text": "НЕ ЗАХОЧЕШЬ ПОМЕНЬШЕ",
+      "size": 54,
+      "style": "accent",
+      "at": "w:зато-0.05",
+      "until": 8.4,
+      "x": 540,
+      "y": 330
+    },
+    {
+      "type": "icon",
+      "icon": "spark",
+      "size": 100,
+      "at": "w:зато",
+      "until": 8.4,
+      "x": 930,
+      "y": 290
+    },
+    {
+      "type": "pill",
+      "text": "ВНУТРИ ТИШИНА",
+      "size": 58,
+      "style": "light",
+      "at": "w:внутри-0.05",
+      "until": "w:360-0.1",
+      "x": 540,
+      "y": 330
+    },
+    {
+      "type": "icon",
+      "icon": "mute",
+      "size": 200,
+      "at": "w:тишина-0.05",
+      "until": "w:360-0.1",
+      "x": 540,
+      "y": 500
+    },
+    {
+      "type": "pill",
+      "text": "МОТОР",
+      "size": 44,
+      "style": "dark",
+      "at": "w:360-0.1",
+      "until": "w:просто-0.1",
+      "x": 540,
+      "y": 290
+    },
+    {
+      "type": "counter",
+      "to": 360,
+      "suffix": " Л.С.",
+      "style": "gold",
+      "size": 150,
+      "dur": 1.0,
+      "bar": 560,
+      "at": "w:360-0.1",
+      "until": "w:просто-0.1",
+      "x": 540,
+      "y": 430
+    },
+    {
+      "type": "photo",
+      "clip": "IMG_1307.MOV",
+      "src": 0.6,
+      "crop": [
+        60,
+        560,
+        960,
+        960
+      ],
+      "text": "НАЖАЛА И ПОЕХАЛА",
+      "size": 36,
+      "width": 360,
+      "tilt": -5,
+      "at": "w:просто-0.05",
+      "until": 15.87,
+      "x": 700,
+      "y": 600
+    },
+    {
+      "type": "pill",
+      "text": "СЗАДИ — ПО-ЧЕЛОВЕЧЕСКИ",
+      "size": 50,
+      "style": "light",
+      "at": "w:сзади-0.05",
+      "until": "w:коленками-0.05",
+      "x": 540,
+      "y": 330,
+      "icon": "check"
+    },
+    {
+      "type": "pill",
+      "text": "НЕ КОЛЕНКАМИ В СПИНКУ",
+      "size": 52,
+      "style": "accent",
+      "at": "w:коленками-0.05",
+      "until": 19.25,
+      "x": 540,
+      "y": 330
+    },
+    {
+      "type": "pill",
+      "text": "СОБАКА",
+      "size": 50,
+      "style": "light",
+      "at": "w:собака-0.05",
+      "until": "w:поместится-0.1",
+      "x": 750,
+      "y": 280
+    },
+    {
+      "type": "icon",
+      "icon": "paw",
+      "size": 84,
+      "at": "w:собака-0.05",
+      "until": "w:поместится-0.1",
+      "x": 975,
+      "y": 280
+    },
+    {
+      "type": "pill",
+      "text": "СУМКА",
+      "size": 50,
+      "style": "light",
+      "at": "w:сумка-0.05",
+      "until": "w:поместится-0.1",
+      "x": 750,
+      "y": 380
+    },
+    {
+      "type": "icon",
+      "icon": "bag",
+      "size": 84,
+      "at": "w:сумка-0.05",
+      "until": "w:поместится-0.1",
+      "x": 975,
+      "y": 380
+    },
+    {
+      "type": "pill",
+      "text": "КОЛЯСКА",
+      "size": 50,
+      "style": "light",
+      "at": "w:коляска-0.05",
+      "until": "w:поместится-0.1",
+      "x": 750,
+      "y": 480
+    },
+    {
+      "type": "icon",
+      "icon": "stroller",
+      "size": 84,
+      "at": "w:коляска-0.05",
+      "until": "w:поместится-0.1",
+      "x": 975,
+      "y": 480
+    },
+    {
+      "type": "pill",
+      "text": "ВСЁ ПОМЕСТИТСЯ",
+      "size": 58,
+      "style": "accent",
+      "at": "w:поместится-0.1",
+      "until": 21.92,
+      "x": 540,
+      "y": 330,
+      "icon": "check"
+    },
+    {
+      "type": "pill",
+      "text": "ТРЕТИЙ РЯД",
+      "size": 64,
+      "style": "accent",
+      "at": "w:даже-0.1",
+      "until": 23.05,
+      "x": 540,
+      "y": 330
+    },
+    {
+      "type": "icon",
+      "icon": "spark",
+      "size": 100,
+      "at": "w:даже",
+      "until": 23.05,
+      "x": 860,
+      "y": 270
+    },
+    {
+      "type": "gold",
+      "text": "2016",
+      "size": 170,
+      "at": "w:2016-0.05",
+      "until": "w:пробег-0.05",
+      "x": 540,
+      "y": 380
+    },
+    {
+      "type": "pill",
+      "text": "ГОД ВЫПУСКА",
+      "size": 44,
+      "style": "dark",
+      "at": "w:2016+0.1",
+      "until": "w:пробег-0.05",
+      "x": 540,
+      "y": 520
+    },
+    {
+      "type": "pill",
+      "text": "ПРОБЕГ",
+      "size": 44,
+      "style": "dark",
+      "at": "w:92-0.1",
+      "until": "w:полный-0.05",
+      "x": 540,
+      "y": 290
+    },
+    {
+      "type": "counter",
+      "to": 92000,
+      "suffix": " КМ",
+      "style": "gold",
+      "size": 140,
+      "dur": 1.2,
+      "bar": 640,
+      "at": "w:92-0.1",
+      "until": "w:полный-0.05",
+      "x": 540,
+      "y": 420
+    },
+    {
+      "type": "pill",
+      "text": "ПОЛНЫЙ ПРИВОД",
+      "size": 64,
+      "style": "accent",
+      "at": "w:полный-0.05",
+      "until": 27.62,
+      "x": 540,
+      "y": 330,
+      "icon": "check"
+    },
+    {
+      "type": "circle",
+      "at": "w:полный",
+      "until": 27.62,
+      "x": 600,
+      "y": 1110,
+      "rx": 300,
+      "ry": 290,
+      "width": 10
+    },
+    {
+      "type": "pill",
+      "text": "ПЕРВЫЙ ВЗНОС",
+      "size": 44,
+      "style": "dark",
+      "at": "w:первоначальным-0.05",
+      "until": "w:адресу-0.05",
+      "x": 540,
+      "y": 470
+    },
+    {
+      "type": "3d",
+      "kind": "rise",
+      "text": "$4 000",
+      "layer": "behind",
+      "extrude": 0.22,
+      "stagger": 3,
+      "canvas": [
+        1080,
+        820
+      ],
+      "frac": 0.9,
+      "fade_bottom": 0.3,
+      "at": "w:первоначальным-0.05",
+      "until": "w:адресу-0.05",
+      "x": 540,
+      "y": 770,
+      "scale": 0.72
+    },
+    {
+      "type": "3d",
+      "kind": "pin",
+      "at": "w:адресу-0.05",
+      "until": "speech_end",
+      "x": 190,
+      "y": 600,
+      "scale": 0.6
+    },
+    {
+      "type": "pill",
+      "text": "Минск, ул. Рыбалко, 13А",
+      "size": 42,
+      "style": "light",
+      "at": "w:адресу",
+      "until": "speech_end",
+      "x": 590,
+      "y": 640
+    },
+    {
+      "type": "logo",
+      "file": "assets/belavto_logo.png",
+      "at": 33.15,
+      "until": "end",
+      "x": 540,
+      "y": 380,
+      "scale": 0.82
+    },
+    {
+      "type": "gold",
+      "text": "MERCEDES-BENZ  ·  2016",
+      "size": 44,
+      "at": 33.3,
+      "until": "end",
+      "x": 540,
+      "y": 590
+    },
+    {
+      "type": "3d",
+      "kind": "spin",
+      "text": "GLS",
+      "at": "speech_end",
+      "until": "end",
+      "x": 540,
+      "y": 790,
+      "scale": 0.55
+    },
+    {
+      "type": "pill",
+      "text": "первый взнос $4 000",
+      "size": 50,
+      "style": "accent",
+      "at": 33.5,
+      "until": "end",
+      "x": 540,
+      "y": 1020
+    },
+    {
+      "type": "pill",
+      "text": "полный привод  ·  92 000 км",
+      "size": 34,
+      "style": "dark",
+      "at": 33.7,
+      "until": "end",
+      "x": 540,
+      "y": 1110,
+      "font": "bold"
+    },
+    {
+      "type": "label",
+      "text": "Минск, ул. Рыбалко, 13А",
+      "size": 40,
+      "at": 33.9,
+      "until": "end",
+      "x": 540,
+      "y": 1200
+    },
+    {
+      "type": "label",
+      "text": "belautocenter.by",
+      "size": 50,
+      "font": "black",
+      "color": "link",
+      "at": 34.05,
+      "until": "end",
+      "x": 540,
+      "y": 1275
+    }
+  ],
+  "sfx": [
+    {
+      "file": "assets/sfx/swish_soft.wav",
+      "at": 3.97,
+      "peak": 0.2,
+      "gain": 0.05
+    },
+    {
+      "file": "assets/sfx/swish_soft.wav",
+      "at": 9.72,
+      "peak": 0.2,
+      "gain": 0.05
+    },
+    {
+      "file": "assets/sfx/swish_soft.wav",
+      "at": 15.87,
+      "peak": 0.2,
+      "gain": 0.05
+    },
+    {
+      "file": "assets/sfx/swish_soft.wav",
+      "at": 23.05,
+      "peak": 0.2,
+      "gain": 0.05
+    },
+    {
+      "file": "assets/sfx/swish_soft.wav",
+      "at": "speech_end",
+      "peak": 0.2,
+      "gain": 0.05
+    },
+    {
+      "file": "assets/sfx/belavto_click3.wav",
+      "at": "w:просто-0.05",
+      "gain": 0.07
+    },
+    {
+      "file": "assets/sfx/belavto_click1.wav",
+      "at": "w:собака-0.05",
+      "gain": 0.06
+    },
+    {
+      "file": "assets/sfx/belavto_click1.wav",
+      "at": "w:сумка-0.05",
+      "gain": 0.06
+    },
+    {
+      "file": "assets/sfx/belavto_click1.wav",
+      "at": "w:коляска-0.05",
+      "gain": 0.06
+    },
+    {
+      "file": "assets/sfx/belavto_click5.wav",
+      "at": "w:360-0.071",
+      "gain": 0.043
+    },
+    {
+      "file": "assets/sfx/belavto_click5.wav",
+      "at": "w:360-0.041",
+      "gain": 0.041
+    },
+    {
+      "file": "assets/sfx/belavto_click5.wav",
+      "at": "w:360-0.009",
+      "gain": 0.039
+    },
+    {
+      "file": "assets/sfx/belavto_click5.wav",
+      "at": "w:360+0.026",
+      "gain": 0.037
+    },
+    {
+      "file": "assets/sfx/belavto_click5.wav",
+      "at": "w:360+0.064",
+      "gain": 0.036
+    },
+    {
+      "file": "assets/sfx/belavto_click5.wav",
+      "at": "w:360+0.106",
+      "gain": 0.034
+    },
+    {
+      "file": "assets/sfx/belavto_click5.wav",
+      "at": "w:360+0.153",
+      "gain": 0.032
+    },
+    {
+      "file": "assets/sfx/belavto_click5.wav",
+      "at": "w:360+0.207",
+      "gain": 0.03
+    },
+    {
+      "file": "assets/sfx/belavto_click5.wav",
+      "at": "w:360+0.270",
+      "gain": 0.028
+    },
+    {
+      "file": "assets/sfx/belavto_click5.wav",
+      "at": "w:360+0.350",
+      "gain": 0.026
+    },
+    {
+      "file": "assets/sfx/belavto_click5.wav",
+      "at": "w:360+0.463",
+      "gain": 0.024
+    },
+    {
+      "file": "assets/sfx/belavto_click5.wav",
+      "at": "w:92-0.066",
+      "gain": 0.043
+    },
+    {
+      "file": "assets/sfx/belavto_click5.wav",
+      "at": "w:92-0.029",
+      "gain": 0.041
+    },
+    {
+      "file": "assets/sfx/belavto_click5.wav",
+      "at": "w:92+0.010",
+      "gain": 0.039
+    },
+    {
+      "file": "assets/sfx/belavto_click5.wav",
+      "at": "w:92+0.052",
+      "gain": 0.037
+    },
+    {
+      "file": "assets/sfx/belavto_click5.wav",
+      "at": "w:92+0.097",
+      "gain": 0.036
+    },
+    {
+      "file": "assets/sfx/belavto_click5.wav",
+      "at": "w:92+0.148",
+      "gain": 0.034
+    },
+    {
+      "file": "assets/sfx/belavto_click5.wav",
+      "at": "w:92+0.204",
+      "gain": 0.032
+    },
+    {
+      "file": "assets/sfx/belavto_click5.wav",
+      "at": "w:92+0.268",
+      "gain": 0.03
+    },
+    {
+      "file": "assets/sfx/belavto_click5.wav",
+      "at": "w:92+0.344",
+      "gain": 0.028
+    },
+    {
+      "file": "assets/sfx/belavto_click5.wav",
+      "at": "w:92+0.440",
+      "gain": 0.026
+    },
+    {
+      "file": "assets/sfx/belavto_click5.wav",
+      "at": "w:92+0.576",
+      "gain": 0.024
+    }
+  ]
 }
