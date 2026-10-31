@@ -438,7 +438,7 @@ def build_items(p):
 
 
 def grade_filter(p, clip):
-    g = p.grade
+    g = dict(p.grade, **p.cfg.get('clip_grade', {}).get(clip, {}))   # per-clip correction, e.g. a cold overcast take
     tone = ''
     if probe(p.clip(clip))['hdr']:
         tone = ('zscale=t=linear:npl=203,format=gbrpf32le,zscale=p=bt709,tonemap=hable:desat=0,'
@@ -449,7 +449,8 @@ def grade_filter(p, clip):
         tone += (f"lut3d=file='{lut}'," if mix >= 0.999 else
                  f"split[gx][gy];[gy]lut3d=file='{lut}'[gl];[gx][gl]blend=all_expr='A*{1 - mix:.3f}+B*{mix:.3f}',")
     return (tone + f"eq=gamma={g['gamma']}:contrast={g['contrast']}:saturation={g['saturation']},"
-            f"colorbalance=rs={-g['cool_shadows'] / 2}:bs={g['cool_shadows']}:rh={g['warmth']}:bh={-g['warmth'] / 1.5}")
+            f"colorbalance=rs={-g['cool_shadows'] / 2}:bs={g['cool_shadows']}:rm={g.get('mid_warmth', 0)}:bm={-g.get('mid_warmth', 0)}"
+            f":rh={g['warmth']}:bh={-g['warmth'] / 1.5}")
 
 
 def decode_cmd(p, it, src, nframes):

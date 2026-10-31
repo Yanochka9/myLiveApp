@@ -68,7 +68,7 @@
   "music": {
     "file": "work/belavto_ad/music.wav",
     "start": 35.0,
-    "volume": 0.14,
+    "volume": 0.22,
     "end_volume": 0.42
   },
   "voice": {
@@ -78,131 +78,61 @@
     {
       "clip": "IMG_2604.MOV",
       "in": 1.75,
-      "out": 3.78,
+      "out": 5.35,
       "zoom": [
         1.0,
-        1.03
+        1.05
       ],
       "dy": 0
     },
     {
-      "clip": "IMG_2604.MOV",
-      "in": 3.92,
-      "out": 5.6,
-      "zoom": [
-        1.14,
-        1.17
-      ],
-      "dy": -60
-    },
-    {
       "clip": "IMG_2617.MOV",
-      "in": 2.22,
-      "out": 4.24,
+      "in": 2.72,
+      "out": 7.7,
       "zoom": [
         1.0,
-        1.03
+        1.05
       ],
       "dy": 150,
       "tin": "flash"
     },
     {
-      "clip": "IMG_2617.MOV",
-      "in": 4.32,
-      "out": 4.95,
-      "zoom": [
-        1.1,
-        1.12
-      ],
-      "dy": 120
-    },
-    {
-      "clip": "IMG_2617.MOV",
-      "in": 5.02,
-      "out": 7.9,
-      "zoom": [
-        1.0,
-        1.03
-      ],
-      "dy": 150
-    },
-    {
       "clip": "IMG_2620.MOV",
-      "in": 1.5,
-      "out": 2.76,
-      "zoom": [
-        1.0,
-        1.03
-      ],
-      "dy": 0,
-      "tin": "flash"
-    },
-    {
-      "clip": "IMG_2620.MOV",
-      "in": 2.86,
+      "in": 1.52,
       "out": 5.85,
       "zoom": [
-        1.12,
-        1.15
-      ],
-      "dy": -40
-    },
-    {
-      "clip": "IMG_2635.MOV",
-      "in": 2.32,
-      "out": 4.55,
-      "zoom": [
         1.0,
-        1.03
+        1.05
       ],
       "dy": 0,
       "tin": "flash"
     },
     {
       "clip": "IMG_2635.MOV",
-      "in": 4.85,
+      "in": 2.3,
       "out": 7.5,
       "zoom": [
-        1.12,
-        1.15
+        1.0,
+        1.06
       ],
-      "dy": -30
+      "dy": 0,
+      "tin": "flash"
     },
     {
       "clip": "IMG_2645.MOV",
-      "in": 1.08,
-      "out": 2.8,
+      "in": 1.06,
+      "out": 7.45,
       "zoom": [
         1.0,
-        1.03
+        1.06
       ],
       "dy": 0,
       "tin": "zoom"
     },
     {
-      "clip": "IMG_2645.MOV",
-      "in": 2.9,
-      "out": 4.6,
-      "zoom": [
-        1.12,
-        1.15
-      ],
-      "dy": -60
-    },
-    {
-      "clip": "IMG_2645.MOV",
-      "in": 4.68,
-      "out": 7.78,
-      "zoom": [
-        1.0,
-        1.04
-      ],
-      "dy": 0
-    },
-    {
       "clip": "IMG_2646.MOV",
-      "in": 1.72,
-      "out": 5.95,
+      "in": 1.3,
+      "out": 5.9,
       "zoom": [
         1.0,
         1.05
@@ -215,40 +145,30 @@
     {
       "clip": "IMG_2615.MOV",
       "src": 0.0,
-      "at": 6.44,
-      "until": 7.4,
+      "at": "w:котором-0.05",
+      "until": "w:складываются-0.05",
       "zoom": [
         1.04,
-        1.04
+        1.08
       ],
-      "drift": [
-        -30,
-        -6
-      ],
-      "linear": true,
       "dy": 40
     },
     {
       "clip": "IMG_2612.MOV",
       "src": 0.7,
-      "at": 7.4,
-      "until": 8.75,
+      "at": "w:складываются-0.05",
+      "until": "w:вашу-0.05",
       "zoom": [
         1.04,
-        1.04
+        1.08
       ],
-      "drift": [
-        -26,
-        8
-      ],
-      "linear": true,
       "dy": 100
     },
     {
       "clip": "IMG_2628.MOV",
       "src": 0.2,
-      "at": 10.54,
-      "until": 11.4,
+      "at": "w:полный-0.05",
+      "until": "w:минские-0.05",
       "zoom": [
         1.0,
         1.03
@@ -258,8 +178,8 @@
     {
       "clip": "IMG_2622.MOV",
       "src": 0.1,
-      "at": 11.4,
-      "until": 13.3,
+      "at": "w:минские-0.05",
+      "until": "we:проблема",
       "zoom": [
         1.0,
         1.04
@@ -269,8 +189,8 @@
     {
       "clip": "IMG_2639.MOV",
       "src": 0.2,
-      "at": 15.72,
-      "until": 16.3,
+      "at": "w:есть#2-0.05",
+      "until": "w:варианты",
       "zoom": [
         1.0,
         1.03
@@ -280,8 +200,8 @@
     {
       "clip": "IMG_2640.MOV",
       "src": 0.3,
-      "at": 16.3,
-      "until": 16.8,
+      "at": "w:варианты",
+      "until": "w:тут-0.05",
       "zoom": [
         1.0,
         1.03
@@ -329,17 +249,17 @@
       "size": 50,
       "style": "light",
       "at": 0.1,
-      "until": 3.61,
+      "until": 3.4999999999999996,
       "x": 540,
-      "y": 545
+      "y": 530
     },
     {
       "type": "pill",
       "text": "ДЛЯ СЕМЬИ",
       "size": 46,
       "style": "light",
-      "at": 3.81,
-      "until": 9.14,
+      "at": 3.6999999999999997,
+      "until": 8.48,
       "x": 540,
       "y": 545
     },
@@ -348,8 +268,8 @@
       "text": "ЗИМА НЕ СТРАШНА",
       "size": 46,
       "style": "light",
-      "at": 9.34,
-      "until": 13.39,
+      "at": 8.68,
+      "until": 12.81,
       "x": 330,
       "y": 545
     },
@@ -358,8 +278,8 @@
       "text": "ЧТОБЫ ОБОРАЧИВАЛИСЬ",
       "size": 46,
       "style": "light",
-      "at": 13.59,
-      "until": 18.27,
+      "at": 13.01,
+      "until": 18.009999999999998,
       "x": 600,
       "y": 522
     },
@@ -401,7 +321,7 @@
       "kind": "slab",
       "text": "БЕЗ ПЕРВОГО ВЗНОСА",
       "at": "w:без#2-0.05",
-      "until": 24.84,
+      "until": 24.45,
       "x": 540,
       "y": 640,
       "scale": 0.9
@@ -432,7 +352,7 @@
       "at": "speech_end",
       "until": "end",
       "x": 540,
-      "y": 620,
+      "y": 795,
       "scale": 0.8
     },
     {
@@ -440,10 +360,10 @@
       "text": "БЕЗ ПЕРВОНАЧАЛЬНОГО ВЗНОСА",
       "size": 40,
       "style": "accent",
-      "at": 29.3,
+      "at": 29.299999999999997,
       "until": "end",
       "x": 540,
-      "y": 850
+      "y": 1025
     },
     {
       "type": "label",
@@ -452,7 +372,7 @@
       "at": "speech_end",
       "until": "end",
       "x": 540,
-      "y": 950
+      "y": 1125
     },
     {
       "type": "label",
@@ -463,14 +383,14 @@
       "at": "speech_end",
       "until": "end",
       "x": 540,
-      "y": 1030
+      "y": 1205
     },
     {
       "type": "icon",
       "icon": "spark",
       "size": 104,
       "at": "w:машина",
-      "until": 3.6,
+      "until": 3.4999999999999996,
       "x": 150,
       "y": 700
     },
@@ -479,7 +399,7 @@
       "icon": "spark",
       "size": 78,
       "at": "w:машина+0.15",
-      "until": 3.6,
+      "until": 3.4999999999999996,
       "x": 940,
       "y": 660
     },
@@ -488,14 +408,14 @@
       "icon": "stroller",
       "size": 156,
       "at": "w:семейный-0.05",
-      "until": 6.36,
+      "until": "w:котором-0.05",
       "x": 870,
       "y": 700
     },
     {
       "type": "circle",
-      "at": 7.55,
-      "until": 8.75,
+      "at": "w:складываются+0.15",
+      "until": "w:вашу-0.05",
       "x": 600,
       "y": 1130,
       "rx": 340,
@@ -508,7 +428,7 @@
       "icon": "bag",
       "size": 143,
       "at": "w:любую-0.05",
-      "until": 8.75,
+      "until": "w:вашу-0.05",
       "x": 840,
       "y": 780
     },
@@ -517,7 +437,7 @@
       "icon": "snow",
       "size": 156,
       "at": "w:зимы-0.05",
-      "until": 10.54,
+      "until": "w:полный-0.05",
       "x": 170,
       "y": 620
     },
@@ -526,14 +446,14 @@
       "icon": "snow",
       "size": 97,
       "at": "w:зимы+0.1",
-      "until": 10.54,
+      "until": "w:полный-0.05",
       "x": 320,
       "y": 800
     },
     {
       "type": "circle",
-      "at": 10.62,
-      "until": 11.4,
+      "at": "w:полный+0.05",
+      "until": "w:минские-0.05",
       "x": 504,
       "y": 958,
       "rx": 380,
@@ -546,7 +466,7 @@
       "icon": "snow",
       "size": 130,
       "at": "w:январе-0.05",
-      "until": 13.3,
+      "until": "we:проблема",
       "x": 880,
       "y": 620
     },
@@ -555,7 +475,7 @@
       "icon": "spark",
       "size": 130,
       "at": "w:оборачивались-0.05",
-      "until": 15.72,
+      "until": "w:есть#2-0.05",
       "x": 860,
       "y": 640
     },
@@ -564,7 +484,7 @@
       "icon": "spark",
       "size": 91,
       "at": "w:оборачивались+0.1",
-      "until": 15.72,
+      "until": "w:есть#2-0.05",
       "x": 960,
       "y": 800
     },
@@ -573,7 +493,7 @@
       "icon": "mute",
       "size": 156,
       "at": "w:тут-0.05",
-      "until": 18.3,
+      "until": 18.009999999999998,
       "x": 880,
       "y": 640
     },
@@ -625,58 +545,70 @@
   ],
   "sfx": [
     {
-      "file": "assets/sfx/belavto_whoosh.wav",
-      "at": 3.71,
-      "peak": 2.0,
-      "gain": 0.08
+      "file": "assets/sfx/swish_soft.wav",
+      "at": 3.5999999999999996,
+      "peak": 0.2,
+      "gain": 0.03
     },
     {
-      "file": "assets/sfx/belavto_whoosh.wav",
-      "at": 9.24,
-      "peak": 2.0,
-      "gain": 0.08
+      "file": "assets/sfx/swish_soft.wav",
+      "at": 8.58,
+      "peak": 0.2,
+      "gain": 0.03
     },
     {
-      "file": "assets/sfx/belavto_whoosh.wav",
-      "at": 13.49,
-      "peak": 2.0,
-      "gain": 0.08
-    },
-    {
-      "file": "assets/sfx/belavto_whoosh.wav",
-      "at": "speech_end",
-      "peak": 2.0,
-      "gain": 0.06
+      "file": "assets/sfx/swish_soft.wav",
+      "at": 12.91,
+      "peak": 0.2,
+      "gain": 0.03
     },
     {
       "file": "assets/sfx/belavto_click1.wav",
       "at": 0.1,
       "peak": 0.09,
-      "gain": 0.035
+      "gain": 0.02
     },
     {
       "file": "assets/sfx/belavto_click2.wav",
-      "at": "w:оформим-0.05",
+      "at": 3.6999999999999997,
       "peak": 0.104,
-      "gain": 0.035
+      "gain": 0.02
+    },
+    {
+      "file": "assets/sfx/belavto_click2.wav",
+      "at": 8.68,
+      "peak": 0.104,
+      "gain": 0.02
+    },
+    {
+      "file": "assets/sfx/belavto_click2.wav",
+      "at": 13.01,
+      "peak": 0.104,
+      "gain": 0.02
     },
     {
       "file": "assets/sfx/belavto_click4.wav",
-      "at": "w:без#2-0.05",
+      "at": "w:оформим-0.05",
       "peak": 0.067,
-      "gain": 0.035
+      "gain": 0.02
     },
     {
       "file": "assets/sfx/belavto_click1.wav",
-      "at": "w:рыбалко-0.05",
+      "at": "w:без#2-0.05",
       "peak": 0.09,
-      "gain": 0.035
+      "gain": 0.02
+    },
+    {
+      "file": "assets/sfx/belavto_click4.wav",
+      "at": "w:рыбалко-0.05",
+      "peak": 0.067,
+      "gain": 0.02
     },
     {
       "file": "assets/sfx/belavto_click2.wav",
       "at": "w:нами-0.2",
       "peak": 0.104,
-      "gain": 0.035
+      "gain": 0.02
     }
   ],
   "asr_model": "medium",
@@ -687,5 +619,60 @@
       1080,
       1080
     ]
+  },
+  "clip_grade": {
+    "IMG_2612.MOV": {
+      "mid_warmth": 0.06,
+      "warmth": 0.04
+    },
+    "IMG_2615.MOV": {
+      "mid_warmth": 0.06,
+      "warmth": 0.04
+    },
+    "IMG_2620.MOV": {
+      "mid_warmth": 0.06,
+      "warmth": 0.04
+    },
+    "IMG_2622.MOV": {
+      "mid_warmth": 0.06,
+      "warmth": 0.04
+    },
+    "IMG_2627.MOV": {
+      "mid_warmth": 0.06,
+      "warmth": 0.04
+    },
+    "IMG_2628.MOV": {
+      "mid_warmth": 0.06,
+      "warmth": 0.04
+    },
+    "IMG_2639.MOV": {
+      "mid_warmth": 0.06,
+      "warmth": 0.04
+    },
+    "IMG_2638.MOV": {
+      "mid_warmth": 0.06,
+      "warmth": 0.04
+    },
+    "IMG_2640.MOV": {
+      "mid_warmth": 0.06,
+      "warmth": 0.04
+    },
+    "IMG_2629V.mov": {
+      "mid_warmth": 0.06,
+      "warmth": 0.04
+    },
+    "IMG_2617.MOV": {
+      "mid_warmth": 0.09,
+      "warmth": 0.05
+    },
+    "IMG_2604.MOV": {
+      "mid_warmth": -0.02
+    },
+    "IMG_2645.MOV": {
+      "mid_warmth": -0.02
+    },
+    "IMG_2646.MOV": {
+      "mid_warmth": -0.02
+    }
   }
 }
