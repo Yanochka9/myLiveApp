@@ -455,7 +455,7 @@ def grade_filter(p, clip):
 
 def decode_cmd(p, it, src, nframes):
     sp = it['speed']
-    vf = f"scale={DW}:{DH}:flags=bicubic,fps={FPS / sp},{grade_filter(p, it['clip'])},format=rgb24"
+    vf = f"scale={DW}:{DH}:flags=lanczos,fps={FPS / sp},{grade_filter(p, it['clip'])},format=rgb24"
     if sp != 1: vf += f',setpts=PTS/{sp}'
     return ['ffmpeg', '-v', 'error', '-ss', f'{src:.3f}', '-i', p.clip(it['clip']), '-vf', vf,
             '-frames:v', str(nframes), '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-']
@@ -835,9 +835,11 @@ def render(p, draft=False):
     out = p.output if not draft else p.output.replace('.mp4', '_draft.mp4')
     os.makedirs(os.path.dirname(out), exist_ok=True)
     enc = subprocess.Popen(['ffmpeg', '-v', 'error', '-y', '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-s', f'{W}x{H}', '-r', str(FPS),
-                            '-i', '-', '-i', mix, *(['-vf', 'crop={2}:{3}:{0}:{1}'.format(*p.out_crop)] if p.out_crop else []),
-                            '-c:v', 'libx264', '-preset', 'veryfast' if draft else 'slow',
-                            '-crf', '22' if draft else '16', '-pix_fmt', 'yuv420p', '-color_primaries', 'bt709',
+                            '-i', '-', '-i', mix,
+                            '-vf', (('crop={2}:{3}:{0}:{1},'.format(*p.out_crop) if p.out_crop else '') + 'unsharp=5:5:0.45:5:5:0'),
+                            '-c:v', 'libx264', '-preset', 'veryfast' if draft else 'slow', '-tune', 'film',
+                            '-profile:v', 'high', '-level', '4.2', '-maxrate', '30M', '-bufsize', '40M',
+                            '-crf', '22' if draft else '12', '-pix_fmt', 'yuv420p', '-color_primaries', 'bt709',
                             '-color_trc', 'bt709', '-colorspace', 'bt709', '-movflags', '+faststart',
                             '-c:a', 'aac', '-b:a', '256k', '-shortest', out], stdin=subprocess.PIPE)
     nf = int(round(p.total * FPS)); cur = rd = None
