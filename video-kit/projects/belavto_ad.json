@@ -1,0 +1,607 @@
+{
+  "name": "belavto_ad",
+  "language": "ru",
+  "sources": {
+    "dir": "work/belavto_ad/src"
+  },
+  "output": "out/belavto_ad.mp4",
+  "theme": {
+    "accent": "#1E9BE0",
+    "accent_light": "#5CCBF2",
+    "dark": "#0B1530",
+    "light": "#FFFFFF",
+    "on_accent": "#FFFFFF",
+    "link": "#5CCBF2",
+    "flash": "#9ADFFF",
+    "paper": "#F6F9FC",
+    "glow": 6,
+    "vignette": 0.22,
+    "3d": {
+      "front": "#2AA9E8",
+      "side": "#0B3A66",
+      "metallic": 0.55,
+      "roughness": 0.2,
+      "white": "#F4FAFF",
+      "dark": "#0B1530"
+    },
+    "fonts": {
+      "black": "assets/fonts/Manrope-ExtraBold.ttf",
+      "xbold": "assets/fonts/Manrope-ExtraBold.ttf",
+      "bold": "assets/fonts/Manrope-Bold.ttf",
+      "semibold": "assets/fonts/Manrope-SemiBold.ttf",
+      "black_italic": "assets/fonts/Manrope-ExtraBold.ttf"
+    },
+    "on_light": "#0B1530"
+  },
+  "grade": {
+    "lut": "assets/luts/refive_light.cube",
+    "lut_mix": 0.7,
+    "gamma": 0.97,
+    "contrast": 1.12,
+    "saturation": 1.08,
+    "warmth": 0.02,
+    "cool_shadows": 0.03
+  },
+  "subtitles": {
+    "enabled": true,
+    "size": 64,
+    "y": 1330,
+    "color": "#FFFFFF",
+    "highlight": "accent",
+    "highlight_text": "#FFFFFF",
+    "mode": "karaoke",
+    "max_words": 3,
+    "max_chars": 17,
+    "uppercase": false,
+    "replace": {
+      "Подберем": "Подберём"
+    },
+    "merge": []
+  },
+  "music": {
+    "file": "work/belavto_ad/music.wav",
+    "start": 35.0,
+    "volume": 0.14,
+    "end_volume": 0.42
+  },
+  "voice": {
+    "target_lufs": -17.5
+  },
+  "aroll": [
+    {
+      "clip": "IMG_2604.MOV",
+      "in": 1.7,
+      "out": 5.65,
+      "zoom": [
+        1.0,
+        1.06
+      ]
+    },
+    {
+      "clip": "IMG_2617.MOV",
+      "in": 2.2,
+      "out": 7.95,
+      "zoom": [
+        1.0,
+        1.06
+      ]
+    },
+    {
+      "clip": "IMG_2620.MOV",
+      "in": 1.5,
+      "out": 5.9,
+      "zoom": [
+        1.0,
+        1.06
+      ]
+    },
+    {
+      "clip": "IMG_2635.MOV",
+      "in": 2.3,
+      "out": 7.55,
+      "zoom": [
+        1.0,
+        1.06
+      ]
+    },
+    {
+      "clip": "IMG_2645.MOV",
+      "in": 1.05,
+      "out": 7.8,
+      "zoom": [
+        1.0,
+        1.06
+      ]
+    },
+    {
+      "clip": "IMG_2646.MOV",
+      "in": 1.7,
+      "out": 6.1,
+      "zoom": [
+        1.0,
+        1.06
+      ]
+    }
+  ],
+  "cutaways": [
+    {
+      "clip": "IMG_2612.MOV",
+      "src": 0.2,
+      "at": "w:сиденья-0.1",
+      "until": "w:любую-0.1",
+      "zoom": [
+        1.12,
+        1.03
+      ],
+      "tin": "zoom"
+    },
+    {
+      "clip": "IMG_2615.MOV",
+      "src": 0.2,
+      "at": "w:любую-0.1",
+      "until": "w:поездку+0.3",
+      "zoom": [
+        1.03,
+        1.1
+      ],
+      "tout": "zoom"
+    },
+    {
+      "clip": "IMG_2628.MOV",
+      "src": 0.2,
+      "at": "w:минские-0.1",
+      "until": "w:январе",
+      "zoom": [
+        1.12,
+        1.03
+      ],
+      "tin": "zoom"
+    },
+    {
+      "clip": "IMG_2622.MOV",
+      "src": 0.3,
+      "at": "w:январе",
+      "until": "we:проблема",
+      "zoom": [
+        1.03,
+        1.1
+      ],
+      "tout": "zoom"
+    },
+    {
+      "clip": "IMG_2639.MOV",
+      "src": 0.2,
+      "at": "w:есть#2-0.05",
+      "until": "w:варианты",
+      "zoom": [
+        1.12,
+        1.03
+      ],
+      "tin": "zoom"
+    },
+    {
+      "clip": "IMG_2640.MOV",
+      "src": 0.3,
+      "at": "w:варианты",
+      "until": "w:тут-0.05",
+      "zoom": [
+        1.03,
+        1.1
+      ],
+      "drift": [
+        -20,
+        20
+      ],
+      "tout": "zoom"
+    }
+  ],
+  "endcard": {
+    "clip": "IMG_2646.MOV",
+    "src": 5.9,
+    "duration": 2.6,
+    "speed": 0.55,
+    "zoom": [
+      1.06,
+      1.14
+    ],
+    "blur": 14,
+    "tint": "accent",
+    "darken": 0.38,
+    "tin": "flash"
+  },
+  "punch": [],
+  "mask_cleanup": {},
+  "elements": [
+    {
+      "type": "3d",
+      "kind": "rise",
+      "text": "БЕЛАВТОЦЕНТР",
+      "layer": "behind",
+      "at": 0.15,
+      "until": 3.45,
+      "x": 540,
+      "y": 640,
+      "scale": 0.8
+    },
+    {
+      "type": "wipe",
+      "at": 3.4400000000000004,
+      "until": 4.34,
+      "text": "ДЛЯ СЕМЬИ",
+      "size": 120
+    },
+    {
+      "type": "3d",
+      "kind": "rise",
+      "text": "OPEL",
+      "layer": "behind",
+      "at": 4.05,
+      "until": "w:сиденья-0.1",
+      "x": 540,
+      "y": 540,
+      "scale": 0.45,
+      "canvas": [
+        1080,
+        400
+      ],
+      "frac": 0.9,
+      "fade_bottom": 0.0
+    },
+    {
+      "type": "3d",
+      "kind": "rise",
+      "text": "ZAFIRA",
+      "layer": "behind",
+      "at": 4.05,
+      "until": "w:сиденья-0.1",
+      "x": 540,
+      "y": 680,
+      "scale": 0.7
+    },
+    {
+      "type": "pill",
+      "text": "ДЛЯ СЕМЬИ",
+      "size": 46,
+      "style": "accent",
+      "at": "w:семейный-0.05",
+      "until": "w:сиденья-0.1",
+      "x": 760,
+      "y": 860,
+      "icon": "check"
+    },
+    {
+      "type": "icon",
+      "icon": "stroller",
+      "size": 110,
+      "at": "w:семейный-0.05",
+      "until": "w:сиденья-0.1",
+      "x": 960,
+      "y": 760
+    },
+    {
+      "type": "pill",
+      "text": "СИДЕНЬЯ СКЛАДЫВАЮТСЯ",
+      "size": 46,
+      "style": "light",
+      "at": "w:сиденья-0.05",
+      "until": "w:поездку+0.3",
+      "x": 540,
+      "y": 545,
+      "icon": "check"
+    },
+    {
+      "type": "wipe",
+      "at": 9.19,
+      "until": 10.09,
+      "text": "ЗИМА НЕ СТРАШНА",
+      "size": 100
+    },
+    {
+      "type": "3d",
+      "kind": "rise",
+      "text": "VOLKSWAGEN",
+      "layer": "behind",
+      "at": 9.799999999999999,
+      "until": "w:полный-0.05",
+      "x": 540,
+      "y": 530,
+      "scale": 0.45,
+      "canvas": [
+        1080,
+        400
+      ],
+      "frac": 0.9,
+      "fade_bottom": 0.0
+    },
+    {
+      "type": "3d",
+      "kind": "rise",
+      "text": "TAOS",
+      "layer": "behind",
+      "at": 9.799999999999999,
+      "until": "w:полный-0.05",
+      "x": 540,
+      "y": 670,
+      "scale": 0.7
+    },
+    {
+      "type": "icon",
+      "icon": "snow",
+      "size": 130,
+      "at": "w:зимы-0.05",
+      "until": "w:минские-0.1",
+      "x": 170,
+      "y": 560
+    },
+    {
+      "type": "photo",
+      "clip": "IMG_2629V.mov",
+      "src": 3.0,
+      "crop": [
+        330,
+        620,
+        560,
+        560
+      ],
+      "text": "ПОЛНЫЙ ПРИВОД",
+      "size": 34,
+      "width": 360,
+      "tilt": -5,
+      "at": "w:полный-0.05",
+      "until": "w:минские-0.1",
+      "x": 290,
+      "y": 760
+    },
+    {
+      "type": "pill",
+      "text": "ДЛЯ МИНСКОЙ ЗИМЫ",
+      "size": 46,
+      "style": "light",
+      "at": "w:минские-0.1",
+      "until": "w:январе",
+      "x": 540,
+      "y": 545
+    },
+    {
+      "type": "icon",
+      "icon": "snow",
+      "size": 110,
+      "at": "w:минские-0.1",
+      "until": "we:проблема",
+      "x": 900,
+      "y": 640
+    },
+    {
+      "type": "pill",
+      "text": "НЕ ПРОБЛЕМА",
+      "size": 50,
+      "style": "accent",
+      "at": "w:январе",
+      "until": "we:проблема",
+      "x": 540,
+      "y": 545,
+      "icon": "check"
+    },
+    {
+      "type": "wipe",
+      "at": 13.59,
+      "until": 14.49,
+      "text": "ЧТОБЫ ОБОРАЧИВАЛИСЬ",
+      "size": 72
+    },
+    {
+      "type": "3d",
+      "kind": "rise",
+      "text": "BMW",
+      "layer": "behind",
+      "at": 14.2,
+      "until": "w:есть#2-0.05",
+      "x": 640,
+      "y": 530,
+      "scale": 0.45,
+      "canvas": [
+        1080,
+        400
+      ],
+      "frac": 0.9,
+      "fade_bottom": 0.0
+    },
+    {
+      "type": "3d",
+      "kind": "rise",
+      "text": "3 SERIES",
+      "layer": "behind",
+      "at": 14.2,
+      "until": "w:есть#2-0.05",
+      "x": 640,
+      "y": 660,
+      "scale": 0.62
+    },
+    {
+      "type": "icon",
+      "icon": "spark",
+      "size": 100,
+      "at": "w:оборачивались",
+      "until": "w:есть#2-0.05",
+      "x": 930,
+      "y": 800
+    },
+    {
+      "type": "pill",
+      "text": "ЭФФЕКТНЫЙ ВЫБОР",
+      "size": 48,
+      "style": "accent",
+      "at": "w:есть#2-0.05",
+      "until": "w:тут-0.05",
+      "x": 540,
+      "y": 545
+    },
+    {
+      "type": "icon",
+      "icon": "mute",
+      "size": 120,
+      "at": "w:тут-0.05",
+      "until": 19.3,
+      "x": 880,
+      "y": 600
+    },
+    {
+      "type": "icon",
+      "icon": "spark",
+      "size": 90,
+      "at": "w:комментариев",
+      "until": 19.3,
+      "x": 760,
+      "y": 520
+    },
+    {
+      "type": "pill",
+      "text": "ПОДБОР ПОД БЮДЖЕТ",
+      "size": 42,
+      "style": "light",
+      "at": "w:подберем-0.05",
+      "until": "w:без#2-0.05",
+      "x": 730,
+      "y": 540,
+      "icon": "check"
+    },
+    {
+      "type": "pill",
+      "text": "ПРОВЕРКА ИСТОРИИ",
+      "size": 42,
+      "style": "light",
+      "at": "w:проверим-0.05",
+      "until": "w:без#2-0.05",
+      "x": 730,
+      "y": 640,
+      "icon": "check"
+    },
+    {
+      "type": "pill",
+      "text": "КРЕДИТ ИЛИ ЛИЗИНГ",
+      "size": 42,
+      "style": "accent",
+      "at": "w:оформим-0.05",
+      "until": "w:без#2-0.05",
+      "x": 730,
+      "y": 740,
+      "icon": "check"
+    },
+    {
+      "type": "3d",
+      "kind": "slab",
+      "text": "БЕЗ ПЕРВОГО ВЗНОСА",
+      "at": "w:без#2-0.05",
+      "until": 26.05,
+      "x": 540,
+      "y": 580,
+      "scale": 0.62
+    },
+    {
+      "type": "3d",
+      "kind": "pin",
+      "at": "w:рыбалко-0.1",
+      "until": "w:нами-0.2",
+      "x": 770,
+      "y": 560,
+      "scale": 0.42
+    },
+    {
+      "type": "pill",
+      "text": "ул. Рыбалко, 13А",
+      "size": 44,
+      "style": "light",
+      "at": "w:рыбалко-0.05",
+      "until": "w:нами-0.2",
+      "x": 770,
+      "y": 760
+    },
+    {
+      "type": "pill",
+      "text": "3 ЭТАЖ",
+      "size": 44,
+      "style": "accent",
+      "at": "w:третий-0.05",
+      "until": "w:нами-0.2",
+      "x": 770,
+      "y": 850
+    },
+    {
+      "type": "gold",
+      "text": "С НАМИ ВСЁ ВОЗМОЖНО",
+      "size": 74,
+      "at": "w:нами-0.2",
+      "until": "speech_end",
+      "x": 540,
+      "y": 540
+    },
+    {
+      "type": "logo",
+      "file": "assets/belavto_logo.png",
+      "at": "speech_end",
+      "until": "end",
+      "x": 540,
+      "y": 620,
+      "scale": 0.8
+    },
+    {
+      "type": "pill",
+      "text": "БЕЗ ПЕРВОНАЧАЛЬНОГО ВЗНОСА",
+      "size": 40,
+      "style": "accent",
+      "at": 30.7,
+      "until": "end",
+      "x": 540,
+      "y": 850
+    },
+    {
+      "type": "label",
+      "text": "Минск, ул. Рыбалко, 13А · 3 этаж",
+      "size": 38,
+      "at": "speech_end",
+      "until": "end",
+      "x": 540,
+      "y": 950
+    },
+    {
+      "type": "label",
+      "text": "belautocenter.by",
+      "size": 48,
+      "font": "black",
+      "color": "link",
+      "at": "speech_end",
+      "until": "end",
+      "x": 540,
+      "y": 1030
+    }
+  ],
+  "sfx": [
+    {
+      "file": "assets/sfx/swish_soft.wav",
+      "at": 3.95,
+      "peak": 0.2,
+      "gain": 0.05
+    },
+    {
+      "file": "assets/sfx/swish_soft.wav",
+      "at": 9.7,
+      "peak": 0.2,
+      "gain": 0.05
+    },
+    {
+      "file": "assets/sfx/swish_soft.wav",
+      "at": 14.1,
+      "peak": 0.2,
+      "gain": 0.05
+    }
+  ],
+  "asr_model": "medium",
+  "frame": {
+    "crop": [
+      0,
+      420,
+      1080,
+      1080
+    ]
+  }
+}

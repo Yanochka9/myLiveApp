@@ -78,6 +78,7 @@ class Project:
         self.subs = deep_merge(DEFAULT_SUBS, c.get('subtitles'))
         self.grade = deep_merge(DEFAULT_GRADE, c.get('grade'))
         self.output = self.rel(c.get('output', f'out/{self.name}.mp4'), root=True)
+        self.out_crop = (c.get('frame') or {}).get('crop')   # [x, y, w, h]: e.g. [0, 420, 1080, 1080] for a 1:1 video
         self._words = None
         self.build_timeline()
 

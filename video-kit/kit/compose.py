@@ -401,7 +401,7 @@ def build_items(p):
     for c in p.cfg.get('cutaways', []):
         t0, t1 = p.t(c['at']), p.t(c['until'], ref=p.t(c['at']))
         cuts.append(dict(clip=c['clip'], src=c.get('src', 0.0), t0=t0, t1=t1, span=(t0, t1), zoom=zoom_fn(c.get('zoom', [1.04, 1.12])),
-                         drift=c.get('drift'), tin=c.get('tin'), speed=c.get('speed', 1.0), cut=True))
+                         drift=c.get('drift'), dy=c.get('dy', 0.0), tin=c.get('tin'), speed=c.get('speed', 1.0), cut=True))
     cuts.sort(key=lambda c: c['t0'])
     items = []
     for a in p.aroll:
@@ -418,12 +418,12 @@ def build_items(p):
             tin = a.get('tin') if abs(s - a['t0']) < 1e-6 else next((c.get('tout') for c in p.cfg.get('cutaways', [])
                                                                        if abs(p.t(c['until'], ref=p.t(c['at'])) - s) < 1e-6), None)
             items.append(dict(clip=a['clip'], src=a['in'] + (s - a['t0']), t0=s, t1=e, span=(a['t0'], a['t1']),
-                              zoom=zoom_fn(a.get('zoom', [1.0, 1.06])), drift=None, tin=tin, speed=1.0, aroll=True))
+                              zoom=zoom_fn(a.get('zoom', [1.0, 1.06])), drift=None, dy=a.get('dy', 0.0), tin=tin, speed=1.0, aroll=True))
     items += cuts
     ec = p.cfg.get('endcard')
     if ec:
         items.append(dict(clip=ec['clip'], src=ec.get('src', 0.0), t0=p.speech_end, t1=p.total, span=(p.speech_end, p.total),
-                          zoom=zoom_fn(ec.get('zoom', [1.06, 1.14])), drift=None, tin=ec.get('tin', 'flash'),
+                          zoom=zoom_fn(ec.get('zoom', [1.06, 1.14])), drift=None, dy=ec.get('dy', 0.0), tin=ec.get('tin', 'flash'),
                           speed=ec.get('speed', 0.55), end=ec))
     items.sort(key=lambda i: i['t0'])
     return items
@@ -558,14 +558,15 @@ class Comp:
         return z, dx
 
     @staticmethod
-    def crop(frame, z, dx):
+    def crop(frame, z, dx, dy=0.0):
+        """dy: vertical framing in output px (positive = show a lower part of the source)"""
         s = BASEZ * z
-        M = np.array([[s, 0, W / 2 - s * (DW / 2 + dx / BASEZ)], [0, s, H / 2 - s * DH / 2]], np.float32)
+        M = np.array([[s, 0, W / 2 - s * (DW / 2 + dx / BASEZ)], [0, s, H / 2 - s * (DH / 2 + dy / BASEZ)]], np.float32)
         return cv2.warpAffine(frame, M, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
 
     @staticmethod
-    def crop_mask(m, z, dx):
-        M = np.array([[z, 0, W / 2 - z * (W / 2 + dx)], [0, z, H / 2 - z * H / 2]], np.float32)
+    def crop_mask(m, z, dx, dy=0.0):
+        M = np.array([[z, 0, W / 2 - z * (W / 2 + dx)], [0, z, H / 2 - z * (H / 2 + dy)]], np.float32)
         return cv2.warpAffine(m, M, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
 
     @staticmethod
@@ -672,8 +673,8 @@ class Comp:
     def render(self, T, it, raw):
         p = self.p
         lt = T - it['t0']
-        z, dx = self.zoom(it, T)
-        base = self.crop(raw, z, dx).astype(np.float32)
+        z, dx = self.zoom(it, T); dy = it.get('dy', 0.0)
+        base = self.crop(raw, z, dx, dy).astype(np.float32)
         if it.get('tin') == 'zoom' and lt < 0.2: base = self.zoom_blur(base, 0.06 * (1 - eo3(lt / 0.2)))
         if any(abs(c - it['t1']) < 1e-6 for c in self.zoom_cuts) and it['t1'] - T < 0.12:
             base = self.zoom_blur(base, 0.05 * eio(1 - (it['t1'] - T) / 0.12))
@@ -690,7 +691,7 @@ class Comp:
             for el in behind: self.draw_el(out, el, T, z, dx, behind=True)
             m = self.mask(it['clip'], it['src'] + lt)
             if m is not None:
-                m = self.crop_mask(m, z, dx)[..., None]
+                m = self.crop_mask(m, z, dx, dy)[..., None]
                 out = out * (1 - m) + base * m
         for el in active:
             if el.get('layer') != 'behind': self.draw_el(out, el, T)
@@ -779,10 +780,13 @@ def preview(p, times, draft=True):
         it = c.item_at(T)
         fr = c.render(T, it, read_single(p, it, T - it['t0']))
         f = os.path.join(od, f't{T:06.2f}.jpg')
-        cv2.imwrite(f, cv2.cvtColor(fr, cv2.COLOR_RGB2BGR), [cv2.IMWRITE_JPEG_QUALITY, 88]); files.append(f)
+        if p.out_crop:
+            x, y, w, h = p.out_crop; fr = fr[y:y + h, x:x + w]
+        cv2.imwrite(f, cv2.cvtColor(np.ascontiguousarray(fr), cv2.COLOR_RGB2BGR), [cv2.IMWRITE_JPEG_QUALITY, 88]); files.append(f)
     cols = min(6, len(files)); rows = math.ceil(len(files) / cols)
-    sheet = Image.new('RGB', (cols * 270, rows * 480))
-    for i, f in enumerate(files): sheet.paste(Image.open(f).resize((270, 480)), ((i % cols) * 270, (i // cols) * 480))
+    tw, th = (360, round(360 * p.out_crop[3] / p.out_crop[2])) if p.out_crop else (270, 480)
+    sheet = Image.new('RGB', (cols * tw, rows * th))
+    for i, f in enumerate(files): sheet.paste(Image.open(f).resize((tw, th)), ((i % cols) * tw, (i // cols) * th))
     sp = os.path.join(od, 'sheet.jpg'); sheet.save(sp, quality=88)
     print(sp)
 
@@ -795,7 +799,8 @@ def render(p, draft=False):
     out = p.output if not draft else p.output.replace('.mp4', '_draft.mp4')
     os.makedirs(os.path.dirname(out), exist_ok=True)
     enc = subprocess.Popen(['ffmpeg', '-v', 'error', '-y', '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-s', f'{W}x{H}', '-r', str(FPS),
-                            '-i', '-', '-i', mix, '-c:v', 'libx264', '-preset', 'veryfast' if draft else 'slow',
+                            '-i', '-', '-i', mix, *(['-vf', 'crop={2}:{3}:{0}:{1}'.format(*p.out_crop)] if p.out_crop else []),
+                            '-c:v', 'libx264', '-preset', 'veryfast' if draft else 'slow',
                             '-crf', '22' if draft else '16', '-pix_fmt', 'yuv420p', '-color_primaries', 'bt709',
                             '-color_trc', 'bt709', '-colorspace', 'bt709', '-movflags', '+faststart',
                             '-c:a', 'aac', '-b:a', '256k', '-shortest', out], stdin=subprocess.PIPE)
