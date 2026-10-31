@@ -150,10 +150,11 @@
         1.06
       ],
       "drift": [
-        -5,
-        20
+        -29,
+        -4
       ],
-      "linear": true
+      "linear": true,
+      "dy": 35
     },
     {
       "clip": "IMG_2615.MOV",
@@ -180,10 +181,11 @@
         1.06
       ],
       "drift": [
-        45,
-        70
+        31,
+        56
       ],
-      "linear": true
+      "linear": true,
+      "dy": 111
     },
     {
       "clip": "IMG_2628.MOV",
@@ -353,7 +355,7 @@
       "until": 26.05,
       "x": 540,
       "y": 580,
-      "scale": 0.62
+      "scale": 0.9
     },
     {
       "type": "pill",
