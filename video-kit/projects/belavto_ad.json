@@ -647,6 +647,36 @@
       "at": "speech_end",
       "peak": 2.0,
       "gain": 0.06
+    },
+    {
+      "file": "assets/sfx/belavto_click1.wav",
+      "at": 0.1,
+      "peak": 0.09,
+      "gain": 0.035
+    },
+    {
+      "file": "assets/sfx/belavto_click2.wav",
+      "at": "w:оформим-0.05",
+      "peak": 0.104,
+      "gain": 0.035
+    },
+    {
+      "file": "assets/sfx/belavto_click4.wav",
+      "at": "w:без#2-0.05",
+      "peak": 0.067,
+      "gain": 0.035
+    },
+    {
+      "file": "assets/sfx/belavto_click1.wav",
+      "at": "w:рыбалко-0.05",
+      "peak": 0.09,
+      "gain": 0.035
+    },
+    {
+      "file": "assets/sfx/belavto_click2.wav",
+      "at": "w:нами-0.2",
+      "peak": 0.104,
+      "gain": 0.035
     }
   ],
   "asr_model": "medium",
