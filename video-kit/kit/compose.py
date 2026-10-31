@@ -619,6 +619,20 @@ class Comp:
             u, v = (T - a) / el.get('draw', 0.35), clamp((b - T) / 0.2)
             pts = wobble_ellipse(x, y, el.get('rx', 160), el.get('ry', 110), seed=int(a * 100))
             draw_stroke(dst, pts, eo3(u), v * clamp(u * 4), self.p.color(el.get('color', 'accent')), el.get('width', 9))
+        elif t == 'arrow':    # hand-drawn arrow: the shaft draws from (x0,y0) to (x1,y1) with a bend, then the head appears
+            u, v = (T - a) / el.get('draw', 0.35), clamp((b - T) / 0.2)
+            p0, p1 = np.array([el['x0'], el['y0']], float), np.array([el['x1'], el['y1']], float)
+            d = p1 - p0; nrm = np.array([-d[1], d[0]]) / (np.hypot(*d) + 1e-6)
+            c = (p0 + p1) / 2 + nrm * el.get('bend', 0.15) * np.hypot(*d)
+            k = np.linspace(0, 1, 60)[:, None]
+            pts = (1 - k) ** 2 * p0 + 2 * (1 - k) * k * c + k ** 2 * p1
+            col = self.p.color(el.get('color', 'accent')); w = el.get('width', 10)
+            draw_stroke(dst, pts, eo3(u), v * clamp(u * 4), col, w)
+            if u >= 0.85:
+                tang = pts[-1] - pts[-6]; tang /= (np.hypot(*tang) + 1e-6); hl = el.get('head', 46)
+                for ang in (2.55, -2.55):
+                    ca, sa = np.cos(ang), np.sin(ang); dv = np.array([tang[0] * ca - tang[1] * sa, tang[0] * sa + tang[1] * ca])
+                    draw_stroke(dst, np.array([pts[-1], pts[-1] + dv * hl]), clamp((u - 0.85) / 0.15), v, col, w)
         elif t == 'icon':     # doodle icon pops and gently rocks
             im = g.icon(el['icon'], el.get('size', 110), el.get('color', 'accent'))
             ang = 8 * np.sin((T - a) * 4.2) * el.get('rock', 1.0)
