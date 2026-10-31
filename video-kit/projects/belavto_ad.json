@@ -578,16 +578,6 @@
       "y": 640
     },
     {
-      "type": "label",
-      "text": "С нами",
-      "size": 58,
-      "font": "bold",
-      "at": "w:нами-0.2",
-      "until": "speech_end",
-      "x": 540,
-      "y": 525
-    },
-    {
       "type": "gold",
       "text": "ВСЁ ВОЗМОЖНО",
       "size": 108,
@@ -597,22 +587,10 @@
         "#45C8F2"
       ],
       "outline": 0.045,
-      "at": "w:всё-0.1",
+      "at": "w:нами-0.2",
       "until": "speech_end",
       "x": 540,
       "y": 645
-    },
-    {
-      "type": "circle",
-      "at": "w:всё",
-      "until": "speech_end",
-      "x": 540,
-      "y": 657,
-      "rx": 430,
-      "ry": 82,
-      "width": 8,
-      "draw": 0.4,
-      "color": "#FFC23A"
     },
     {
       "type": "icon",
