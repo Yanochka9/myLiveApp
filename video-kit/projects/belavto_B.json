@@ -1,0 +1,487 @@
+{
+  "name": "belavto_ad",
+  "language": "ru",
+  "sources": {
+    "dir": "work/belavto_ad/src"
+  },
+  "output": "out/belavto_B.mp4",
+  "theme": {
+    "accent": "#1E9BE0",
+    "accent_light": "#5CCBF2",
+    "dark": "#0B1530",
+    "light": "#FFFFFF",
+    "on_accent": "#FFFFFF",
+    "link": "#5CCBF2",
+    "flash": "#9ADFFF",
+    "paper": "#F6F9FC",
+    "glow": 0,
+    "vignette": 0.14,
+    "3d": {
+      "front": "#2AA9E8",
+      "side": "#0B3A66",
+      "metallic": 0.55,
+      "roughness": 0.2,
+      "white": "#F4FAFF",
+      "dark": "#0B1530"
+    },
+    "fonts": {
+      "black": "assets/fonts/Manrope-ExtraBold.ttf",
+      "xbold": "assets/fonts/Manrope-ExtraBold.ttf",
+      "bold": "assets/fonts/Manrope-Bold.ttf",
+      "semibold": "assets/fonts/Manrope-SemiBold.ttf",
+      "black_italic": "assets/fonts/Manrope-ExtraBold.ttf"
+    },
+    "on_light": "#0B1530",
+    "leak": [
+      "#FF8A3D",
+      "#45C8F2"
+    ]
+  },
+  "grade": {
+    "lut": "assets/luts/refive_light.cube",
+    "lut_mix": 0.4,
+    "gamma": 1.0,
+    "contrast": 1.06,
+    "saturation": 1.04,
+    "warmth": 0.01,
+    "cool_shadows": 0.0
+  },
+  "subtitles": {
+    "enabled": true,
+    "size": 64,
+    "y": 1330,
+    "color": "#FFFFFF",
+    "highlight": "#1B1838",
+    "highlight_text": "#6FD3F7",
+    "mode": "karaoke",
+    "max_words": 3,
+    "max_chars": 17,
+    "uppercase": false,
+    "replace": {
+      "Подберем": "Подберём",
+      "Белавтоцентр": "Белавто Центр"
+    },
+    "merge": [],
+    "box": false,
+    "font": "bold"
+  },
+  "music": {
+    "file": "work/belavto_ad/music.wav",
+    "start": 35.0,
+    "volume": 0.22,
+    "end_volume": 0.42,
+    "boost": []
+  },
+  "voice": {
+    "target_lufs": -17.5
+  },
+  "aroll": [
+    {
+      "clip": "IMG_2645.MOV",
+      "in": 1.06,
+      "out": 7.75,
+      "zoom": [
+        1,
+        1
+      ]
+    },
+    {
+      "clip": "IMG_2646.MOV",
+      "in": 1.3,
+      "out": 5.9,
+      "zoom": [
+        1,
+        1.05
+      ],
+      "tin": "flash"
+    }
+  ],
+  "cutaways": [
+    {
+      "clip": "IMG_2639.MOV",
+      "src": 0.1,
+      "zoom": [
+        1.0,
+        1.06
+      ],
+      "at": 0.0,
+      "until": 0.9
+    },
+    {
+      "clip": "IMG_2615.MOV",
+      "src": 0.2,
+      "zoom": [
+        1.04,
+        1.07
+      ],
+      "dy": 40,
+      "at": 0.9,
+      "until": 1.7
+    },
+    {
+      "clip": "IMG_2612.MOV",
+      "src": 0.6,
+      "zoom": [
+        1.04,
+        1.08
+      ],
+      "dy": 100,
+      "drift": [
+        -20,
+        -20
+      ],
+      "at": 1.7,
+      "until": 2.5
+    },
+    {
+      "clip": "IMG_2622.MOV",
+      "src": 0.1,
+      "zoom": [
+        1.0,
+        1.05
+      ],
+      "dy": 110,
+      "at": 2.5,
+      "until": 3.4
+    },
+    {
+      "clip": "IMG_2628.MOV",
+      "src": 0.2,
+      "zoom": [
+        1.0,
+        1.04
+      ],
+      "dy": 140,
+      "at": 3.4,
+      "until": 4.1
+    },
+    {
+      "clip": "IMG_2638.MOV",
+      "src": 0.3,
+      "zoom": [
+        1.04,
+        1.0
+      ],
+      "at": 4.1,
+      "until": 5.0
+    },
+    {
+      "clip": "IMG_2640.MOV",
+      "src": 0.3,
+      "zoom": [
+        1.0,
+        1.05
+      ],
+      "dy": 40,
+      "drift": [
+        -20,
+        20
+      ],
+      "at": 5.0,
+      "until": 5.8
+    },
+    {
+      "clip": "IMG_2627.MOV",
+      "src": 0.5,
+      "zoom": [
+        1.0,
+        1.04
+      ],
+      "dy": 140,
+      "at": 5.8,
+      "until": 6.69
+    }
+  ],
+  "endcard": {
+    "clip": "IMG_2646.MOV",
+    "src": 5.9,
+    "duration": 1.6,
+    "speed": 0.55,
+    "zoom": [
+      1.06,
+      1.14
+    ],
+    "blur": 14,
+    "tint": "accent",
+    "darken": 0.38,
+    "tin": "flash"
+  },
+  "punch": [],
+  "mask_cleanup": {},
+  "elements": [
+    {
+      "type": "pill",
+      "text": "ПОДБЕРЁМ ПОД БЮДЖЕТ",
+      "size": 46,
+      "style": "light",
+      "at": "w:подберем-0.05",
+      "until": "w:проверим-0.05",
+      "x": 540,
+      "y": 545,
+      "icon": "check"
+    },
+    {
+      "type": "pill",
+      "text": "ПРОВЕРИМ ИСТОРИЮ И СОСТОЯНИЕ",
+      "size": 42,
+      "style": "light",
+      "at": "w:проверим-0.05",
+      "until": "w:оформим-0.05",
+      "x": 540,
+      "y": 545,
+      "icon": "check"
+    },
+    {
+      "type": "pill",
+      "text": "КРЕДИТ ИЛИ ЛИЗИНГ",
+      "size": 46,
+      "style": "accent",
+      "at": "w:оформим-0.05",
+      "until": "w:без-0.05",
+      "x": 540,
+      "y": 545,
+      "icon": "check"
+    },
+    {
+      "type": "gold",
+      "text": "БЕЗ ПЕРВОГО ВЗНОСА",
+      "size": 86,
+      "colors": [
+        "#FF7A1A",
+        "#FFC23A",
+        "#45C8F2"
+      ],
+      "outline": 0.045,
+      "at": "w:без-0.05",
+      "until": 6.64,
+      "x": 540,
+      "y": 580
+    },
+    {
+      "type": "gold",
+      "text": "БЕЛАВТО ЦЕНТР",
+      "size": 104,
+      "colors": [
+        "#FF7A1A",
+        "#FFC23A",
+        "#45C8F2"
+      ],
+      "outline": 0.045,
+      "at": "w:белавтоцентр-0.05",
+      "until": "w:нами-0.25",
+      "x": 540,
+      "y": 560
+    },
+    {
+      "type": "pill",
+      "text": "ул. Рыбалко, 13А",
+      "size": 44,
+      "style": "light",
+      "at": "w:рыбалко-0.05",
+      "until": "w:нами-0.2",
+      "x": 770,
+      "y": 690
+    },
+    {
+      "type": "pill",
+      "text": "3 ЭТАЖ",
+      "size": 44,
+      "style": "accent",
+      "at": "w:третий-0.05",
+      "until": "w:нами-0.2",
+      "x": 770,
+      "y": 780
+    },
+    {
+      "type": "gold",
+      "text": "ВСЁ ВОЗМОЖНО",
+      "size": 108,
+      "colors": [
+        "#FF7A1A",
+        "#FFC23A",
+        "#45C8F2"
+      ],
+      "outline": 0.045,
+      "at": "w:нами-0.2",
+      "until": "speech_end",
+      "x": 540,
+      "y": 645
+    },
+    {
+      "type": "icon",
+      "icon": "spark",
+      "size": 117,
+      "at": "w:возможно-0.1",
+      "until": "speech_end",
+      "x": 120,
+      "y": 565,
+      "color": "#FFC23A"
+    },
+    {
+      "type": "icon",
+      "icon": "spark",
+      "size": 91,
+      "at": "w:возможно",
+      "until": "speech_end",
+      "x": 965,
+      "y": 725,
+      "color": "#45C8F2"
+    },
+    {
+      "type": "logo",
+      "file": "assets/belavto_logo.png",
+      "at": 0.3,
+      "until": "speech_end",
+      "x": 962,
+      "y": 1405,
+      "scale": 0.26,
+      "opacity": 0.85
+    },
+    {
+      "type": "logo",
+      "file": "assets/belavto_logo.png",
+      "at": "speech_end",
+      "until": "end",
+      "x": 540,
+      "y": 795,
+      "scale": 0.8
+    },
+    {
+      "type": "gold",
+      "text": "БЕЗ ПЕРВОГО ВЗНОСА",
+      "size": 76,
+      "colors": [
+        "#FF7A1A",
+        "#FFC23A",
+        "#45C8F2"
+      ],
+      "outline": 0.045,
+      "at": 11.49,
+      "until": "end",
+      "x": 540,
+      "y": 1025
+    },
+    {
+      "type": "label",
+      "text": "Минск, ул. Рыбалко, 13А · 3 этаж",
+      "size": 38,
+      "at": "speech_end",
+      "until": "end",
+      "x": 540,
+      "y": 1125
+    },
+    {
+      "type": "label",
+      "text": "belautocenter.by",
+      "size": 48,
+      "font": "black",
+      "color": "link",
+      "at": "speech_end",
+      "until": "end",
+      "x": 540,
+      "y": 1205
+    }
+  ],
+  "sfx": [
+    {
+      "file": "assets/sfx/belavto_tick.wav",
+      "at": "w:подберем-0.05",
+      "peak": 0.08,
+      "gain": 0.02
+    },
+    {
+      "file": "assets/sfx/belavto_tick.wav",
+      "at": "w:проверим-0.05",
+      "peak": 0.08,
+      "gain": 0.02
+    },
+    {
+      "file": "assets/sfx/belavto_tick.wav",
+      "at": "w:оформим-0.05",
+      "peak": 0.08,
+      "gain": 0.02
+    },
+    {
+      "file": "assets/sfx/belavto_tick.wav",
+      "at": "w:без-0.05",
+      "peak": 0.08,
+      "gain": 0.02
+    },
+    {
+      "file": "assets/sfx/belavto_tick.wav",
+      "at": "w:белавтоцентр-0.05",
+      "peak": 0.08,
+      "gain": 0.02
+    },
+    {
+      "file": "assets/sfx/belavto_tick.wav",
+      "at": "w:нами-0.25",
+      "peak": 0.08,
+      "gain": 0.02
+    }
+  ],
+  "asr_model": "medium",
+  "frame": {
+    "crop": [
+      0,
+      420,
+      1080,
+      1080
+    ]
+  },
+  "clip_grade": {
+    "IMG_2612.MOV": {
+      "mid_warmth": 0.06,
+      "warmth": 0.04
+    },
+    "IMG_2615.MOV": {
+      "mid_warmth": 0.06,
+      "warmth": 0.04
+    },
+    "IMG_2620.MOV": {
+      "mid_warmth": 0.06,
+      "warmth": 0.04
+    },
+    "IMG_2622.MOV": {
+      "mid_warmth": 0.06,
+      "warmth": 0.04
+    },
+    "IMG_2627.MOV": {
+      "mid_warmth": 0.06,
+      "warmth": 0.04
+    },
+    "IMG_2628.MOV": {
+      "mid_warmth": 0.06,
+      "warmth": 0.04
+    },
+    "IMG_2639.MOV": {
+      "mid_warmth": 0.06,
+      "warmth": 0.04
+    },
+    "IMG_2638.MOV": {
+      "mid_warmth": 0.06,
+      "warmth": 0.04
+    },
+    "IMG_2640.MOV": {
+      "mid_warmth": 0.06,
+      "warmth": 0.04
+    },
+    "IMG_2629V.mov": {
+      "mid_warmth": 0.06,
+      "warmth": 0.04
+    },
+    "IMG_2617.MOV": {
+      "mid_warmth": 0.09,
+      "warmth": 0.05
+    },
+    "IMG_2604.MOV": {
+      "mid_warmth": -0.02
+    },
+    "IMG_2645.MOV": {
+      "mid_warmth": -0.02
+    },
+    "IMG_2646.MOV": {
+      "mid_warmth": -0.02
+    }
+  }
+}

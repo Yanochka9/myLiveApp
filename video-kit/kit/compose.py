@@ -777,6 +777,9 @@ def build_audio(p, out):
         st, vol, ev = m.get('start', 0.0), m.get('volume', 0.14), m.get('end_volume', 0.42)
         se = p.speech_end
         expr = f"if(lt(t,{se - 0.15}),{vol},if(lt(t,{se + 0.25}),{vol}+(t-{se - 0.15})/0.4*{ev - vol},{ev}))"
+        for b0, b1 in m.get('boost', []):   # music-only stretches (no voice): music up to end_volume with short ramps
+            b0, b1 = p.t(b0), p.t(b1)
+            expr = f"if(between(t,{b0 - 0.2},{b1 + 0.2}),{vol}+({ev - vol})*min(1,min((t-{b0 - 0.2})/0.2,({b1 + 0.2}-t)/0.2)),{expr})"
         filt.append(f"[{k}:a]atrim={st}:{st + T},asetpts=PTS-STARTPTS,aformat=sample_rates=48000:channel_layouts=stereo,"
                     f"afade=t=in:d=0.05,volume='{expr}':eval=frame,afade=t=out:st={T - 1.0}:d=1.0[mus]")
         mix = ['[voice]', '[mus]']
