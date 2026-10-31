@@ -145,25 +145,29 @@
   "cutaways": [
     {
       "clip": "IMG_2615.MOV",
-      "src": 0.0,
-      "at": "w:котором-0.05",
-      "until": "w:складываются-0.05",
+      "src": 0.3,
+      "at": "w:вот-0.04",
+      "until": "w:складываются-0.02",
       "zoom": [
         1.04,
-        1.08
+        1.07
       ],
       "dy": 40
     },
     {
       "clip": "IMG_2612.MOV",
-      "src": 0.7,
-      "at": "w:складываются-0.05",
-      "until": "w:вашу-0.05",
+      "src": 0.05,
+      "at": "w:складываются-0.02",
+      "until": 8.58,
       "zoom": [
         1.04,
         1.08
       ],
-      "dy": 100
+      "dy": 100,
+      "drift": [
+        -20,
+        -20
+      ]
     },
     {
       "clip": "IMG_2628.MOV",
@@ -189,25 +193,42 @@
     },
     {
       "clip": "IMG_2639.MOV",
-      "src": 0.2,
-      "at": "w:есть#2-0.05",
-      "until": "w:варианты",
+      "src": 0.1,
+      "at": "w:чтобы-0.03",
+      "until": "w:есть#2-0.04",
       "zoom": [
         1.0,
-        1.03
+        1.05
+      ],
+      "dy": 0,
+      "tin": "zoom"
+    },
+    {
+      "clip": "IMG_2638.MOV",
+      "src": 0.3,
+      "at": "w:есть#2-0.04",
+      "until": "w:тут-0.05",
+      "zoom": [
+        1.03,
+        1.0
       ],
       "dy": 0
     },
     {
       "clip": "IMG_2640.MOV",
       "src": 0.3,
-      "at": "w:варианты",
-      "until": "w:тут-0.05",
+      "at": "w:тут-0.05",
+      "until": 17.45,
       "zoom": [
         1.0,
-        1.03
+        1.04
       ],
-      "dy": 40
+      "dy": 40,
+      "drift": [
+        -20,
+        20
+      ],
+      "tout": "zoom"
     }
   ],
   "endcard": {
@@ -318,16 +339,6 @@
       "icon": "check"
     },
     {
-      "type": "3d",
-      "kind": "slab",
-      "text": "БЕЗ ПЕРВОГО ВЗНОСА",
-      "at": "w:без#2-0.05",
-      "until": 24.45,
-      "x": 540,
-      "y": 640,
-      "scale": 0.9
-    },
-    {
       "type": "pill",
       "text": "ул. Рыбалко, 13А",
       "size": 44,
@@ -335,7 +346,7 @@
       "at": "w:рыбалко-0.05",
       "until": "w:нами-0.2",
       "x": 770,
-      "y": 620
+      "y": 690
     },
     {
       "type": "pill",
@@ -345,7 +356,7 @@
       "at": "w:третий-0.05",
       "until": "w:нами-0.2",
       "x": 770,
-      "y": 720
+      "y": 780
     },
     {
       "type": "logo",
@@ -399,7 +410,7 @@
       "icon": "stroller",
       "size": 156,
       "at": "w:семейный-0.05",
-      "until": "w:котором-0.05",
+      "until": "w:вот-0.05",
       "x": 870,
       "y": 700
     },
@@ -472,7 +483,7 @@
       "type": "icon",
       "icon": "mute",
       "size": 156,
-      "at": "w:тут-0.05",
+      "at": 17.45,
       "until": 18.009999999999998,
       "x": 880,
       "y": 640
@@ -523,41 +534,6 @@
       "opacity": 0.85
     },
     {
-      "type": "circle",
-      "at": "w:сиденья-0.1",
-      "until": "w:складываются-0.05",
-      "x": 600,
-      "y": 1110,
-      "rx": 370,
-      "ry": 210,
-      "width": 9,
-      "draw": 0.35
-    },
-    {
-      "type": "arrow",
-      "at": "w:складываются+0.05",
-      "until": "w:вашу-0.05",
-      "x0": 430,
-      "y0": 880,
-      "x1": 450,
-      "y1": 1150,
-      "bend": 0.18,
-      "width": 11,
-      "draw": 0.35
-    },
-    {
-      "type": "arrow",
-      "at": "w:складываются+0.15",
-      "until": "w:вашу-0.05",
-      "x0": 760,
-      "y0": 880,
-      "x1": 740,
-      "y1": 1150,
-      "bend": -0.18,
-      "width": 11,
-      "draw": 0.35
-    },
-    {
       "type": "gold",
       "text": "БЕЗ ПЕРВОГО ВЗНОСА",
       "size": 76,
@@ -571,6 +547,60 @@
       "until": "end",
       "x": 540,
       "y": 1025
+    },
+    {
+      "type": "arrow",
+      "at": "w:вот+0.05",
+      "until": 8.5,
+      "x0": 430,
+      "y0": 860,
+      "x1": 450,
+      "y1": 1140,
+      "bend": 0.18,
+      "width": 11,
+      "draw": 0.35
+    },
+    {
+      "type": "arrow",
+      "at": "w:вот+0.15",
+      "until": 8.5,
+      "x0": 760,
+      "y0": 860,
+      "x1": 740,
+      "y1": 1140,
+      "bend": -0.18,
+      "width": 11,
+      "draw": 0.35
+    },
+    {
+      "type": "gold",
+      "text": "БЕЗ ПЕРВОГО ВЗНОСА",
+      "size": 86,
+      "colors": [
+        "#FF7A1A",
+        "#FFC23A",
+        "#45C8F2"
+      ],
+      "outline": 0.045,
+      "at": "w:без#2-0.05",
+      "until": 24.45,
+      "x": 540,
+      "y": 580
+    },
+    {
+      "type": "gold",
+      "text": "БЕЛАВТО ЦЕНТР",
+      "size": 104,
+      "colors": [
+        "#FF7A1A",
+        "#FFC23A",
+        "#45C8F2"
+      ],
+      "outline": 0.045,
+      "at": "w:белавтоцентр-0.05",
+      "until": "w:нами-0.25",
+      "x": 540,
+      "y": 560
     }
   ],
   "sfx": [
@@ -593,51 +623,33 @@
       "gain": 0.03
     },
     {
-      "file": "assets/sfx/belavto_click1.wav",
+      "file": "assets/sfx/belavto_tick.wav",
       "at": 0.1,
-      "peak": 0.09,
+      "peak": 0.08,
       "gain": 0.02
     },
     {
-      "file": "assets/sfx/belavto_click2.wav",
-      "at": 3.6999999999999997,
-      "peak": 0.104,
-      "gain": 0.02
-    },
-    {
-      "file": "assets/sfx/belavto_click2.wav",
-      "at": 8.68,
-      "peak": 0.104,
-      "gain": 0.02
-    },
-    {
-      "file": "assets/sfx/belavto_click2.wav",
-      "at": 13.01,
-      "peak": 0.104,
-      "gain": 0.02
-    },
-    {
-      "file": "assets/sfx/belavto_click4.wav",
+      "file": "assets/sfx/belavto_tick.wav",
       "at": "w:оформим-0.05",
-      "peak": 0.067,
+      "peak": 0.08,
       "gain": 0.02
     },
     {
-      "file": "assets/sfx/belavto_click1.wav",
+      "file": "assets/sfx/belavto_tick.wav",
       "at": "w:без#2-0.05",
-      "peak": 0.09,
+      "peak": 0.08,
       "gain": 0.02
     },
     {
-      "file": "assets/sfx/belavto_click4.wav",
-      "at": "w:рыбалко-0.05",
-      "peak": 0.067,
+      "file": "assets/sfx/belavto_tick.wav",
+      "at": "w:белавтоцентр-0.05",
+      "peak": 0.08,
       "gain": 0.02
     },
     {
-      "file": "assets/sfx/belavto_click2.wav",
-      "at": "w:нами-0.2",
-      "peak": 0.104,
+      "file": "assets/sfx/belavto_tick.wav",
+      "at": "w:нами-0.25",
+      "peak": 0.08,
       "gain": 0.02
     }
   ],
