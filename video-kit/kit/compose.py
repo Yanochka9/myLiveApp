@@ -426,7 +426,7 @@ def build_items(p):
             tin = a.get('tin') if abs(s - a['t0']) < 1e-6 else next((c.get('tout') for c in p.cfg.get('cutaways', [])
                                                                        if abs(p.t(c['until'], ref=p.t(c['at'])) - s) < 1e-6), None)
             items.append(dict(clip=a['clip'], src=a['in'] + (s - a['t0']), t0=s, t1=e, span=(a['t0'], a['t1']),
-                              zoom=zoom_fn(a.get('zoom', [1.0, 1.06])), drift=None, dy=a.get('dy', 0.0), tin=tin, speed=1.0, aroll=True))
+                              zoom=zoom_fn(a.get('zoom', [1.0, 1.06])), drift=[a['dx'], a['dx']] if a.get('dx') else None, dy=a.get('dy', 0.0), tin=tin, speed=1.0, aroll=True))
     items += cuts
     ec = p.cfg.get('endcard')
     if ec:
