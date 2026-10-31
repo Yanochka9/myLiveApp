@@ -377,7 +377,7 @@ def draw_subs(dst, T, groups, gfx, p):
     hl = p.color(s['highlight']); x = CW / 2 - total / 2
     for i, (t, w, a, b) in enumerate(parts):
         active = (a - 0.04 <= T < max(b, a + 0.12) + 0.06) if s['mode'] == 'karaoke' else (s['mode'] == 'first' and i == 0)
-        if active:
+        if active and s.get('box', True):
             k = eo3((T - a + 0.04) / 0.1) if s['mode'] == 'karaoke' else 1
             pad = s['size'] * 0.22
             d.rounded_rectangle((x - pad, cy - th / 2 - pad * 0.85, x + w + pad, cy + th / 2 + pad), int(s['size'] * 0.28),
@@ -401,7 +401,7 @@ def build_items(p):
     for c in p.cfg.get('cutaways', []):
         t0, t1 = p.t(c['at']), p.t(c['until'], ref=p.t(c['at']))
         cuts.append(dict(clip=c['clip'], src=c.get('src', 0.0), t0=t0, t1=t1, span=(t0, t1), zoom=zoom_fn(c.get('zoom', [1.04, 1.12])),
-                         drift=c.get('drift'), dy=c.get('dy', 0.0), tin=c.get('tin'), speed=c.get('speed', 1.0), cut=True))
+                         drift=c.get('drift'), linear=c.get('linear', False), dy=c.get('dy', 0.0), tin=c.get('tin'), speed=c.get('speed', 1.0), cut=True))
     cuts.sort(key=lambda c: c['t0'])
     items = []
     for a in p.aroll:
@@ -554,7 +554,8 @@ class Comp:
             z *= 1 + 0.14 * eio(1 - (it['t1'] - T) / 0.12)
         dx = 0.0
         if it.get('drift'):
-            d = it['drift']; dx = d[0] + (d[1] - d[0]) * eio(lt / (it['t1'] - it['t0']))
+            d = it['drift']; u = lt / (it['t1'] - it['t0'])
+            dx = d[0] + (d[1] - d[0]) * (u if it.get('linear') else eio(u))
         return z, dx
 
     @staticmethod

@@ -47,7 +47,7 @@
     "size": 64,
     "y": 1330,
     "color": "#FFFFFF",
-    "highlight": "accent",
+    "highlight": "#1B1838",
     "highlight_text": "#FFFFFF",
     "mode": "karaoke",
     "max_words": 3,
@@ -56,7 +56,8 @@
     "replace": {
       "Подберем": "Подберём"
     },
-    "merge": []
+    "merge": [],
+    "box": true
   },
   "music": {
     "file": "work/belavto_ad/music.wav",
@@ -125,26 +126,64 @@
   ],
   "cutaways": [
     {
-      "clip": "IMG_2612.MOV",
-      "src": 0.2,
-      "at": "w:сиденья-0.1",
-      "until": "w:любую-0.1",
+      "clip": "IMG_2615.MOV",
+      "src": 0.0,
+      "at": 7.3,
+      "until": 7.9,
       "zoom": [
-        1.12,
-        1.03
+        1.06,
+        1.06
       ],
-      "tin": "zoom"
+      "drift": [
+        -30,
+        -5
+      ],
+      "linear": true
+    },
+    {
+      "clip": "IMG_2612.MOV",
+      "src": 0.587,
+      "at": 7.9,
+      "until": 8.5,
+      "zoom": [
+        1.06,
+        1.06
+      ],
+      "drift": [
+        -5,
+        20
+      ],
+      "linear": true
     },
     {
       "clip": "IMG_2615.MOV",
-      "src": 0.2,
-      "at": "w:любую-0.1",
-      "until": "w:поездку+0.3",
+      "src": 1.2,
+      "at": 8.5,
+      "until": 9.1,
       "zoom": [
-        1.03,
-        1.1
+        1.06,
+        1.06
       ],
-      "tout": "zoom"
+      "drift": [
+        20,
+        45
+      ],
+      "linear": true
+    },
+    {
+      "clip": "IMG_2612.MOV",
+      "src": 1.316,
+      "at": 9.1,
+      "until": 9.7,
+      "zoom": [
+        1.06,
+        1.06
+      ],
+      "drift": [
+        45,
+        70
+      ],
+      "linear": true
     },
     {
       "clip": "IMG_2628.MOV",
@@ -152,7 +191,7 @@
       "at": "w:минские-0.1",
       "until": "w:январе",
       "zoom": [
-        1.12,
+        1.1,
         1.03
       ],
       "tin": "zoom"
@@ -164,9 +203,8 @@
       "until": "we:проблема",
       "zoom": [
         1.03,
-        1.1
-      ],
-      "tout": "zoom"
+        1.08
+      ]
     },
     {
       "clip": "IMG_2639.MOV",
@@ -174,7 +212,7 @@
       "at": "w:есть#2-0.05",
       "until": "w:варианты",
       "zoom": [
-        1.12,
+        1.1,
         1.03
       ],
       "tin": "zoom"
@@ -186,7 +224,7 @@
       "until": "w:тут-0.05",
       "zoom": [
         1.03,
-        1.1
+        1.08
       ],
       "drift": [
         -20,
@@ -231,63 +269,14 @@
       "size": 120
     },
     {
-      "type": "3d",
-      "kind": "rise",
-      "text": "OPEL",
-      "layer": "behind",
-      "at": 4.05,
-      "until": "w:сиденья-0.1",
-      "x": 540,
-      "y": 540,
-      "scale": 0.45,
-      "canvas": [
-        1080,
-        400
-      ],
-      "frac": 0.9,
-      "fade_bottom": 0.0
-    },
-    {
-      "type": "3d",
-      "kind": "rise",
-      "text": "ZAFIRA",
-      "layer": "behind",
-      "at": 4.05,
-      "until": "w:сиденья-0.1",
-      "x": 540,
-      "y": 680,
-      "scale": 0.7
-    },
-    {
       "type": "pill",
       "text": "ДЛЯ СЕМЬИ",
       "size": 46,
-      "style": "accent",
-      "at": "w:семейный-0.05",
-      "until": "w:сиденья-0.1",
-      "x": 760,
-      "y": 860,
-      "icon": "check"
-    },
-    {
-      "type": "icon",
-      "icon": "stroller",
-      "size": 110,
-      "at": "w:семейный-0.05",
-      "until": "w:сиденья-0.1",
-      "x": 960,
-      "y": 760
-    },
-    {
-      "type": "pill",
-      "text": "СИДЕНЬЯ СКЛАДЫВАЮТСЯ",
-      "size": 46,
       "style": "light",
-      "at": "w:сиденья-0.05",
-      "until": "w:поездку+0.3",
+      "at": 4.25,
+      "until": 9.2,
       "x": 540,
-      "y": 545,
-      "icon": "check"
+      "y": 545
     },
     {
       "type": "wipe",
@@ -297,90 +286,14 @@
       "size": 100
     },
     {
-      "type": "3d",
-      "kind": "rise",
-      "text": "VOLKSWAGEN",
-      "layer": "behind",
-      "at": 9.799999999999999,
-      "until": "w:полный-0.05",
-      "x": 540,
-      "y": 530,
-      "scale": 0.45,
-      "canvas": [
-        1080,
-        400
-      ],
-      "frac": 0.9,
-      "fade_bottom": 0.0
-    },
-    {
-      "type": "3d",
-      "kind": "rise",
-      "text": "TAOS",
-      "layer": "behind",
-      "at": 9.799999999999999,
-      "until": "w:полный-0.05",
-      "x": 540,
-      "y": 670,
-      "scale": 0.7
-    },
-    {
-      "type": "icon",
-      "icon": "snow",
-      "size": 130,
-      "at": "w:зимы-0.05",
-      "until": "w:минские-0.1",
-      "x": 170,
-      "y": 560
-    },
-    {
-      "type": "photo",
-      "clip": "IMG_2629V.mov",
-      "src": 3.0,
-      "crop": [
-        330,
-        620,
-        560,
-        560
-      ],
-      "text": "ПОЛНЫЙ ПРИВОД",
-      "size": 34,
-      "width": 360,
-      "tilt": -5,
-      "at": "w:полный-0.05",
-      "until": "w:минские-0.1",
-      "x": 290,
-      "y": 760
-    },
-    {
       "type": "pill",
-      "text": "ДЛЯ МИНСКОЙ ЗИМЫ",
+      "text": "ЗИМА НЕ СТРАШНА",
       "size": 46,
       "style": "light",
-      "at": "w:минские-0.1",
-      "until": "w:январе",
-      "x": 540,
+      "at": 10.0,
+      "until": 13.6,
+      "x": 330,
       "y": 545
-    },
-    {
-      "type": "icon",
-      "icon": "snow",
-      "size": 110,
-      "at": "w:минские-0.1",
-      "until": "we:проблема",
-      "x": 900,
-      "y": 640
-    },
-    {
-      "type": "pill",
-      "text": "НЕ ПРОБЛЕМА",
-      "size": 50,
-      "style": "accent",
-      "at": "w:январе",
-      "until": "we:проблема",
-      "x": 540,
-      "y": 545,
-      "icon": "check"
     },
     {
       "type": "wipe",
@@ -390,69 +303,14 @@
       "size": 72
     },
     {
-      "type": "3d",
-      "kind": "rise",
-      "text": "BMW",
-      "layer": "behind",
-      "at": 14.2,
-      "until": "w:есть#2-0.05",
-      "x": 640,
-      "y": 530,
-      "scale": 0.45,
-      "canvas": [
-        1080,
-        400
-      ],
-      "frac": 0.9,
-      "fade_bottom": 0.0
-    },
-    {
-      "type": "3d",
-      "kind": "rise",
-      "text": "3 SERIES",
-      "layer": "behind",
-      "at": 14.2,
-      "until": "w:есть#2-0.05",
-      "x": 640,
-      "y": 660,
-      "scale": 0.62
-    },
-    {
-      "type": "icon",
-      "icon": "spark",
-      "size": 100,
-      "at": "w:оборачивались",
-      "until": "w:есть#2-0.05",
-      "x": 930,
-      "y": 800
-    },
-    {
       "type": "pill",
-      "text": "ЭФФЕКТНЫЙ ВЫБОР",
-      "size": 48,
-      "style": "accent",
-      "at": "w:есть#2-0.05",
-      "until": "w:тут-0.05",
-      "x": 540,
-      "y": 545
-    },
-    {
-      "type": "icon",
-      "icon": "mute",
-      "size": 120,
-      "at": "w:тут-0.05",
+      "text": "ЧТОБЫ ОБОРАЧИВАЛИСЬ",
+      "size": 46,
+      "style": "light",
+      "at": 14.4,
       "until": 19.3,
-      "x": 880,
-      "y": 600
-    },
-    {
-      "type": "icon",
-      "icon": "spark",
-      "size": 90,
-      "at": "w:комментариев",
-      "until": 19.3,
-      "x": 760,
-      "y": 520
+      "x": 600,
+      "y": 522
     },
     {
       "type": "pill",
@@ -462,7 +320,7 @@
       "at": "w:подберем-0.05",
       "until": "w:без#2-0.05",
       "x": 730,
-      "y": 540,
+      "y": 560,
       "icon": "check"
     },
     {
@@ -473,7 +331,7 @@
       "at": "w:проверим-0.05",
       "until": "w:без#2-0.05",
       "x": 730,
-      "y": 640,
+      "y": 660,
       "icon": "check"
     },
     {
@@ -484,7 +342,7 @@
       "at": "w:оформим-0.05",
       "until": "w:без#2-0.05",
       "x": 730,
-      "y": 740,
+      "y": 760,
       "icon": "check"
     },
     {
@@ -498,15 +356,6 @@
       "scale": 0.62
     },
     {
-      "type": "3d",
-      "kind": "pin",
-      "at": "w:рыбалко-0.1",
-      "until": "w:нами-0.2",
-      "x": 770,
-      "y": 560,
-      "scale": 0.42
-    },
-    {
       "type": "pill",
       "text": "ул. Рыбалко, 13А",
       "size": 44,
@@ -514,7 +363,7 @@
       "at": "w:рыбалко-0.05",
       "until": "w:нами-0.2",
       "x": 770,
-      "y": 760
+      "y": 620
     },
     {
       "type": "pill",
@@ -524,7 +373,7 @@
       "at": "w:третий-0.05",
       "until": "w:нами-0.2",
       "x": 770,
-      "y": 850
+      "y": 720
     },
     {
       "type": "gold",
@@ -533,7 +382,7 @@
       "at": "w:нами-0.2",
       "until": "speech_end",
       "x": 540,
-      "y": 540
+      "y": 560
     },
     {
       "type": "logo",
