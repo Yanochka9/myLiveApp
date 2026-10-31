@@ -324,13 +324,14 @@
   "mask_cleanup": {},
   "elements": [
     {
-      "type": "logo",
-      "file": "assets/belavto_logo.png",
+      "type": "pill",
+      "text": "ПОДБЕРЁМ АВТО ПОД ВАС",
+      "size": 50,
+      "style": "light",
       "at": 0.1,
       "until": 3.61,
       "x": 540,
-      "y": 580,
-      "scale": 0.62
+      "y": 545
     },
     {
       "type": "pill",
@@ -426,15 +427,6 @@
       "y": 720
     },
     {
-      "type": "gold",
-      "text": "С НАМИ ВСЁ ВОЗМОЖНО",
-      "size": 74,
-      "at": "w:нами-0.2",
-      "until": "speech_end",
-      "x": 540,
-      "y": 560
-    },
-    {
       "type": "logo",
       "file": "assets/belavto_logo.png",
       "at": "speech_end",
@@ -479,8 +471,8 @@
       "size": 104,
       "at": "w:машина",
       "until": 3.6,
-      "x": 250,
-      "y": 620
+      "x": 150,
+      "y": 700
     },
     {
       "type": "icon",
@@ -488,8 +480,8 @@
       "size": 78,
       "at": "w:машина+0.15",
       "until": 3.6,
-      "x": 830,
-      "y": 560
+      "x": 940,
+      "y": 660
     },
     {
       "type": "icon",
@@ -518,7 +510,7 @@
       "at": "w:любую-0.05",
       "until": 8.75,
       "x": 840,
-      "y": 720
+      "y": 780
     },
     {
       "type": "icon",
@@ -586,13 +578,71 @@
       "y": 640
     },
     {
-      "type": "icon",
-      "icon": "heart",
-      "size": 117,
-      "at": "w:нами-0.1",
+      "type": "label",
+      "text": "С нами",
+      "size": 58,
+      "font": "bold",
+      "at": "w:нами-0.2",
       "until": "speech_end",
-      "x": 880,
-      "y": 720
+      "x": 540,
+      "y": 525
+    },
+    {
+      "type": "gold",
+      "text": "ВСЁ ВОЗМОЖНО",
+      "size": 108,
+      "colors": [
+        "#FF7A1A",
+        "#FFC23A",
+        "#45C8F2"
+      ],
+      "outline": 0.045,
+      "at": "w:всё-0.1",
+      "until": "speech_end",
+      "x": 540,
+      "y": 645
+    },
+    {
+      "type": "circle",
+      "at": "w:всё",
+      "until": "speech_end",
+      "x": 540,
+      "y": 657,
+      "rx": 430,
+      "ry": 82,
+      "width": 8,
+      "draw": 0.4,
+      "color": "#FFC23A"
+    },
+    {
+      "type": "icon",
+      "icon": "spark",
+      "size": 90,
+      "at": "w:возможно-0.1",
+      "until": "speech_end",
+      "x": 120,
+      "y": 565,
+      "color": "#FFC23A"
+    },
+    {
+      "type": "icon",
+      "icon": "spark",
+      "size": 70,
+      "at": "w:возможно",
+      "until": "speech_end",
+      "x": 965,
+      "y": 725,
+      "color": "#45C8F2"
+    },
+    {
+      "type": "logo",
+      "file": "assets/belavto_logo.png",
+      "at": 0.3,
+      "until": "speech_end",
+      "x": 962,
+      "y": 1405,
+      "scale": 0.26,
+      "opacity": 0.85
     }
   ],
   "sfx": [

@@ -170,14 +170,22 @@ class Gfx:
         return card
 
     @functools.lru_cache(maxsize=None)
-    def gold(self, text, size, font='black', outline=0.06):
-        """text filled with the accent gradient (light top -> accent bottom), dark outline, soft shadow"""
+    def gold(self, text, size, font='black', outline=0.06, colors=None):
+        """text filled with the accent gradient (light top -> accent bottom), dark outline, soft shadow;
+        colors: list of colours -> horizontal multi-stop gradient instead (e.g. the logo's orange -> cyan)"""
         p = self.p; f = self.font(font, size); bb = f.getbbox(text); ow = max(2, int(size * outline))
         w, h = bb[2] - bb[0] + 2 * ow + 20, bb[3] - bb[1] + 2 * ow + 20
         m = Image.new('L', (w, h), 0); ImageDraw.Draw(m).text((10 + ow - bb[0], 10 + ow - bb[1]), text, font=f, fill=255)
         o = Image.new('L', (w, h), 0)
         ImageDraw.Draw(o).text((10 + ow - bb[0], 10 + ow - bb[1]), text, font=f, fill=255, stroke_width=ow, stroke_fill=255)
-        g = self.rounded_grad(w, h, 0, p.color('accent_light'), p.color('accent'))
+        if colors:
+            cs = np.array([p.color(c) for c in colors], np.float32); xs = np.linspace(0, 1, len(cs))
+            u = np.linspace(0, 1, w)
+            row = np.stack([np.interp(u, xs, cs[:, k]) for k in range(3)], 1)
+            shade = np.linspace(1.08, 0.9, h)[:, None, None]
+            g = Image.fromarray(np.clip(row[None] * shade, 0, 255).astype(np.uint8), 'RGB').convert('RGBA')
+        else:
+            g = self.rounded_grad(w, h, 0, p.color('accent_light'), p.color('accent'))
         im = Image.new('RGBA', (w, h), (*p.color('dark'), 0)); im.putalpha(o)
         g.putalpha(m); im.alpha_composite(g)
         return self.shadow(im, blur=12, off=(0, 6), op=0.45)
@@ -605,7 +613,7 @@ class Comp:
             draw_line(dst, (x, y + 40), pt, eo3((T - a - 0.1) / 0.3), al, self.p.color('text'), self.p.color('accent'))
             blend(dst, g.pill(el['text'], el.get('size', 44), el.get('style', 'accent'), el.get('font', 'xbold'), el.get('icon')), x, y, s, al)
         elif t == 'logo':
-            blend(dst, g.image(el['file']), x, y, s * sc, al)
+            blend(dst, g.image(el['file']), x, y, s * sc, al * el.get('opacity', 1.0))
         elif t == 'circle':   # marker circle drawn around a detail
             u, v = (T - a) / el.get('draw', 0.35), clamp((b - T) / 0.2)
             pts = wobble_ellipse(x, y, el.get('rx', 160), el.get('ry', 110), seed=int(a * 100))
@@ -627,7 +635,8 @@ class Comp:
                 fg = g.rounded_grad(fw, bh, bh // 2, self.p.color('accent_light'), self.p.color('accent'))
                 blend(dst, fg, x - bw / 2 + fw / 2, by, s, al)
         elif t == 'gold':     # gradient-filled title text
-            blend(dst, g.gold(el['text'], el.get('size', 90), el.get('font', 'black')), x, y, s * sc, al)
+            cols = tuple(el['colors']) if el.get('colors') else None
+            blend(dst, g.gold(el['text'], el.get('size', 90), el.get('font', 'black'), el.get('outline', 0.06), cols), x, y, s * sc, al)
         elif t == 'rank':     # place badge
             blend(dst, g.rank(el['n'], el.get('size', 100), el.get('word', 'МЕСТО')), x, y, s * sc, al)
         elif t == 'measure':  # dimension line grows from the middle to both ends, ticks + gold label
