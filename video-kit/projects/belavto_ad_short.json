@@ -31,7 +31,11 @@
       "semibold": "assets/fonts/Manrope-SemiBold.ttf",
       "black_italic": "assets/fonts/Manrope-ExtraBold.ttf"
     },
-    "on_light": "#0B1530"
+    "on_light": "#0B1530",
+    "leak": [
+      "#FF8A3D",
+      "#45C8F2"
+    ]
   },
   "grade": {
     "lut": "assets/luts/refive_light.cube",
@@ -48,7 +52,7 @@
     "y": 1330,
     "color": "#FFFFFF",
     "highlight": "#1B1838",
-    "highlight_text": "#FFFFFF",
+    "highlight_text": "#6FD3F7",
     "mode": "karaoke",
     "max_words": 3,
     "max_chars": 17,
@@ -57,7 +61,8 @@
       "Подберем": "Подберём"
     },
     "merge": [],
-    "box": true
+    "box": false,
+    "font": "bold"
   },
   "music": {
     "file": "work/belavto_ad/music.wav",
@@ -280,7 +285,7 @@
       "at": "w:без-0.05",
       "until": 15.5,
       "x": 540,
-      "y": 580,
+      "y": 640,
       "scale": 0.9
     },
     {

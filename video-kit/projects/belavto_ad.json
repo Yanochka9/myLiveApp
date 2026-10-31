@@ -31,7 +31,11 @@
       "semibold": "assets/fonts/Manrope-SemiBold.ttf",
       "black_italic": "assets/fonts/Manrope-ExtraBold.ttf"
     },
-    "on_light": "#0B1530"
+    "on_light": "#0B1530",
+    "leak": [
+      "#FF8A3D",
+      "#45C8F2"
+    ]
   },
   "grade": {
     "lut": "assets/luts/refive_light.cube",
@@ -48,7 +52,7 @@
     "y": 1330,
     "color": "#FFFFFF",
     "highlight": "#1B1838",
-    "highlight_text": "#FFFFFF",
+    "highlight_text": "#6FD3F7",
     "mode": "karaoke",
     "max_words": 3,
     "max_chars": 17,
@@ -57,7 +61,8 @@
       "Подберем": "Подберём"
     },
     "merge": [],
-    "box": true
+    "box": false,
+    "font": "bold"
   },
   "music": {
     "file": "work/belavto_ad/music.wav",
@@ -85,7 +90,8 @@
       "zoom": [
         1.0,
         1.06
-      ]
+      ],
+      "tin": "flash"
     },
     {
       "clip": "IMG_2620.MOV",
@@ -94,7 +100,8 @@
       "zoom": [
         1.0,
         1.06
-      ]
+      ],
+      "tin": "flash"
     },
     {
       "clip": "IMG_2635.MOV",
@@ -103,7 +110,8 @@
       "zoom": [
         1.0,
         1.06
-      ]
+      ],
+      "tin": "flash"
     },
     {
       "clip": "IMG_2645.MOV",
@@ -112,7 +120,8 @@
       "zoom": [
         1.0,
         1.06
-      ]
+      ],
+      "tin": "zoom"
     },
     {
       "clip": "IMG_2646.MOV",
@@ -264,52 +273,31 @@
       "scale": 0.8
     },
     {
-      "type": "wipe",
-      "at": 3.4400000000000004,
-      "until": 4.34,
-      "text": "ДЛЯ СЕМЬИ",
-      "size": 120
-    },
-    {
       "type": "pill",
       "text": "ДЛЯ СЕМЬИ",
       "size": 46,
       "style": "light",
-      "at": 4.25,
+      "at": 4.15,
       "until": 9.2,
       "x": 540,
       "y": 545
     },
     {
-      "type": "wipe",
-      "at": 9.19,
-      "until": 10.09,
-      "text": "ЗИМА НЕ СТРАШНА",
-      "size": 100
-    },
-    {
       "type": "pill",
       "text": "ЗИМА НЕ СТРАШНА",
       "size": 46,
       "style": "light",
-      "at": 10.0,
+      "at": 9.9,
       "until": 13.6,
       "x": 330,
       "y": 545
     },
     {
-      "type": "wipe",
-      "at": 13.59,
-      "until": 14.49,
-      "text": "ЧТОБЫ ОБОРАЧИВАЛИСЬ",
-      "size": 72
-    },
-    {
       "type": "pill",
       "text": "ЧТОБЫ ОБОРАЧИВАЛИСЬ",
       "size": 46,
       "style": "light",
-      "at": 14.4,
+      "at": 14.3,
       "until": 19.3,
       "x": 600,
       "y": 522
@@ -354,7 +342,7 @@
       "at": "w:без#2-0.05",
       "until": 26.05,
       "x": 540,
-      "y": 580,
+      "y": 640,
       "scale": 0.9
     },
     {
@@ -428,22 +416,28 @@
   ],
   "sfx": [
     {
-      "file": "assets/sfx/swish_soft.wav",
+      "file": "assets/sfx/belavto_whoosh.wav",
       "at": 3.95,
-      "peak": 0.2,
-      "gain": 0.05
+      "peak": 2.0,
+      "gain": 0.08
     },
     {
-      "file": "assets/sfx/swish_soft.wav",
+      "file": "assets/sfx/belavto_whoosh.wav",
       "at": 9.7,
-      "peak": 0.2,
-      "gain": 0.05
+      "peak": 2.0,
+      "gain": 0.08
     },
     {
-      "file": "assets/sfx/swish_soft.wav",
+      "file": "assets/sfx/belavto_whoosh.wav",
       "at": 14.1,
-      "peak": 0.2,
-      "gain": 0.05
+      "peak": 2.0,
+      "gain": 0.08
+    },
+    {
+      "file": "assets/sfx/belavto_whoosh.wav",
+      "at": "speech_end",
+      "peak": 2.0,
+      "gain": 0.06
     }
   ],
   "asr_model": "medium",

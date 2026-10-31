@@ -494,6 +494,9 @@ class Comp:
         self.glow_col = acc * p.theme['glow']
         fl = np.array(p.color('flash'), np.float32) / 255
         self.flash_col = fl
+        lk = p.theme.get('leak')     # two colours -> flashes become a diagonal light leak
+        self.leak = [np.array(p.color(c), np.float32) / 255 for c in lk] if lk else None
+        self.diag = ((xx / W) * 0.55 + (1 - yy / H) * 0.45).astype(np.float32)
         self.flash_ts = [it['t0'] for it in self.items if it.get('tin') == 'flash']
         self.zoom_cuts = [it['t0'] for it in self.items if it.get('tin') == 'zoom']
 
@@ -699,7 +702,15 @@ class Comp:
         draw_subs(out, T, self.groups, self.gfx, p)
         for ft in self.flash_ts:
             d = abs(T - ft)
-            if d < 0.2:
+            if self.leak is not None and d < 0.3:
+                # light leak: diagonal two-colour streak sweeps across the cut, screen-blended, short white peak
+                u = (T - ft + 0.3) / 0.6
+                band = np.exp(-((self.diag - (u * 1.6 - 0.3)) / 0.32) ** 2)[..., None]
+                k = (1 - d / 0.3) ** 1.5
+                col = self.leak[0] * (1 - self.diag[..., None]) + self.leak[1] * self.diag[..., None]
+                out = out + (255 - out) * col * band * k
+                if d < 0.07: out = out + (255 - out) * (0.35 * (1 - d / 0.07))
+            elif d < 0.2:
                 k = (1 - d / 0.2) ** 2 * 0.45
                 out = out + (255 - out) * (self.glowmap * k) * self.flash_col
         out = out * self.vig + self.glowmap * self.glow_col
