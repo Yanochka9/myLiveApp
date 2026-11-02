@@ -23,8 +23,8 @@ MAIN = '2504'
 W = json.load(open(f"{WORK}/words_medium.json"))[MAIN]
 HDR = open(f"{S}/../grade_hdr_to_sdr.txt").read().strip()   # первым: после zoompan zscale падает
 LOOK = f"lut3d={A}/r5_light.cube,unsharp=5:5:0.4"
-MUSIC_ID = '1qbZIIjZFgVdDkU7WbI64Y0ZTHzE32ibK'  # «музыка и звуки», тот же трек, что в историях
-MUSIC_DB = -25
+MUSIC_ID = '19CPc_GsOVXSTSU7amm4dPYcFdRAPm0Eq'  # «музыка и звуки», Chill Coffee Flow (другой трек, чем в историях)
+MUSIC_DB = -30                                     # тише: клиент просил
 
 
 def run(cmd):
@@ -74,8 +74,36 @@ def ranges_from_words(a, b, gap=0.35):
     res = []
     for s, e in out:
         s = onset(s, res[-1][1] if res else a) - 0.06
-        res.append([max(a, s), min(b, e + 0.15)])
-    return res
+        e += 0.15
+        # Whisper ошибается на 0.1–0.5 с: расширяем кусок по реальному звуку до тишины (начало ≤0.4 с, конец ≤0.35 с)
+        lo = res[-1][1] if res else a
+        k = 0
+        while k < 40 and s - 0.01 > lo and DB[int((s - 0.01) * 100)] > -44:
+            s -= 0.01; k += 1
+        k = 0
+        while k < 35 and e + 0.01 < b and DB[int(e * 100)] > -44:
+            e += 0.01; k += 1
+        s, e = max(a, s), min(b, e)
+        if res and s - res[-1][1] < 0.12:      # слиплись — один кусок
+            res[-1][1] = e
+        else:
+            res.append([s, e])
+    # Whisper растягивает слова на паузы — режем ещё и по реальной тишине (≥0.35 с тише −50 дБ), запас 0.1 с
+    out = []
+    for s, e in res:
+        cur, i, i1 = s, int(s * 100), int(e * 100)
+        while i < i1:
+            if DB[i] < -50:
+                j = i
+                while j < i1 and DB[j] < -50:
+                    j += 1
+                if j - i >= 35 and j < i1:
+                    out.append([cur, i / 100 + 0.1]); cur = j / 100 - 0.1
+                i = j
+            else:
+                i += 1
+        out.append([cur, e])
+    return [r for r in out if r[1] - r[0] > 0.15]
 
 
 VID_END = 91.5
@@ -310,14 +338,15 @@ def build_audio():
                  f"adelay={int(round(o * 1000))}:all=1[v{i}]")
     n = len(pieces)
     f.append(''.join(f"[v{i}]" for i in range(n)) + f"amix=inputs={n}:normalize=0,"
-             f"highpass=f=80,arnndn=m={A}/sh.rnnn:mix=0.85,lowpass=f=14000,"
+             f"highpass=f=80,arnndn=m={A}/sh.rnnn:mix=1,"
+             "agate=threshold=0.02:ratio=4:attack=5:release=200:range=0.12,lowpass=f=14000,"
              "acompressor=threshold=-20dB:ratio=3:attack=5:release=120:makeup=2,"
              f"apad=whole_dur={TOTAL:.3f},atrim=0:{TOTAL:.3f},asplit=2[voice][key]")
-    music = f"{WORK}/music.wav"
+    music = f"{WORK}/music_{MUSIC_ID[:6]}.wav"
     if not os.path.exists(music):
-        run(['curl', '-sSL', '-o', f"{WORK}/music_src.mov",
+        run(['curl', '-sSL', '-o', f"{WORK}/music_src_{MUSIC_ID[:6]}.mov",
              f"https://drive.usercontent.google.com/download?id={MUSIC_ID}&export=download&confirm=t"])
-        run(['ffmpeg', '-v', 'error', '-y', '-i', f"{WORK}/music_src.mov", '-vn', '-ac', '2', '-ar', '48000', music])
+        run(['ffmpeg', '-v', 'error', '-y', '-i', f"{WORK}/music_src_{MUSIC_ID[:6]}.mov", '-vn', '-ac', '2', '-ar', '48000', music])
     ins += ['-ss', '8', '-i', music]
     f.append(f"[{n}:a]aresample=48000,aformat=channel_layouts=stereo,volume={MUSIC_DB}dB,"
              f"afade=t=in:d=0.4,afade=t=out:st={TOTAL - 1.2:.3f}:d=1.2,apad,atrim=0:{TOTAL:.3f}[mus]")
@@ -423,14 +452,6 @@ def check(x, y, s=1.0):
     return f"m {x} {y + 14 * s} l {x + 10 * s} {y + 26 * s} l {x + 30 * s} {y} l {x + 34 * s} {y + 4 * s} l {x + 10 * s} {y + 34 * s} l {x - 4 * s} {y + 18 * s}"
 
 
-def clock(cx, cy, r):
-    """циферблат: обод + две стрелки"""
-    ring = circle(cx, cy, r) + " " + circle(cx, cy, r - 9).replace('m ', 'm ', 1)
-    hands = (f"m {cx - 4} {cy} l {cx - 4} {cy - r + 22} l {cx + 4} {cy - r + 22} l {cx + 4} {cy} "
-             f"m {cx} {cy - 4} l {cx + r - 28} {cy - 4} l {cx + r - 28} {cy + 4} l {cx} {cy + 4}")
-    return ring, hands
-
-
 def sun(cx, cy, r):
     d = circle(cx, cy, r)
     import math
@@ -441,6 +462,23 @@ def sun(cx, cy, r):
         nx, ny = -math.sin(a) * 5, math.cos(a) * 5
         d += f" m {x0 + nx:.0f} {y0 + ny:.0f} l {x1 + nx:.0f} {y1 + ny:.0f} l {x1 - nx:.0f} {y1 - ny:.0f} l {x0 - nx:.0f} {y0 - ny:.0f}"
     return d
+
+
+STYLE_FONT = {'Huge': ('Oswald-Bold.ttf', 230, 0), 'Days': ('Montserrat-ExtraBold.ttf', 64, 2),
+              'Item2': ('Montserrat-ExtraBold.ttf', 54, 1), 'Item': ('Montserrat-ExtraBold.ttf', 40, 1),
+              'Big': ('Oswald-Bold.ttf', 116, 3), 'Small': ('Montserrat-ExtraBold.ttf', 46, 4)}
+
+LIBASS_K = {'Oswald-Bold.ttf': 0.564, 'Montserrat-ExtraBold.ttf': 0.643}
+
+
+def tw(style, text):
+    """ширина строки в пикселях кадра — как её нарисует libass (шрифт и межбуквенный интервал стиля)"""
+    from PIL import ImageFont
+    f, size, sp = STYLE_FONT[style]
+    font = ImageFont.truetype(f"{A}/fonts/{f}", size)
+    k = LIBASS_K[f]                  # libass рисует шрифт мельче, чем PIL того же размера (замерено)
+    x0, _, x1, _ = font.getbbox(text)
+    return (x1 - x0) * k + sp * (len(text) - 1)
 
 
 def build_ass():
@@ -454,72 +492,98 @@ def build_ass():
     for st, en, txt in caption_events():
         D(5, st, en, 'Cap', f"{{\\pos(540,1040)\\fad(40,0)\\fscx88\\fscy88\\t(0,110,\\fscx100\\fscy100)}}{txt}")
 
-    # 1) GEELY · 5 % · QUANTUM
+    # Раскладка считается по реальной ширине текста (PIL с теми же шрифтами), группа «иконка + текст»
+    # центрируется по x=540 внутри плашки X1..X2, по вертикали — по центру плашки.
+    def row(icon_w, lines, gap=34):
+        w = icon_w + (gap if icon_w else 0) + max(tw(st, tx) for st, tx in lines)
+        x0 = round(540 - w / 2)
+        return x0, x0 + icon_w + (gap if icon_w else 0)
+
+    def two_lines(a1, a2, b, x, cy, top, bottom, d=42):
+        (st1, tx1, c1), (st2, tx2, c2) = top, bottom
+        D(2, a1, b, st1, f"{{\\an4\\pos({x},{cy - d})\\c{c1}\\fad(200,200)}}{tx1}")
+        D(2, a2, b, st2, f"{{\\an4\\pos({x},{cy + d})\\c{c2}\\fad(200,200)}}{tx2}")
+
+    WHITE = '&HFFFFFF&'
+    PANEL_BIG, PANEL_LOW = (1140, 1400), (1150, 1330)
+
+    def check_icon(a, b, cx, cy):
+        D(2, a, b, 'Shape', f"{{\\an7\\pos(0,0)\\1c{GOLD}\\bord0\\shad0{pop}\\org({cx},{cy})}}" + shape(circle(cx, cy, 44)))
+        D(3, a, b, 'Shape', f"{{\\an7\\pos(0,0)\\1c&H101010&\\bord0\\shad0\\fad(160,200)}}" + shape(check(cx - 16, cy - 18, 1.0)))
+
+    # 1) 5 % · ПЛЁНКА QUANTUM
     a = word('5') - 0.05; b = word('для') - 0.1
-    panel(a, b, 1140, 1400)
-    D(2, a, b, 'Huge', f"{{\\an6\\pos(470,1272)\\c{GOLD}{pop}}}5%")
-    D(2, a + 0.25, b, 'Days', f"{{\\an4\\pos(500,1235)\\fad(200,200)}}ПЛЁНКА")
-    D(2, word('quantum') - 0.05, b, 'Days', f"{{\\an4\\pos(500,1315)\\c{GOLD}\\fad(150,200)}}QUANTUM")
+    y1, y2 = PANEL_BIG; cy = (y1 + y2) // 2
+    panel(a, b, y1, y2)
+    x0, xt = row(tw('Huge', '5%'), [('Days', 'ПЛЁНКА'), ('Days', 'QUANTUM')], gap=30)
+    D(2, a, b, 'Huge', f"{{\\an4\\pos({x0},{cy})\\c{GOLD}{pop}}}5%")
+    two_lines(a + 0.25, word('quantum') - 0.05, b, xt, cy, ('Days', 'ПЛЁНКА', WHITE), ('Days', 'QUANTUM', GOLD))
     GFX_SFX.extend([('hit3', a, -20), ('hit1', word('quantum'), -24)])
 
-    # 2) Минимальный разбор — галочка
-    a = word('минимальный') - 0.05; b = word('карты') - 0.05
-    panel(a, b, 1150, 1330)
-    D(2, a, b, 'Shape', f"{{\\an7\\pos(0,0)\\1c{GOLD}\\bord0\\shad0{pop}\\org(260,1240)}}" + shape(circle(260, 1240, 44)))
-    D(3, a, b, 'Shape', f"{{\\an7\\pos(0,0)\\1c&H101010&\\bord0\\shad0\\fad(160,200)}}" + shape(check(244, 1222, 1.0)))
-    D(2, a, b, 'Item2', f"{{\\an4\\pos(330,1240)\\fad(160,200)}}МИНИМАЛЬНЫЙ\\N{{\\c{GOLD}}}РАЗБОР")
-    GFX_SFX.append(('hit3', a, -22))
+    # 2) Минимальный разбор, 3) Без сложностей — галочка
+    for w0, w1, t1, t2, snd in [('минимальный', 'карты', 'МИНИМАЛЬНЫЙ', 'РАЗБОР', 'hit3'),
+                                ('никаких', 'получается', 'БЕЗ', 'СЛОЖНОСТЕЙ', 'hit1')]:
+        a = word(w0) - 0.05; b = word(w1) - 0.05
+        y1, y2 = PANEL_LOW; cy = (y1 + y2) // 2
+        panel(a, b, y1, y2)
+        x0, xt = row(88, [('Item2', t1), ('Item2', t2)])
+        check_icon(a, b, x0 + 44, cy)
+        two_lines(a, a, b, xt, cy, ('Item2', t1, WHITE), ('Item2', t2, GOLD), d=32)
+        GFX_SFX.append((snd, a, -22))
 
-    # 3) Никаких сложностей — галочка
-    a = word('никаких') - 0.05; b = word('получается') - 0.05
-    panel(a, b, 1150, 1330)
-    D(2, a, b, 'Shape', f"{{\\an7\\pos(0,0)\\1c{GOLD}\\bord0\\shad0{pop}\\org(260,1240)}}" + shape(circle(260, 1240, 44)))
-    D(3, a, b, 'Shape', f"{{\\an7\\pos(0,0)\\1c&H101010&\\bord0\\shad0\\fad(160,200)}}" + shape(check(244, 1222, 1.0)))
-    D(2, a, b, 'Item2', f"{{\\an4\\pos(330,1240)\\fad(160,200)}}БЕЗ\\N{{\\c{GOLD}}}СЛОЖНОСТЕЙ")
-    GFX_SFX.append(('hit1', a, -24))
-
-    # 4) Таймер «1,5 часа»
+    # 4) Таймер «1,5 часа» — часы контуром, стрелка крутится
     a = word('полтора') - 0.05; b = word('поэтому', 2) - 0.05
-    panel(a, b, 1140, 1400)
-    ring, hands = clock(300, 1270, 82)
-    D(2, a, b, 'Shape', f"{{\\an7\\pos(0,0)\\1c{GOLD}\\bord0\\shad0{pop}\\org(300,1270)}}" + shape(ring))
-    D(3, a, b, 'Shape', f"{{\\an7\\pos(0,0)\\1c{GOLD}\\bord0\\shad0\\fad(160,200)\\org(300,1270)\\frz0\\t(0,{int((b - a) * 1000)},\\frz-300)}}" + shape(hands))
-    D(2, a + 0.1, b, 'Days', f"{{\\an4\\pos(420,1235)\\c{GOLD}\\fad(200,200)}}1,5 ЧАСА")
-    D(2, a + 0.3, b, 'Item2', f"{{\\an4\\pos(420,1320)\\fad(200,200)}}НА ТОНИРОВКУ")
+    y1, y2 = PANEL_BIG; cy = (y1 + y2) // 2
+    panel(a, b, y1, y2)
+    R = 70
+    x0, xt = row(2 * R, [('Days', '1,5 ЧАСА'), ('Item2', 'НА ТОНИРОВКУ')])
+    cx = x0 + R
+    D(2, a, b, 'Shape', f"{{\\an7\\pos(0,0)\\1a&HFF&\\3c{GOLD}\\bord8\\shad0{pop}\\org({cx},{cy})}}" + shape(circle(cx, cy, R - 4)))
+    D(3, a, b, 'Shape', f"{{\\an7\\pos(0,0)\\1c{GOLD}\\bord0\\shad0\\fad(160,200)}}" + shape(circle(cx, cy, 8)))
+    D(3, a, b, 'Shape', f"{{\\an7\\pos(0,0)\\1c{GOLD}\\bord0\\shad0\\fad(160,200)}}"
+      + shape(f"m {cx - 4} {cy} l {cx - 4} {cy - R + 26} l {cx + 4} {cy - R + 26} l {cx + 4} {cy}"))
+    D(3, a, b, 'Shape', f"{{\\an7\\pos(0,0)\\1c{GOLD}\\bord0\\shad0\\fad(160,200)\\org({cx},{cy})\\frz0\\t(0,{int((b - a) * 1000)},\\frz-270)}}"
+      + shape(f"m {cx} {cy - 4} l {cx + R - 22} {cy - 4} l {cx + R - 22} {cy + 4} l {cx} {cy + 4}"))
+    two_lines(a + 0.1, a + 0.3, b, xt, cy, ('Days', '1,5 ЧАСА', GOLD), ('Item2', 'НА ТОНИРОВКУ', WHITE))
     GFX_SFX.append(('hit3', a, -20))
 
-    # 5) (без хука) «За 1,5–2 часа» — второй таймер-бейдж
+    # 5) (без хука) «За 1,5–2 часа»
     if not HOOK:
         a = word('за') - 0.05; b = word('с', 2) - 0.1
-        panel(a, b, 1150, 1330)
-        D(2, a, b, 'Days', f"{{\\pos(540,1240)\\c{GOLD}{pop}}}1,5–2 ЧАСА")
+        y1, y2 = PANEL_LOW; cy = (y1 + y2) // 2
+        panel(a, b, y1, y2)
+        D(2, a, b, 'Days', f"{{\\an5\\pos(540,{cy})\\c{GOLD}{pop}}}1,5–2 ЧАСА")
         GFX_SFX.append(('hit1', a, -24))
 
-    # 6) «≈ 4 часа с подготовкой»
+    # 6) «4 часа с подготовкой»
     a = word('четыре') - 0.05; b = word('красивый') - 0.05
-    panel(a, b, 1140, 1400)
-    D(2, a, b, 'Huge', f"{{\\an6\\pos(430,1272)\\c{GOLD}{pop}}}4")
-    D(2, a + 0.2, b, 'Days', f"{{\\an4\\pos(470,1235)\\fad(200,200)}}ЧАСА")
-    D(2, a + 0.35, b, 'Item2', f"{{\\an4\\pos(470,1320)\\fad(200,200)}}С ПОДГОТОВКОЙ")
+    y1, y2 = PANEL_BIG; cy = (y1 + y2) // 2
+    panel(a, b, y1, y2)
+    x0, xt = row(tw('Huge', '4'), [('Days', 'ЧАСА'), ('Item2', 'С ПОДГОТОВКОЙ')], gap=30)
+    D(2, a, b, 'Huge', f"{{\\an4\\pos({x0},{cy})\\c{GOLD}{pop}}}4")
+    two_lines(a + 0.2, a + 0.35, b, xt, cy, ('Days', 'ЧАСА', WHITE), ('Item2', 'С ПОДГОТОВКОЙ', WHITE))
     GFX_SFX.append(('hit3', a, -20))
 
     # 7) Солнце — салон не выгорает
     a = word('солнечные') - 0.05; b = word('тонируем') - 0.05
-    panel(a, b, 1140, 1400)
-    D(2, a, b, 'Shape', f"{{\\an7\\pos(0,0)\\1c{GOLD}\\bord0\\shad0{pop}\\org(300,1270)\\t(0,{int((b - a) * 1000)},\\frz40)}}" + shape(sun(300, 1270, 48)))
-    D(2, a + 0.15, b, 'Item2', f"{{\\an4\\pos(420,1232)\\fad(200,200)}}САЛОН")
-    D(2, a + 0.3, b, 'Days', f"{{\\an4\\pos(420,1312)\\c{GOLD}\\fad(200,200)}}НЕ ВЫГОРАЕТ")
+    y1, y2 = PANEL_BIG; cy = (y1 + y2) // 2
+    panel(a, b, y1, y2)
+    x0, xt = row(150, [('Item2', 'САЛОН'), ('Days', 'НЕ ВЫГОРАЕТ')], gap=30)
+    cx = x0 + 75
+    D(2, a, b, 'Shape', f"{{\\an7\\pos(0,0)\\1c{GOLD}\\bord0\\shad0{pop}\\org({cx},{cy})\\t(0,{int((b - a) * 1000)},\\frz40)}}" + shape(sun(cx, cy, 36)))
+    two_lines(a + 0.15, a + 0.3, b, xt, cy, ('Item2', 'САЛОН', WHITE), ('Days', 'НЕ ВЫГОРАЕТ', GOLD))
     GFX_SFX.append(('hit1', a, -24))
 
     # 8) QUANTUM — цена/качество
     a = word('quantum', 2) - 0.05; b = word('ну') - 0.05 if has('ну') else word('будете') - 0.1
     panel(a, b, 1130, 1420)
-    D(2, a, b, 'Small', f"{{\\pos(540,1180)\\fad(200,200)}}ПЛЁНКИ")
-    D(2, a, b, 'Big', f"{{\\pos(540,1270)\\c{GOLD}{pop}}}QUANTUM")
+    D(2, a, b, 'Small', f"{{\\an5\\pos(540,1185)\\fad(200,200)}}ПЛЁНКИ")
+    D(2, a, b, 'Big', f"{{\\an5\\pos(540,1272)\\c{GOLD}{pop}}}QUANTUM")
     t1 = word('цена') - 0.05
-    D(2, t1, b, 'Shape', f"{{\\an7\\pos(0,0)\\1c{GOLD}\\bord0\\shad0\\fad(150,200)}}" + shape(circle(300, 1365, 22)))
-    D(3, t1, b, 'Shape', f"{{\\an7\\pos(0,0)\\1c&H101010&\\bord0\\shad0\\fad(150,200)}}" + shape(check(286, 1352, 0.78)))
-    D(2, t1, b, 'Item', f"{{\\an4\\pos(338,1365)\\fad(150,200)}}ЦЕНА · КАЧЕСТВО")
+    x0, xt = row(44, [('Item', 'ЦЕНА · КАЧЕСТВО')], gap=16)
+    D(2, t1, b, 'Shape', f"{{\\an7\\pos(0,0)\\1c{GOLD}\\bord0\\shad0\\fad(150,200)}}" + shape(circle(x0 + 22, 1365, 22)))
+    D(3, t1, b, 'Shape', f"{{\\an7\\pos(0,0)\\1c&H101010&\\bord0\\shad0\\fad(150,200)}}" + shape(check(x0 + 8, 1352, 0.78)))
+    D(2, t1, b, 'Item', f"{{\\an4\\pos({xt},1365)\\fad(150,200)}}ЦЕНА · КАЧЕСТВО")
     GFX_SFX.extend([('hit3', a, -20), ('hit4', t1, -24)])
 
     # концовка
@@ -573,10 +637,26 @@ def final():
     run(['ffmpeg', '-v', 'error', '-y', '-i', f"{OUT}/video_raw.mp4",
          '-loop', '1', '-framerate', '30', '-t', f"{TOTAL:.3f}", '-i', f"{S}/../brand/logo.png",
          '-i', f"{OUT}/audio.wav", '-filter_complex', fc, '-map', '[v]', '-map', '2:a',
-         '-c:v', 'libx264', '-preset', 'slow', '-crf', '20', '-maxrate', '9M', '-bufsize', '18M',
+         '-c:v', 'libx264', '-preset', 'slow', '-b:v', '5500k', '-maxrate', '7M', '-bufsize', '14M',  # ~60 МБ: больше не скачивалось
          '-profile:v', 'high', '-pix_fmt', 'yuv420p',
          '-c:a', 'aac', '-b:a', '192k', '-movflags', '+faststart', '-shortest', name])
     print("OUT", name)
+    return name
+
+
+def stories(name):
+    """сторис: 5 частей по смыслу, режем перед началом фразы"""
+    cuts = [0.0] + [max(0.0, word(*w) - 0.12) for w in STORY_CUTS] + [TOTAL]
+    for k in range(len(cuts) - 1):
+        out = f"{WORK}/DetailLab_Tonirovka_Geely_Story_{k + 1}.mp4"
+        run(['ffmpeg', '-v', 'error', '-y', '-ss', f"{cuts[k]:.3f}", '-i', name, '-t', f"{cuts[k + 1] - cuts[k]:.3f}",
+             '-c:v', 'libx264', '-preset', 'slow', '-b:v', '6M', '-maxrate', '7M', '-bufsize', '14M', '-pix_fmt', 'yuv420p',
+             '-c:a', 'aac', '-b:a', '192k', '-movflags', '+faststart', out])
+        print("STORY", k + 1, round(cuts[k + 1] - cuts[k], 2))
+
+
+# 1) Geely, 5 %, Quantum  2) разбор, без сложностей  3) время 1,5–2 часа  4) 4 часа, результат, солнце  5) Quantum, концовка
+STORY_CUTS = [('для',), ('сколько',), ('с', 2), ('тонируем',)]
 
 
 if __name__ == '__main__':
@@ -590,4 +670,6 @@ if __name__ == '__main__':
     build_ass()       # заполняет GFX_SFX — до звука
     build_video()
     build_audio()
-    final()
+    name = final()
+    if not HOOK:
+        stories(name)
