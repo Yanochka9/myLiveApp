@@ -41,22 +41,32 @@ def pill(d, y, text, f, bg, fg, padx, h):
 
 
 def make_header(cfg, path):
+    """Обзор авто: плашка + модель + цена + «без взноса». Говорящая сторис: только плашка-рубрика."""
     def draw(d):
         if cfg.get("badge"):
             pill(d, 210, cfg["badge"].upper(), font("Bold", 34), RED, "white", 28, 58)
-        ctext(d, 288, cfg["title"], font("ExtraBold", 78), stroke=2)
-        ctext(d, 382, cfg["price"], font("ExtraBold", 78), stroke=2)
+        if cfg.get("title"):
+            ctext(d, 288, cfg["title"], font("ExtraBold", 78), stroke=2)
+        if cfg.get("price"):
+            ctext(d, 382, cfg["price"], font("ExtraBold", 78), stroke=2)
         if cfg.get("pill"):
             pill(d, 486, cfg["pill"], font("Bold", 42), (255, 255, 255, 240), (20, 20, 20, 255), 34, 72)
     shadowed(draw).save(path)
 
 
 def make_cta(cfg, path):
+    """cta_q — строка-вопрос, cta_big — две крупные строки, cta_pill — красная плашка
+    (по умолчанию «Пишите «cta_word» в директ»)."""
+    q = cfg.get("cta_q", "Хотите увидеть вживую?")
+    big = cfg.get("cta_big", ["Запишитесь", "на тест-драйв"])
+    action = cfg.get("cta_pill") or f"Пишите «{cfg['cta_word']}» в директ"
+
     def draw(d):
-        ctext(d, 700, "Хотите увидеть вживую?", font("SemiBold", 54))
-        ctext(d, 790, "Запишитесь", font("ExtraBold", 104), stroke=2)
-        ctext(d, 910, "на тест-драйв", font("ExtraBold", 104), stroke=2)
-        pill(d, 1080, f"Пишите «{cfg['cta_word']}» в директ", font("Bold", 50), RED, "white", 44, 100)
+        ctext(d, 700, q, font("SemiBold", 54))
+        f_big = font("ExtraBold", 104 if max(map(len, big)) <= 14 else 88)
+        for i, line in enumerate(big):
+            ctext(d, 790 + i * 120, line, f_big, stroke=2)
+        pill(d, 1080, action, font("Bold", 50), RED, "white", 44, 100)
         if cfg.get("cta_footer"):
             ctext(d, 1215, cfg["cta_footer"], font("SemiBold", 40), fill=(255, 255, 255, 230))
     shadowed(draw).save(path)
