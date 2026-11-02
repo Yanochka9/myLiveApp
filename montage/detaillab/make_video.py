@@ -220,12 +220,35 @@ def plate_png(lines, path):
     img.save(path)
 
 
+def text_card(lines, path):
+    """Светлая полупрозрачная плашка с тёмным узким текстом (как в CapCut-роликах DetailLab) — для режима minimal."""
+    pad_x, pad_y, gap = 40, 24, 10
+    tmp = ImageDraw.Draw(Image.new("RGBA", (10, 10)))
+    for fs in range(60, 30, -2):  # шрифт уменьшается, пока строка не влезет в безопасную ширину
+        f1 = ImageFont.truetype(f"{FONTS}/Oswald-Bold.ttf", fs)
+        sizes = [tmp.textbbox((0, 0), l, font=f1) for l in lines]
+        tw = max(b[2] - b[0] for b in sizes)
+        if tw + pad_x * 2 <= SAFE_W:
+            break
+    th = sum(b[3] - b[1] for b in sizes) + gap * (len(lines) - 1)
+    bw, bh = min(tw + pad_x * 2, SAFE_W), th + pad_y * 2
+    img = Image.new("RGBA", (bw, bh), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    d.rounded_rectangle((0, 0, bw - 1, bh - 1), 30, fill=(236, 236, 238, 205))
+    y = pad_y
+    for l, b in zip(lines, sizes):
+        d.text(((bw - (b[2] - b[0])) / 2 - b[0], y - b[1]), l, font=f1, fill=(18, 18, 20, 255))
+        y += (b[3] - b[1]) + gap
+    img.save(path)
+
+
 def build(cfg):
     w, out = cfg["work"], cfg["out"]
     proxy = f"{w}/proxy.mov"
     allw = words_all(cfg)
     fix = {**FIX, **cfg.get("fix_words", {})}
     tag = cfg["name"]
+    mini = cfg.get("minimal", False)  # «как в жизни»: только субтитры, текст в начале/конце, музыка
 
     segs = []
     for a, b, v, z, part, plate in cfg["edl"]:
@@ -245,16 +268,17 @@ def build(cfg):
     body = o
 
     # заставка: размытый кадр + логотип
-    run(f"ffmpeg -v error -y -ss {cfg.get('endcard_bg_time', segs[-1][0])} -i {proxy} -frames:v 1 -vf \"{grade(cfg)}\" {w}/last.png")
-    run(f"ffmpeg -v error -y -loop 1 -t {ENDCARD} -i {w}/last.png -loop 1 -t {ENDCARD} -i {A}/endcard.png "
-        f"-f lavfi -t {ENDCARD} -i anullsrc=r=48000:cl=stereo "
-        f"-filter_complex \"[0]scale={W}:{H},boxblur=30:3,eq=brightness=-0.3,fps={FPS}[bg];[1]format=rgba,fade=t=in:st=0:d=0.35:alpha=1[l];[bg][l]overlay=0:0,format=yuv420p[v]\" "
-        f"-map [v] -map 2:a -c:v libx264 -preset fast -crf 15 -c:a pcm_s16le {w}/endcard.mov")
-    files.append(f"{w}/endcard.mov")
+    if not mini:
+        run(f"ffmpeg -v error -y -ss {cfg.get('endcard_bg_time', segs[-1][0])} -i {proxy} -frames:v 1 -vf \"{grade(cfg)}\" {w}/last.png")
+        run(f"ffmpeg -v error -y -loop 1 -t {ENDCARD} -i {w}/last.png -loop 1 -t {ENDCARD} -i {A}/endcard.png "
+            f"-f lavfi -t {ENDCARD} -i anullsrc=r=48000:cl=stereo "
+            f"-filter_complex \"[0]scale={W}:{H},boxblur=30:3,eq=brightness=-0.3,fps={FPS}[bg];[1]format=rgba,fade=t=in:st=0:d=0.35:alpha=1[l];[bg][l]overlay=0:0,format=yuv420p[v]\" "
+            f"-map [v] -map 2:a -c:v libx264 -preset fast -crf 15 -c:a pcm_s16le {w}/endcard.mov")
+        files.append(f"{w}/endcard.mov")
     with open(f"{w}/list.txt", "w") as fh:
         fh.writelines(f"file '{f}'\n" for f in files)
     run(f"ffmpeg -v error -y -f concat -safe 0 -i {w}/list.txt -c copy {w}/joined.mov")
-    total = body + ENDCARD
+    total = body + (0 if mini else ENDCARD)
 
     spans, firsts = {}, []
     for st, en, part, plate in meta:
@@ -264,21 +288,21 @@ def build(cfg):
             s0, e0 = spans.get(plate, (st, en))
             spans[plate] = (min(s0, st), max(e0, en))
     hook = cfg.get("hook_plate", "hook")
-    hook_end = spans[hook][1]
+    hook_end = spans[hook][1] if hook in spans else min(cfg.get("hook_text_dur", 3.0), body)
     build_subs(timeline, allw, fix, f"{w}/subs.ass", onsets(f"{w}/audio.wav"), cfg.get("sub_words", 1),
-               hook_end, cfg.get("hook_title"))
+               0.0 if mini else hook_end, cfg.get("hook_title"))
 
     music = f"{w}/music.wav"
     if not os.path.exists(music):
         drive_download(cfg["music_drive_id"], f"{w}/music_src.mov")
         run(f"ffmpeg -v error -y -i {w}/music_src.mov -vn -ac 2 -ar 48000 {music}")
     inputs = [f"-i {w}/joined.mov", f"-ss {cfg.get('music_start', 8)} -i {music}", f"-i {A}/sfx/flash.mp3"]
-    pops = [t for t in firsts if t > hook_end + 0.5] + [body]
+    pops = [] if mini else [t for t in firsts if t > hook_end + 0.5] + [body]
     for k in range(len(pops)):
         inputs.append(f"-i {A}/sfx/{'s5' if k == len(pops) - 1 else ('s2' if k % 2 == 0 else 's4')}.mp3")
     chain, last, n = [], "[0:v]", len(inputs)
-    last_plate = max(spans, key=lambda g: spans[g][0])
-    for grp, lines in cfg["plates"].items():
+    last_plate = max(spans, key=lambda g: spans[g][0]) if spans else None
+    for grp, lines in ({} if mini else cfg.get("plates", {})).items():
         if grp not in spans:
             continue
         p = f"{w}/plate_{grp}.png"
@@ -297,7 +321,18 @@ def build(cfg):
         chain.append(f"[{n}:v]format=rgba{fade}[p{n}]")
         chain.append(f"{last}[p{n}]overlay={SAFE_X}-w/2:{PLATE_Y}:enable='between(t,{st:.2f},{en:.2f})'[v{n}]")
         last = f"[v{n}]"; n += 1
-    for k, (t, peak, din, dout) in enumerate([(hook_end, 1.0, 0.12, 0.30)] + [(t, 0.6, 0.06, 0.22) for t in pops]):
+    if mini:  # текст в начале и в конце, мягко появляется и гаснет
+        for key, st, en in [("hook_text", 0.0, hook_end), ("end_text", max(total - cfg.get("end_text_dur", 3.0), 0), total)]:
+            if not cfg.get(key):
+                continue
+            p = f"{w}/{key}.png"
+            text_card(cfg[key], p)
+            inputs.append(f"-loop 1 -t {total:.2f} -i {p}")
+            fade = f",fade=t=out:st={en - PLATE_FADE:.2f}:d={PLATE_FADE}:alpha=1" if en < total else ""
+            chain.append(f"[{n}:v]format=rgba,fade=t=in:st={st:.2f}:d=0.2:alpha=1{fade}[p{n}]")
+            chain.append(f"{last}[p{n}]overlay={SAFE_X}-w/2:{PLATE_Y}:enable='between(t,{st:.2f},{en:.2f})'[v{n}]")
+            last = f"[v{n}]"; n += 1
+    for k, (t, peak, din, dout) in enumerate(([] if mini else [(hook_end, 1.0, 0.12, 0.30)]) + [(t, 0.6, 0.06, 0.22) for t in pops]):
         chain.append(f"color=c=white:s={W}x{H}:d={total:.2f}:r={FPS},format=rgba,"
                      f"fade=t=in:st={max(t - din, 0):.2f}:d={din}:alpha=1,fade=t=out:st={t:.2f}:d={dout}:alpha=1,colorchannelmixer=aa={peak}[fl{k}]")
         chain.append(f"{last}[fl{k}]overlay=0:0:enable='between(t,{max(t - din - 0.01, 0):.2f},{t + dout + 0.02:.2f})'[vf{k}]")
@@ -310,9 +345,9 @@ def build(cfg):
                  f"afade=t=in:d=1.0,afade=t=out:st={total - 1.5:.2f}:d=1.5[mus]")
     chain.append("[mus][sc]sidechaincompress=threshold=0.05:ratio=2.5:attack=40:release=600[duck]")
     fl = int((hook_end - FLASH_LEAD) * 1000)
-    fx = [f"[2:a]aresample=48000,volume=0.45,adelay={fl}|{fl}[fx0]"]
+    fx = [] if mini else [f"[2:a]aresample=48000,volume=0.45,adelay={fl}|{fl}[fx0]"]
     for k, t in enumerate(pops):
-        fx.append(f"[{3 + k}:a]aresample=48000,volume={0.32 if k == len(pops) - 1 else 0.24},adelay={int(t * 1000)}|{int(t * 1000)}[fx{k + 1}]")
+        fx.append(f"[{3 + k}:a]aresample=48000,volume={0.32 if k == len(pops) - 1 else 0.24},adelay={int(t * 1000)}|{int(t * 1000)}[fx{len(fx)}]")
     chain += fx
     labels = "".join(f"[fx{k}]" for k in range(len(fx)))
     chain.append(f"[voice][duck]{labels}amix=inputs={2 + len(fx)}:duration=longest:normalize=0,atrim=0:{total:.2f},alimiter=limit=0.95[aout]")
