@@ -9,9 +9,18 @@ TOP, BOTTOM, SIDE = 210, 1480, 40                  # tabs / header above, captio
 RIGHT_COL = dict(x=930, y0=820, y1=1560)           # like / comment / share / avatar column
 
 
+CROP = None   # [x, y, w, h] of a cropped output (1:1 feed video): only its edges matter, no app interface on top
+
+
 def unsafe(box):
     x0, y0, x1, y1 = box
     why = []
+    if CROP:
+        cx, cy, cw, ch = CROP
+        if y0 < cy + SIDE: why.append('выше кадра 1:1')
+        if y1 > cy + ch - SIDE: why.append('ниже кадра 1:1')
+        if x0 < cx + SIDE or x1 > cx + cw - SIDE: why.append('у края кадра')
+        return why
     if y0 < TOP: why.append(f'выше {TOP}px (верх интерфейса)')
     if y1 > BOTTOM: why.append(f'ниже {BOTTOM}px (подпись внизу)')
     if x0 < SIDE or x1 > W - SIDE: why.append('у края кадра')
@@ -41,9 +50,11 @@ def el_size(c, el):
 
 
 def check(p):
+    global CROP
+    CROP = p.out_crop
     c = compose.Comp(p, True)
     bad = 0
-    print('== безопасная зона TikTok / Reels')
+    print('== безопасная зона ' + ('кадра 1:1' if CROP else 'TikTok / Reels'))
     for el in c.els:
         sz = el_size(c, el)
         if not sz: continue
@@ -83,7 +94,7 @@ def check(p):
             k = round(T, 1)
             if k not in cache:
                 raw = compose.read_single(p, it, T - it['t0']); z, dx = c.zoom(it, T)
-                sm = cv2.resize(cv2.cvtColor(c.crop(raw, z, dx).astype(np.uint8), cv2.COLOR_RGB2BGR), (W // 2, H // 2))
+                sm = cv2.resize(cv2.cvtColor(c.crop(raw, z, dx, it.get('dy', 0.0)).astype(np.uint8), cv2.COLOR_RGB2BGR), (W // 2, H // 2))
                 _, res = det.detect(sm)
                 cache[k] = [] if res is None else [tuple(v * 2 for v in r[:4]) for r in res]
             for fx, fy, fw, fh in cache[k]:
