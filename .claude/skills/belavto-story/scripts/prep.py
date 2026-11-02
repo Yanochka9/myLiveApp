@@ -1,6 +1,9 @@
 """Подготовка исходников для сторис «мини-обзор авто».
 
-  python3 -I prep.py WORKDIR clip1.MOV clip2.MOV ...
+  python3 -I prep.py [--look=capcut] WORKDIR clip1.MOV clip2.MOV ...
+
+--look: cold (по умолчанию, «машина дня») или capcut (говорящие сторис: натуральная кожа, мягкие света, лёгкий холод —
+подогнан по скриншотам CapCut пользователя).
 
 Для каждого клипа (в переданном порядке):
   - HDR (HLG/PQ с iPhone) → SDR, цветокоррекция бренда, 1080×1920, 30 fps;
@@ -14,6 +17,11 @@ GRADE = ("eq=saturation=0.8:contrast=1.06,"
          "colorbalance=rs=-0.03:bs=0.05:rm=-0.03:bm=0.03:rh=-0.03:bh=0.03")
 TONEMAP = ("zscale=tin={tin}:min=bt2020nc:pin=bt2020:rin=tv:t=linear:npl=203,format=gbrpf32le,"
            "zscale=p=bt709,tonemap=hable:desat=0,zscale=t=bt709:m=bt709:r=tv,format=yuv420p")
+# говорящие сторис: подогнано по эталонным кадрам из CapCut (чёрное ≈12 %, белое ≈75 %, низкая насыщенность, лёгкий холод)
+LOOKS = {"cold": GRADE,
+         "capcut": ("eq=saturation=0.88:contrast=1.08:gamma=1.05,"
+                    "colorbalance=rs=-0.04:bs=0.05:rm=-0.02:bm=0.03:rh=-0.02:bh=0.03,"
+                    "curves=all='0/0.04 0.25/0.27 0.5/0.52 0.8/0.76 1/0.88'")}
 FRAME = "scale=1080:1920:force_original_aspect_ratio=increase:flags=lanczos,crop=1080:1920,fps=30"
 
 
@@ -45,7 +53,12 @@ def speech_bounds(path, dur):
 
 
 def main():
-    work, clips = sys.argv[1], sys.argv[2:]
+    args = sys.argv[1:]
+    look = "cold"
+    if args and args[0].startswith("--look="):
+        look = args.pop(0).split("=", 1)[1]
+    grade = LOOKS[look]
+    work, clips = args[0], args[1:]
     os.makedirs(work, exist_ok=True)
     from faster_whisper import WhisperModel
     import numpy as np
@@ -56,7 +69,7 @@ def main():
         dur, trc, has_audio = probe(src)
         a, b = speech_bounds(src, dur) if has_audio else (0.0, dur)
         tin = {"arib-std-b67": "arib-std-b67", "smpte2084": "smpte2084"}.get(trc)
-        vf = (TONEMAP.format(tin=tin) + "," if tin else "format=yuv420p,") + GRADE + "," + FRAME
+        vf = (TONEMAP.format(tin=tin) + "," if tin else "format=yuv420p,") + grade + "," + FRAME
         out = f"{work}/clip_{i}.mov"
         # клип без звука получает тишину, чтобы склейка аудио не ломалась
         silent_in = [] if has_audio else ["-f", "lavfi", "-i", "anullsrc=r=48000:cl=stereo"]

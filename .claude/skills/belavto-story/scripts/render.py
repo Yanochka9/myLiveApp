@@ -11,7 +11,7 @@ from PIL import Image, ImageDraw, ImageFont, ImageFilter
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-from prep import TONEMAP, GRADE, FRAME, probe  # noqa: E402
+from prep import TONEMAP, LOOKS, FRAME, probe  # noqa: E402
 FONTS = "/usr/share/fonts/opentype/inter/"
 W, H = 1080, 1920
 RED, YELLOW_ASS = (229, 33, 43, 255), "&H004DD3FF&"
@@ -107,7 +107,7 @@ def prep_broll(cfg, wd):
     for k, b in enumerate(cfg.get("broll", []), 1):
         _, trc, _ = probe(b["src"])
         tin = {"arib-std-b67": "arib-std-b67", "smpte2084": "smpte2084"}.get(trc)
-        vf = (TONEMAP.format(tin=tin) + "," if tin else "format=yuv420p,") + GRADE + "," + FRAME
+        vf = (TONEMAP.format(tin=tin) + "," if tin else "format=yuv420p,") + LOOKS[cfg.get("look", "cold")] + "," + FRAME
         dst = f"{wd}/broll_{k}.mov"
         ff("-ss", str(b["ss"]), "-t", f"{b['e'] - b['s']:.3f}", "-i", b["src"], "-an", "-vf", vf,
            "-c:v", "libx264", "-crf", "14", "-preset", "fast", dst)
