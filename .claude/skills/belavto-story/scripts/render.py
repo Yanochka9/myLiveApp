@@ -10,9 +10,12 @@ import json, os, re, subprocess, sys
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, HERE)
+from prep import TONEMAP, GRADE, FRAME, probe  # noqa: E402
 FONTS = "/usr/share/fonts/opentype/inter/"
 W, H = 1080, 1920
 RED, YELLOW_ASS = (229, 33, 43, 255), "&H004DD3FF&"
+YELLOW = (255, 211, 77, 255)
 CTA_DUR = 2.8
 
 
@@ -40,33 +43,83 @@ def pill(d, y, text, f, bg, fg, padx, h):
     d.text((x0 + padx, y + (h - asc - desc) / 2 - 1), text, font=f, fill=fg)
 
 
+def rich_ctext(d, y, line, f):
+    """Строка по центру с обводкой; *фрагменты* — жёлтым."""
+    parts = re.split(r"(\*.+?\*)", line)
+    x = (W - sum(d.textlength(p.strip("*"), font=f) for p in parts)) / 2
+    for p in parts:
+        t = p.strip("*")
+        d.text((x, y), t, font=f, fill=YELLOW if p.startswith("*") else "white", stroke_width=2, stroke_fill=(0, 0, 0, 90))
+        x += d.textlength(t, font=f)
+
+
 def make_header(cfg, path):
+    """Обзор авто: плашка + модель + цена + «без взноса».
+    Говорящая сторис: крупная плашка-рубрика + заголовок-крючок (headline, \\n — перенос, *жёлтым*)."""
     def draw(d):
+        if cfg.get("headline"):
+            if cfg.get("badge"):
+                pill(d, 200, cfg["badge"].upper(), font("Bold", 42), RED, "white", 34, 72)
+            lines, size = cfg["headline"].split("\n"), 86
+            while size > 56 and max(d.textlength(l.replace("*", ""), font=font("ExtraBold", size)) for l in lines) > 960:
+                size -= 4
+            for i, line in enumerate(lines):
+                rich_ctext(d, 300 + i * (size + 14), line, font("ExtraBold", size))
+            return
         if cfg.get("badge"):
             pill(d, 210, cfg["badge"].upper(), font("Bold", 34), RED, "white", 28, 58)
-        ctext(d, 288, cfg["title"], font("ExtraBold", 78), stroke=2)
-        ctext(d, 382, cfg["price"], font("ExtraBold", 78), stroke=2)
+        if cfg.get("title"):
+            ctext(d, 288, cfg["title"], font("ExtraBold", 78), stroke=2)
+        if cfg.get("price"):
+            ctext(d, 382, cfg["price"], font("ExtraBold", 78), stroke=2)
         if cfg.get("pill"):
             pill(d, 486, cfg["pill"], font("Bold", 42), (255, 255, 255, 240), (20, 20, 20, 255), 34, 72)
-    shadowed(draw).save(path)
+    img = shadowed(draw)
+    if cfg.get("headline"):  # мягкое затемнение сверху, чтобы заголовок читался на светлом потолке/небе
+        shade = Image.new("RGBA", (W, H))
+        grad = Image.linear_gradient("L").resize((W, 640)).point(lambda v: int((255 - v) * 0.3))
+        a = Image.new("L", (W, H)); a.paste(grad, (0, 0)); shade.putalpha(a)
+        shade.alpha_composite(img); img = shade
+    img.save(path)
 
 
 def make_cta(cfg, path):
+    """cta_q — строка-вопрос, cta_big — две крупные строки, cta_pill — красная плашка
+    (по умолчанию «Пишите «cta_word» в директ»)."""
+    q = cfg.get("cta_q", "Хотите увидеть вживую?")
+    big = cfg.get("cta_big", ["Запишитесь", "на тест-драйв"])
+    action = cfg.get("cta_pill") or f"Пишите «{cfg['cta_word']}» в директ"
+
     def draw(d):
-        ctext(d, 700, "Хотите увидеть вживую?", font("SemiBold", 54))
-        ctext(d, 790, "Запишитесь", font("ExtraBold", 104), stroke=2)
-        ctext(d, 910, "на тест-драйв", font("ExtraBold", 104), stroke=2)
-        pill(d, 1080, f"Пишите «{cfg['cta_word']}» в директ", font("Bold", 50), RED, "white", 44, 100)
+        ctext(d, 700, q, font("SemiBold", 54))
+        f_big = font("ExtraBold", 104 if max(map(len, big)) <= 14 else 88)
+        for i, line in enumerate(big):
+            ctext(d, 790 + i * 120, line, f_big, stroke=2)
+        pill(d, 1080, action, font("Bold", 50), RED, "white", 44, 100)
         if cfg.get("cta_footer"):
             ctext(d, 1215, cfg["cta_footer"], font("SemiBold", 40), fill=(255, 255, 255, 230))
     shadowed(draw).save(path)
+
+
+def prep_broll(cfg, wd):
+    """Подсъёмы: тот же тонмаппинг/грейд/кадр, что в prep.py; звук подсъёма не используется (голос идёт дальше)."""
+    out = []
+    for k, b in enumerate(cfg.get("broll", []), 1):
+        _, trc, _ = probe(b["src"])
+        tin = {"arib-std-b67": "arib-std-b67", "smpte2084": "smpte2084"}.get(trc)
+        vf = (TONEMAP.format(tin=tin) + "," if tin else "format=yuv420p,") + GRADE + "," + FRAME
+        dst = f"{wd}/broll_{k}.mov"
+        ff("-ss", str(b["ss"]), "-t", f"{b['e'] - b['s']:.3f}", "-i", b["src"], "-an", "-vf", vf,
+           "-c:v", "libx264", "-crf", "14", "-preset", "fast", dst)
+        out.append((dst, b["s"], b["e"]))
+    return out
 
 
 def ts(t):
     t = max(t, 0); return f"0:{int(t // 60):02d}:{t % 60:05.2f}"
 
 
-def make_ass(subs, main_dur, path):
+def make_ass(subs, main_dur, path, hl_scale=100):
     head = """[Script Info]
 ScriptType: v4.00+
 PlayResX: 1080
@@ -83,7 +136,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
     lines = []
     for s in subs:
         text = s["t"].replace("\n", "\\N")
-        text = re.sub(r"\*(.+?)\*", lambda m: "{\\c" + YELLOW_ASS + "}" + m[1] + "{\\c&H00FFFFFF&}", text)
+        text = re.sub(r"\*(.+?)\*", lambda m: "{\\c" + YELLOW_ASS + f"\\fscx{hl_scale}\\fscy{hl_scale}}}" + m[1] + "{\\c&H00FFFFFF&\\fscx100\\fscy100}", text)
         lines.append(f"Dialogue: 0,{ts(s['s'])},{ts(min(s['e'], main_dur))},Sub,,0,0,0,,{{\\fad(120,0)}}{text}")
     open(path, "w").write(head + "\n".join(lines) + "\n")
 
@@ -95,13 +148,25 @@ def ff(*args):
 def main():
     cfg = json.load(open(sys.argv[1]))
     wd = cfg["workdir"]; meta = json.load(open(f"{wd}/words.json"))
-    main_dur = meta["main_dur"]; n = len(meta["clips"]); total = main_dur + CTA_DUR
-    make_header(cfg, f"{wd}/header.png"); make_cta(cfg, f"{wd}/cta.png"); make_ass(cfg["subs"], main_dur, f"{wd}/subs.ass")
+    main_dur = meta["main_dur"]; n = len(meta["clips"])
+    # хвост после последнего слова не нужен: там ведущая уже опускает/поворачивает камеру
+    last_png = f"{wd}/last.png"
+    if meta["words"] and meta["words"][-1]["e"] + 0.35 < main_dur - 0.05:
+        main_dur = round(meta["words"][-1]["e"] + 0.35, 3)
+        lc = meta["clips"][-1]; last_png = f"{wd}/last_cut.png"
+        ff("-ss", f"{max(0, main_dur - lc['start'] - 0.1):.3f}", "-i", f"{wd}/clip_{lc['clip']}.mov",
+           "-frames:v", "1", last_png)
+    total = main_dur + CTA_DUR
+    face = cfg.get("face_vf")  # обработка только кадров с ведущей (не подсъёмов), напр. мягкое сглаживание кожи
+    post = cfg.get("post_vf")  # общий доводчик картинки поверх всего (тени/чёткость)
+    sharpen = cfg.get("sharpen", 0.4)
+    make_header(cfg, f"{wd}/header.png"); make_cta(cfg, f"{wd}/cta.png"); make_ass(cfg["subs"], main_dur, f"{wd}/subs.ass", cfg.get("hl_scale", 100))
+    broll = prep_broll(cfg, wd)
 
     # финальный экран: стоп-кадр плавно размывается, сверху появляется призыв
-    ff("-loop", "1", "-t", str(CTA_DUR), "-framerate", "30", "-i", f"{wd}/last.png",
+    ff("-loop", "1", "-t", str(CTA_DUR), "-framerate", "30", "-i", last_png,
        "-loop", "1", "-t", str(CTA_DUR), "-framerate", "30", "-i", f"{wd}/cta.png", "-filter_complex",
-       "[0]format=yuv420p,split[s][b];[b]gblur=sigma=22,eq=brightness=-0.2[bb];"
+       f"[0]{face + ',' if face else ''}{post + ',' if post else ''}format=yuv420p,split[s][b];[b]gblur=sigma=22,eq=brightness=-0.2[bb];"
        "[s][bb]xfade=transition=fade:duration=0.5:offset=0,format=rgba[bg];"
        "[1]format=rgba,fade=in:st=0.15:d=0.45:alpha=1[t];[bg][t]overlay=format=auto,format=yuv420p",
        "-c:v", "libx264", "-crf", "14", "-preset", "fast", "-an", f"{wd}/cta.mov")
@@ -109,16 +174,24 @@ def main():
     inputs = sum((["-i", f"{wd}/clip_{k}.mov"] for k in range(1, n + 1)), [])
     cat = "".join(f"[{k}:v][{k}:a]" for k in range(n))
     i_cta, i_head, i_tap = n, n + 1, n + 2
+    extra_b = []
     extra = ["-i", f"{wd}/cta.mov", "-loop", "1", "-framerate", "30", "-t", f"{main_dur:.3f}", "-i", f"{wd}/header.png",
              "-i", f"{HERE}/../assets/tap.wav"]
     tap_ms = int((main_dur + 0.15) * 1000)
+    base = n + 3 + (1 if cfg.get("music") else 0)
+    bro = ""
+    for j, (path, bs, be) in enumerate(broll):
+        extra_b.append(path)
+        bro += (f"[{base + j}:v]setpts=PTS-STARTPTS+{bs:.3f}/TB[b{j}];"
+                f"[mvb{j}][b{j}]overlay=enable='between(t,{bs:.3f},{be - 0.01:.3f})':eof_action=pass[mvb{j + 1}];")
     graph = (
         f"{cat}concat=n={n}:v=1:a=1[mv][ma];"
-        f"[mv]trim=duration={main_dur:.3f},setpts=PTS-STARTPTS,unsharp=5:5:0.4[mv2];"
+        f"[mv]trim=duration={main_dur:.3f},setpts=PTS-STARTPTS{',' + face if face else ''}[mvb0];{bro}"
+        f"[mvb{len(broll)}]{post + ',' if post else ''}unsharp=5:5:{sharpen}[mv2];"
         f"[{i_head}]format=rgba,fade=in:st=0:d=0.3:alpha=1,fade=out:st={main_dur - 0.36:.2f}:d=0.36:alpha=1[hd];"
         f"[mv2][hd]overlay=format=auto,ass={wd}/subs.ass:fontsdir={FONTS},format=yuv420p[mvs];"
         f"[mvs][{i_cta}:v]concat=n=2:v=1:a=0[v];"
-        f"[ma]highpass=f=80,acompressor=threshold=-20dB:ratio=3:attack=10:release=150,"
+        f"[ma]atrim=0:{main_dur:.3f},highpass=f=80,{'afftdn=nf=-28:nr=12:tn=1,' if cfg.get('denoise') else ''}acompressor=threshold=-20dB:ratio=3:attack=10:release=150,"
         f"loudnorm=I=-15:TP=-2:LRA=11,aresample=48000,apad,atrim=0:{total:.3f},asplit[voice][key];"
         f"[{i_tap}:a]aresample=48000,aformat=channel_layouts=stereo,adelay={tap_ms}|{tap_ms},volume=0.5,"
         f"apad,atrim=0:{total:.3f}[fx];"
@@ -128,13 +201,14 @@ def main():
         extra += ["-i", cfg["music"]]
         off = cfg.get("music_offset", 5)
         graph += (f"[{n + 3}:a]aresample=48000,aformat=channel_layouts=stereo,atrim=start={off}:duration={total:.3f},"
-                  f"asetpts=PTS-STARTPTS,volume=0.06,afade=t=in:d=0.6,afade=t=out:st={total - 1.44:.2f}:d=1.44[mus];"
-                  f"[mus][key]sidechaincompress=threshold=0.03:ratio=3:attack=30:release=600[musd];")
+                  f"asetpts=PTS-STARTPTS,volume={cfg.get('music_vol', 0.06)},afade=t=in:d=0.6,afade=t=out:st={total - 1.44:.2f}:d=1.44[mus];"
+                  f"[mus][key]sidechaincompress=threshold=0.03:ratio={cfg.get('duck_ratio', 3)}:attack=30:release=600[musd];")
         mix_inputs += "[musd]"; count = 3
     else:
         graph += "[key]anullsink;"
     graph += f"{mix_inputs}amix=inputs={count}:normalize=0,alimiter=limit=0.89[a]"
 
+    extra += sum((["-i", p] for p in extra_b), [])
     ff(*inputs, *extra, "-filter_complex", graph, "-map", "[v]", "-map", "[a]", "-t", f"{total:.3f}",
        "-c:v", "libx264", "-profile:v", "high", "-crf", "20", "-preset", "slow", "-pix_fmt", "yuv420p",
        "-colorspace", "bt709", "-color_primaries", "bt709", "-color_trc", "bt709", "-r", "30",

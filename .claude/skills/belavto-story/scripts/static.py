@@ -31,11 +31,12 @@ def load_bg(cfg):
     else:
         tmp = tempfile.mktemp(suffix=".png")
         seek = ["-ss", str(cfg["bg_time"])] if "bg_time" in cfg else ["-sseof", "-0.3"]
-        subprocess.run(["ffmpeg", "-v", "error", "-y", *seek, "-i", src, "-frames:v", "1",
-                        "-vf", "zscale=t=linear:npl=100,tonemap=hable,zscale=t=bt709:m=bt709:r=tv,format=rgb24",
-                        tmp], check=False)
-        if not os.path.exists(tmp):  # SDR-исходник — без тонмаппинга
-            subprocess.run(["ffmpeg", "-v", "error", "-y", *seek, "-i", src, "-frames:v", "1", tmp], check=True)
+        trc = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries",
+                              "stream=color_transfer", "-of", "csv=p=0", src], capture_output=True, text=True).stdout.strip()
+        # HDR с iPhone тонмаппим как в prep.py; клипы после prep.py уже SDR
+        vf = (["-vf", "zscale=t=linear:npl=100,tonemap=hable,zscale=t=bt709:m=bt709:r=tv,format=rgb24"]
+              if trc in ("arib-std-b67", "smpte2084") else [])
+        subprocess.run(["ffmpeg", "-v", "error", "-y", *seek, "-i", src, "-frames:v", "1", *vf, tmp], check=True)
         img = Image.open(tmp)
     img = img.convert("RGB")
     s = max(W / img.width, H / img.height)

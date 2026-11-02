@@ -41,7 +41,7 @@ def grade(cfg):
 
 
 SUB_Y, PLATE_Y = 1205, 1290
-SAFE_X, SAFE_W = 470, 800    # центр и макс. ширина текста: правее x≈900 — кнопки TikTok
+SAFE_X, SAFE_W = 540, 720    # субтитры и плашки по центру; ширина ≤720, чтобы правый край не заходил под кнопки (x≈900)
 GAP, KEEP = 0.50, 0.14       # паузы длиннее GAP сжимаем, у слова оставляем KEEP
 ENDCARD = 1.6
 FLASH_LEAD = 1.4             # длина нарастания «вжуха» до вспышки
@@ -199,11 +199,14 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 def plate_png(lines, path):
     """Тёмная плашка с золотой рамкой: верхняя строка белая, нижняя золотая."""
     from PIL import ImageFilter
-    f1 = ImageFont.truetype(f"{FONTS}/Inter-Black.otf", 44)
     pad_x, pad_y, gap = 34, 20, 8
     tmp = ImageDraw.Draw(Image.new("RGBA", (10, 10)))
-    sizes = [tmp.textbbox((0, 0), l, font=f1) for l in lines]
-    tw = max(b[2] - b[0] for b in sizes)
+    for fs in range(44, 28, -2):  # длинная строка — шрифт меньше, но плашка не шире SAFE_W
+        f1 = ImageFont.truetype(f"{FONTS}/Inter-Black.otf", fs)
+        sizes = [tmp.textbbox((0, 0), l, font=f1) for l in lines]
+        tw = max(b[2] - b[0] for b in sizes)
+        if tw + pad_x * 2 <= SAFE_W:
+            break
     th = sum(b[3] - b[1] for b in sizes) + gap * (len(lines) - 1)
     bw, bh = min(tw + pad_x * 2, SAFE_W), th + pad_y * 2
     img = Image.new("RGBA", (bw + 24, bh + 24), (0, 0, 0, 0))
@@ -216,28 +219,6 @@ def plate_png(lines, path):
     for i, (l, b) in enumerate(zip(lines, sizes)):
         col = GOLD + (255,) if i == len(lines) - 1 else (255, 255, 255, 255)
         d.text((12 + (bw - (b[2] - b[0])) / 2 - b[0], y - b[1]), l, font=f1, fill=col)
-        y += (b[3] - b[1]) + gap
-    img.save(path)
-
-
-def text_card(lines, path):
-    """Светлая полупрозрачная плашка с тёмным узким текстом (как в CapCut-роликах DetailLab) — для режима minimal."""
-    pad_x, pad_y, gap = 40, 24, 10
-    tmp = ImageDraw.Draw(Image.new("RGBA", (10, 10)))
-    for fs in range(60, 30, -2):  # шрифт уменьшается, пока строка не влезет в безопасную ширину
-        f1 = ImageFont.truetype(f"{FONTS}/Oswald-Bold.ttf", fs)
-        sizes = [tmp.textbbox((0, 0), l, font=f1) for l in lines]
-        tw = max(b[2] - b[0] for b in sizes)
-        if tw + pad_x * 2 <= SAFE_W:
-            break
-    th = sum(b[3] - b[1] for b in sizes) + gap * (len(lines) - 1)
-    bw, bh = min(tw + pad_x * 2, SAFE_W), th + pad_y * 2
-    img = Image.new("RGBA", (bw, bh), (0, 0, 0, 0))
-    d = ImageDraw.Draw(img)
-    d.rounded_rectangle((0, 0, bw - 1, bh - 1), 30, fill=(236, 236, 238, 205))
-    y = pad_y
-    for l, b in zip(lines, sizes):
-        d.text(((bw - (b[2] - b[0])) / 2 - b[0], y - b[1]), l, font=f1, fill=(18, 18, 20, 255))
         y += (b[3] - b[1]) + gap
     img.save(path)
 
@@ -288,7 +269,7 @@ def build(cfg):
             s0, e0 = spans.get(plate, (st, en))
             spans[plate] = (min(s0, st), max(e0, en))
     hook = cfg.get("hook_plate", "hook")
-    hook_end = spans[hook][1] if hook in spans else min(cfg.get("hook_text_dur", 3.0), body)
+    hook_end = spans[hook][1] if hook in spans else min(cfg.get("hook_text_dur", 5.0), body)
     build_subs(timeline, allw, fix, f"{w}/subs.ass", onsets(f"{w}/audio.wav"), cfg.get("sub_words", 1),
                0.0 if mini else hook_end, cfg.get("hook_title"))
 
@@ -321,12 +302,12 @@ def build(cfg):
         chain.append(f"[{n}:v]format=rgba{fade}[p{n}]")
         chain.append(f"{last}[p{n}]overlay={SAFE_X}-w/2:{PLATE_Y}:enable='between(t,{st:.2f},{en:.2f})'[v{n}]")
         last = f"[v{n}]"; n += 1
-    if mini:  # текст в начале и в конце, мягко появляется и гаснет
+    if mini:  # текст в начале и в конце — та же тёмная плашка с золотой рамкой, мягко появляется и гаснет
         for key, st, en in [("hook_text", 0.0, hook_end), ("end_text", max(total - cfg.get("end_text_dur", 3.0), 0), total)]:
             if not cfg.get(key):
                 continue
             p = f"{w}/{key}.png"
-            text_card(cfg[key], p)
+            plate_png([l.upper() for l in cfg[key]], p)
             inputs.append(f"-loop 1 -t {total:.2f} -i {p}")
             fade = f",fade=t=out:st={en - PLATE_FADE:.2f}:d={PLATE_FADE}:alpha=1" if en < total else ""
             chain.append(f"[{n}:v]format=rgba,fade=t=in:st={st:.2f}:d=0.2:alpha=1{fade}[p{n}]")
@@ -338,8 +319,11 @@ def build(cfg):
         chain.append(f"{last}[fl{k}]overlay=0:0:enable='between(t,{max(t - din - 0.01, 0):.2f},{t + dout + 0.02:.2f})'[vf{k}]")
         last = f"[vf{k}]"
     chain.append(f"{last}ass={w}/subs.ass:fontsdir={FONTS}[vout]")
-    # голос без шумодава; aresample после loudnorm обязателен (иначе 192 кГц и обрезанный конец)
-    chain.append("[0:a]highpass=f=95,acompressor=threshold=-22dB:ratio=2.5:attack=8:release=120:makeup=2,"
+    # шумодав RNNoise (assets/sh.rnnn): фон −10 дБ, голос держит loudnorm; denoise: 0 — выключить.
+    # aresample после loudnorm обязателен (иначе 192 кГц и обрезанный конец)
+    dn = cfg.get("denoise", 0.85)
+    dn = f"arnndn=m={A}/sh.rnnn:mix={dn}," if dn else ""
+    chain.append(f"[0:a]highpass=f=95,{dn}acompressor=threshold=-22dB:ratio=2.5:attack=8:release=120:makeup=2,"
                  "loudnorm=I=-13:TP=-1.5:LRA=8,aresample=48000,asplit=2[voice][sc]")
     chain.append(f"[1:a]aresample=48000,atrim=0:{total:.2f},volume={cfg.get('music_vol', 0.22)},"
                  f"afade=t=in:d=1.0,afade=t=out:st={total - 1.5:.2f}:d=1.5[mus]")
