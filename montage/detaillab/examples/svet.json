@@ -1,0 +1,18 @@
+{
+ "name": "Svet",
+ "source_drive_id": "1Kfn9QZSLtVsOTMWbQ5hSRFkawl1ztvqF",
+ "minimal": true,
+ "music_drive_id": "1qbZIIjZFgVdDkU7WbI64Y0ZTHzE32ibK",
+ "music_start": 8,
+ "music_vol": 0.0,
+ "lut": "r5_light.cube",
+ "lut_mix": 1.0,
+ "sub_words": 1,
+ "hook_text": [],
+ "end_text": [],
+ "fix_words": {},
+ "plates": {},
+ "edl": [],
+ "hook_text_dur": 5.0,
+ "end_text_dur": 3.5
+}
