@@ -24,8 +24,10 @@
  },
  "plates": {},
  "edl": [
-  [0.0, 30.3, null, 1.0, 1, null],
-  [31.24, 60.36, null, 1.0, 2, null]
+  [0.0, 15.64, null, 1.0, 1, null],
+  [15.68, 30.3, null, 1.0, 2, null],
+  [31.24, 37.58, null, 1.0, 2, null],
+  [37.96, 60.36, null, 1.0, 3, null]
  ],
  "hook_text_dur": 3.0,
  "end_text_dur": 3.5
