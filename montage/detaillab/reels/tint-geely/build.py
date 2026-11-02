@@ -21,8 +21,8 @@ END_DUR = 3.4
 TAIL = 0.2
 MAIN = '2504'
 W = json.load(open(f"{WORK}/words_medium.json"))[MAIN]
-GRADE = (open(f"{S}/../grade_hdr_to_sdr.txt").read().strip()
-         + f",lut3d={A}/r5_light.cube,unsharp=5:5:0.4")
+HDR = open(f"{S}/../grade_hdr_to_sdr.txt").read().strip()   # первым: после zoompan zscale падает
+LOOK = f"lut3d={A}/r5_light.cube,unsharp=5:5:0.4"
 MUSIC_ID = '1qbZIIjZFgVdDkU7WbI64Y0ZTHzE32ibK'  # «музыка и звуки», тот же трек, что в историях
 MUSIC_DB = -25
 
@@ -218,7 +218,7 @@ def render(src, ss, nfr, vf, post=''):
     global idx
     out = f"{OUT}/seg{idx:03d}.mp4"; idx += 1
     run(['ffmpeg', '-v', 'error', '-y', '-ss', f"{ss:.3f}", '-i', src, '-an',
-         '-vf', f"{vf},scale=1080:1920:flags=lanczos,setsar=1,fps={FPS},{GRADE}{post},format=yuv420p",
+         '-vf', f"{HDR},{vf},scale=1080:1920:flags=lanczos,setsar=1,fps={FPS},{LOOK}{post},format=yuv420p",
          '-frames:v', str(nfr), '-c:v', 'libx264', '-preset', 'medium', '-crf', '17', out])
     return out
 
