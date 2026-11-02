@@ -8,6 +8,7 @@
   python3 make.py <project.json> render           final video -> out/<name>.mp4
   python3 make.py <project.json> subs             print subtitle phrases with timings
   python3 make.py <project.json> check            safe zone for TikTok / Reels + nothing over the presenter's face
+  python3 make.py <project.json> hqmask           precise person + car masks for the project's 'hq_masks' list
 """
 import os, sys
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'kit'))
@@ -29,6 +30,10 @@ def main():
         from compose import subtitle_groups
         for g in subtitle_groups(p):
             print(f"{g['s']:6.2f}-{g['e']:6.2f}  " + ' | '.join(w[2] for w in g['words']))
+    elif cmd == 'hqmask':
+        from hqmask import hqmask
+        for m in p.cfg.get('hq_masks', []):
+            hqmask(p, m['clip'], m['from'], m['to'], m.get('model', 'birefnet-general-lite'), [tuple(c) for c in m.get('crops', [])])
     elif cmd == 'check':
         from check import check; check(p)
     elif cmd == 'preview':

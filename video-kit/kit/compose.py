@@ -543,6 +543,10 @@ class Comp:
         return cv2.GaussianBlur(m, (0, 0), 2.2)
 
     def mask(self, clip, src_t):
+        hq = os.path.join(self.p.work, 'masks_hq', clip, f'{int(round(src_t * 30)):05d}.png')
+        if os.path.exists(hq):   # precise per-frame mask from 'make.py hqmask' wins over the ISNet one
+            m = cv2.imread(hq, cv2.IMREAD_GRAYSCALE)
+            if m is not None: return m.astype(np.float32) / 255
         x = src_t * MASK_FPS; i0 = int(math.floor(x)); f = x - i0
         a, b = self.mask_png(clip, i0), self.mask_png(clip, i0 + 1)
         if a is None or b is None: return a if b is None else b
@@ -701,7 +705,7 @@ class Comp:
             m = self.mask(it['clip'], it['src'] + lt)
             if m is not None:
                 a, b = spot['_span']; k = clamp((T - a) / spot.get('fade', 0.5)) * clamp((b - T) / 0.25)
-                m = cv2.GaussianBlur(self.crop_mask(m, z, dx), (0, 0), 6)[..., None]
+                m = cv2.GaussianBlur(self.crop_mask(m, z, dx), (0, 0), spot.get('feather', 6))[..., None]
                 lum = base.mean(2, keepdims=True)
                 dim = (base * (1 - spot.get('desat', 0.6)) + lum * spot.get('desat', 0.6)) * (1 - spot.get('darken', 0.6))
                 base = base * (1 - k * (1 - m)) + dim * k * (1 - m)

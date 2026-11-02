@@ -211,7 +211,8 @@
       "until": 4.15,
       "darken": 0.62,
       "desat": 0.7,
-      "fade": 0.6
+      "fade": 0.6,
+      "feather": 2
     },
     {
       "type": "3d",
@@ -790,6 +791,25 @@
       "file": "assets/sfx/belavto_click5.wav",
       "at": "w:92+0.576",
       "gain": 0.024
+    }
+  ],
+  "hq_masks": [
+    {
+      "clip": "IMG_1285.MOV",
+      "from": 0.1,
+      "to": 4.45,
+      "crops": [
+        [
+          0.0,
+          2.6,
+          [
+            300,
+            700,
+            780,
+            1220
+          ]
+        ]
+      ]
     }
   ]
 }
