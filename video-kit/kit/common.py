@@ -36,7 +36,6 @@ DEFAULT_SUBS = {
     'enabled': True, 'font': 'black', 'size': 64, 'y': 1330, 'color': '#FFFFFF',
     'highlight': 'accent', 'highlight_text': '#FFFFFF', 'mode': 'karaoke',
     'max_words': 3, 'max_chars': 17, 'uppercase': False, 'shadow': 0.55,
-    'box': True,                  # False: the active word only changes colour (highlight_text), no plate behind it
     'margin': 150,                # side margin: phrases stay clear of the TikTok / Reels button column
     'replace': {}, 'merge': [],
 }
@@ -79,7 +78,6 @@ class Project:
         self.subs = deep_merge(DEFAULT_SUBS, c.get('subtitles'))
         self.grade = deep_merge(DEFAULT_GRADE, c.get('grade'))
         self.output = self.rel(c.get('output', f'out/{self.name}.mp4'), root=True)
-        self.out_crop = (c.get('frame') or {}).get('crop')   # [x, y, w, h]: e.g. [0, 420, 1080, 1080] for a 1:1 video
         self._words = None
         self.build_timeline()
 

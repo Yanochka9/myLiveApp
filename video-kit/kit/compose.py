@@ -170,22 +170,14 @@ class Gfx:
         return card
 
     @functools.lru_cache(maxsize=None)
-    def gold(self, text, size, font='black', outline=0.06, colors=None):
-        """text filled with the accent gradient (light top -> accent bottom), dark outline, soft shadow;
-        colors: list of colours -> horizontal multi-stop gradient instead (e.g. the logo's orange -> cyan)"""
+    def gold(self, text, size, font='black', outline=0.06):
+        """text filled with the accent gradient (light top -> accent bottom), dark outline, soft shadow"""
         p = self.p; f = self.font(font, size); bb = f.getbbox(text); ow = max(2, int(size * outline))
         w, h = bb[2] - bb[0] + 2 * ow + 20, bb[3] - bb[1] + 2 * ow + 20
         m = Image.new('L', (w, h), 0); ImageDraw.Draw(m).text((10 + ow - bb[0], 10 + ow - bb[1]), text, font=f, fill=255)
         o = Image.new('L', (w, h), 0)
         ImageDraw.Draw(o).text((10 + ow - bb[0], 10 + ow - bb[1]), text, font=f, fill=255, stroke_width=ow, stroke_fill=255)
-        if colors:
-            cs = np.array([p.color(c) for c in colors], np.float32); xs = np.linspace(0, 1, len(cs))
-            u = np.linspace(0, 1, w)
-            row = np.stack([np.interp(u, xs, cs[:, k]) for k in range(3)], 1)
-            shade = np.linspace(1.08, 0.9, h)[:, None, None]
-            g = Image.fromarray(np.clip(row[None] * shade, 0, 255).astype(np.uint8), 'RGB').convert('RGBA')
-        else:
-            g = self.rounded_grad(w, h, 0, p.color('accent_light'), p.color('accent'))
+        g = self.rounded_grad(w, h, 0, p.color('accent_light'), p.color('accent'))
         im = Image.new('RGBA', (w, h), (*p.color('dark'), 0)); im.putalpha(o)
         g.putalpha(m); im.alpha_composite(g)
         return self.shadow(im, blur=12, off=(0, 6), op=0.45)
@@ -385,7 +377,7 @@ def draw_subs(dst, T, groups, gfx, p):
     hl = p.color(s['highlight']); x = CW / 2 - total / 2
     for i, (t, w, a, b) in enumerate(parts):
         active = (a - 0.04 <= T < max(b, a + 0.12) + 0.06) if s['mode'] == 'karaoke' else (s['mode'] == 'first' and i == 0)
-        if active and s.get('box', True):
+        if active:
             k = eo3((T - a + 0.04) / 0.1) if s['mode'] == 'karaoke' else 1
             pad = s['size'] * 0.22
             d.rounded_rectangle((x - pad, cy - th / 2 - pad * 0.85, x + w + pad, cy + th / 2 + pad), int(s['size'] * 0.28),
@@ -414,7 +406,7 @@ def build_items(p):
     for c in p.cfg.get('cutaways', []):
         t0, t1 = p.t(c['at']), p.t(c['until'], ref=p.t(c['at']))
         cuts.append(dict(clip=c['clip'], src=c.get('src', 0.0), t0=t0, t1=t1, span=(t0, t1), zoom=zoom_fn(c.get('zoom', [1.04, 1.12])),
-                         drift=c.get('drift'), linear=c.get('linear', False), dy=c.get('dy', 0.0), tin=c.get('tin'), speed=c.get('speed', 1.0), cut=True))
+                         drift=c.get('drift'), tin=c.get('tin'), speed=c.get('speed', 1.0), cut=True))
     cuts.sort(key=lambda c: c['t0'])
     items = []
     for a in p.aroll:
@@ -431,20 +423,20 @@ def build_items(p):
             tin = a.get('tin') if abs(s - a['t0']) < 1e-6 else next((c.get('tout') for c in p.cfg.get('cutaways', [])
                                                                        if abs(p.t(c['until'], ref=p.t(c['at'])) - s) < 1e-6), None)
             items.append(dict(clip=a['clip'], src=a['in'] + (s - a['t0']), t0=s, t1=e, span=(a['t0'], a['t1']),
-                              zoom=zoom_fn(a.get('zoom', [1.0, 1.06])), drift=[a['dx'], a['dx']] if a.get('dx') else None, dy=a.get('dy', 0.0), tin=tin, speed=1.0, aroll=True,
+                              zoom=zoom_fn(a.get('zoom', [1.0, 1.06])), drift=None, tin=tin, speed=1.0, aroll=True,
                               focus=a.get('focus')))
     items += cuts
     ec = p.cfg.get('endcard')
     if ec:
         items.append(dict(clip=ec['clip'], src=ec.get('src', 0.0), t0=p.speech_end, t1=p.total, span=(p.speech_end, p.total),
-                          zoom=zoom_fn(ec.get('zoom', [1.06, 1.14])), drift=None, dy=ec.get('dy', 0.0), tin=ec.get('tin', 'flash'),
+                          zoom=zoom_fn(ec.get('zoom', [1.06, 1.14])), drift=None, tin=ec.get('tin', 'flash'),
                           speed=ec.get('speed', 0.55), end=ec))
     items.sort(key=lambda i: i['t0'])
     return items
 
 
 def grade_filter(p, clip):
-    g = dict(p.grade, **p.cfg.get('clip_grade', {}).get(clip, {}))   # per-clip correction, e.g. a cold overcast take
+    g = p.grade
     tone = ''
     if probe(p.clip(clip))['hdr']:
         tone = ('zscale=t=linear:npl=203,format=gbrpf32le,zscale=p=bt709,tonemap=hable:desat=0,'
@@ -455,13 +447,12 @@ def grade_filter(p, clip):
         tone += (f"lut3d=file='{lut}'," if mix >= 0.999 else
                  f"split[gx][gy];[gy]lut3d=file='{lut}'[gl];[gx][gl]blend=all_expr='A*{1 - mix:.3f}+B*{mix:.3f}',")
     return (tone + f"eq=gamma={g['gamma']}:contrast={g['contrast']}:saturation={g['saturation']},"
-            f"colorbalance=rs={-g['cool_shadows'] / 2}:bs={g['cool_shadows']}:rm={g.get('mid_warmth', 0)}:bm={-g.get('mid_warmth', 0)}"
-            f":rh={g['warmth']}:bh={-g['warmth'] / 1.5}")
+            f"colorbalance=rs={-g['cool_shadows'] / 2}:bs={g['cool_shadows']}:rh={g['warmth']}:bh={-g['warmth'] / 1.5}")
 
 
 def decode_cmd(p, it, src, nframes):
     sp = it['speed']
-    vf = f"scale={DW}:{DH}:flags=lanczos,fps={FPS / sp},{grade_filter(p, it['clip'])},format=rgb24"
+    vf = f"scale={DW}:{DH}:flags=bicubic,fps={FPS / sp},{grade_filter(p, it['clip'])},format=rgb24"
     if sp != 1: vf += f',setpts=PTS/{sp}'
     return ['ffmpeg', '-v', 'error', '-ss', f'{src:.3f}', '-i', p.clip(it['clip']), '-vf', vf,
             '-frames:v', str(nframes), '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-']
@@ -509,9 +500,6 @@ class Comp:
         self.glow_col = acc * p.theme['glow']
         fl = np.array(p.color('flash'), np.float32) / 255
         self.flash_col = fl
-        lk = p.theme.get('leak')     # two colours -> flashes become a diagonal light leak
-        self.leak = [np.array(p.color(c), np.float32) / 255 for c in lk] if lk else None
-        self.diag = ((xx / W) * 0.55 + (1 - yy / H) * 0.45).astype(np.float32)
         self.flash_ts = [it['t0'] for it in self.items if it.get('tin') == 'flash']
         self.zoom_cuts = [it['t0'] for it in self.items if it.get('tin') == 'zoom']
 
@@ -572,22 +560,20 @@ class Comp:
             z *= 1 + 0.14 * eio(1 - (it['t1'] - T) / 0.12)
         dx = 0.0
         if it.get('drift'):
-            d = it['drift']; u = lt / (it['t1'] - it['t0'])
-            dx = d[0] + (d[1] - d[0]) * (u if it.get('linear') else eio(u))
+            d = it['drift']; dx = d[0] + (d[1] - d[0]) * eio(lt / (it['t1'] - it['t0']))
         if it.get('focus') is not None: return z, (dx, it['focus'])   # zoom toward a height (0 top .. 1 bottom)
         return z, dx
 
     @staticmethod
-    def crop(frame, z, dx, dy=0.0):
-        """dy: vertical framing in output px (positive = show a lower part of the source); dx may carry a focus height"""
+    def crop(frame, z, dx):
         dx, f = split_dx(dx); s = BASEZ * z
-        M = np.array([[s, 0, W / 2 - s * (DW / 2 + dx / BASEZ)], [0, s, f * H - s * (f * DH + dy / BASEZ)]], np.float32)
+        M = np.array([[s, 0, W / 2 - s * (DW / 2 + dx / BASEZ)], [0, s, f * H - s * f * DH]], np.float32)
         return cv2.warpAffine(frame, M, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
 
     @staticmethod
-    def crop_mask(m, z, dx, dy=0.0):
+    def crop_mask(m, z, dx):
         dx, f = split_dx(dx)
-        M = np.array([[z, 0, W / 2 - z * (W / 2 + dx)], [0, z, f * H - z * (f * H + dy)]], np.float32)
+        M = np.array([[z, 0, W / 2 - z * (W / 2 + dx)], [0, z, f * H - z * f * H]], np.float32)
         return cv2.warpAffine(m, M, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
 
     @staticmethod
@@ -623,25 +609,11 @@ class Comp:
             draw_line(dst, (x, y + 40), pt, eo3((T - a - 0.1) / 0.3), al, self.p.color('text'), self.p.color('accent'))
             blend(dst, g.pill(el['text'], el.get('size', 44), el.get('style', 'accent'), el.get('font', 'xbold'), el.get('icon')), x, y, s, al)
         elif t == 'logo':
-            blend(dst, g.image(el['file']), x, y, s * sc, al * el.get('opacity', 1.0))
+            blend(dst, g.image(el['file']), x, y, s * sc, al)
         elif t == 'circle':   # marker circle drawn around a detail
             u, v = (T - a) / el.get('draw', 0.35), clamp((b - T) / 0.2)
             pts = wobble_ellipse(x, y, el.get('rx', 160), el.get('ry', 110), seed=int(a * 100))
             draw_stroke(dst, pts, eo3(u), v * clamp(u * 4), self.p.color(el.get('color', 'accent')), el.get('width', 9))
-        elif t == 'arrow':    # hand-drawn arrow: the shaft draws from (x0,y0) to (x1,y1) with a bend, then the head appears
-            u, v = (T - a) / el.get('draw', 0.35), clamp((b - T) / 0.2)
-            p0, p1 = np.array([el['x0'], el['y0']], float), np.array([el['x1'], el['y1']], float)
-            d = p1 - p0; nrm = np.array([-d[1], d[0]]) / (np.hypot(*d) + 1e-6)
-            c = (p0 + p1) / 2 + nrm * el.get('bend', 0.15) * np.hypot(*d)
-            k = np.linspace(0, 1, 60)[:, None]
-            pts = (1 - k) ** 2 * p0 + 2 * (1 - k) * k * c + k ** 2 * p1
-            col = self.p.color(el.get('color', 'accent')); w = el.get('width', 10)
-            draw_stroke(dst, pts, eo3(u), v * clamp(u * 4), col, w)
-            if u >= 0.85:
-                tang = pts[-1] - pts[-6]; tang /= (np.hypot(*tang) + 1e-6); hl = el.get('head', 46)
-                for ang in (2.55, -2.55):
-                    ca, sa = np.cos(ang), np.sin(ang); dv = np.array([tang[0] * ca - tang[1] * sa, tang[0] * sa + tang[1] * ca])
-                    draw_stroke(dst, np.array([pts[-1], pts[-1] + dv * hl]), clamp((u - 0.85) / 0.15), v, col, w)
         elif t == 'icon':     # doodle icon pops and gently rocks
             im = g.icon(el['icon'], el.get('size', 110), el.get('color', 'accent'))
             ang = 8 * np.sin((T - a) * 4.2) * el.get('rock', 1.0)
@@ -659,8 +631,7 @@ class Comp:
                 fg = g.rounded_grad(fw, bh, bh // 2, self.p.color('accent_light'), self.p.color('accent'))
                 blend(dst, fg, x - bw / 2 + fw / 2, by, s, al)
         elif t == 'gold':     # gradient-filled title text
-            cols = tuple(el['colors']) if el.get('colors') else None
-            blend(dst, g.gold(el['text'], el.get('size', 90), el.get('font', 'black'), el.get('outline', 0.06), cols), x, y, s * sc, al)
+            blend(dst, g.gold(el['text'], el.get('size', 90), el.get('font', 'black')), x, y, s * sc, al)
         elif t == 'rank':     # place badge
             blend(dst, g.rank(el['n'], el.get('size', 100), el.get('word', 'МЕСТО')), x, y, s * sc, al)
         elif t == 'measure':  # dimension line grows from the middle to both ends, ticks + gold label
@@ -713,8 +684,8 @@ class Comp:
     def render(self, T, it, raw):
         p = self.p
         lt = T - it['t0']
-        z, dx = self.zoom(it, T); dy = it.get('dy', 0.0)
-        base = self.crop(raw, z, dx, dy).astype(np.float32)
+        z, dx = self.zoom(it, T)
+        base = self.crop(raw, z, dx).astype(np.float32)
         if it.get('tin') == 'zoom' and lt < 0.2: base = self.zoom_blur(base, 0.06 * (1 - eo3(lt / 0.2)))
         if any(abs(c - it['t1']) < 1e-6 for c in self.zoom_cuts) and it['t1'] - T < 0.12:
             base = self.zoom_blur(base, 0.05 * eio(1 - (it['t1'] - T) / 0.12))
@@ -730,7 +701,7 @@ class Comp:
             m = self.mask(it['clip'], it['src'] + lt)
             if m is not None:
                 a, b = spot['_span']; k = clamp((T - a) / spot.get('fade', 0.5)) * clamp((b - T) / 0.25)
-                m = cv2.GaussianBlur(self.crop_mask(m, z, dx, it.get('dy', 0.0)), (0, 0), 6)[..., None]
+                m = cv2.GaussianBlur(self.crop_mask(m, z, dx), (0, 0), 6)[..., None]
                 lum = base.mean(2, keepdims=True)
                 dim = (base * (1 - spot.get('desat', 0.6)) + lum * spot.get('desat', 0.6)) * (1 - spot.get('darken', 0.6))
                 base = base * (1 - k * (1 - m)) + dim * k * (1 - m)
@@ -740,22 +711,14 @@ class Comp:
             for el in behind: self.draw_el(out, el, T, z, dx, behind=True)
             m = self.mask(it['clip'], it['src'] + lt)
             if m is not None:
-                m = self.crop_mask(m, z, dx, dy)[..., None]
+                m = self.crop_mask(m, z, dx)[..., None]
                 out = out * (1 - m) + base * m
         for el in active:
             if el.get('layer') != 'behind': self.draw_el(out, el, T)
         draw_subs(out, T, self.groups, self.gfx, p)
         for ft in self.flash_ts:
             d = abs(T - ft)
-            if self.leak is not None and d < 0.3:
-                # light leak: diagonal two-colour streak sweeps across the cut, screen-blended, short white peak
-                u = (T - ft + 0.3) / 0.6
-                band = np.exp(-((self.diag - (u * 1.6 - 0.3)) / 0.32) ** 2)[..., None]
-                k = (1 - d / 0.3) ** 1.5
-                col = self.leak[0] * (1 - self.diag[..., None]) + self.leak[1] * self.diag[..., None]
-                out = out + (255 - out) * col * band * k
-                if d < 0.07: out = out + (255 - out) * (0.35 * (1 - d / 0.07))
-            elif d < 0.2:
+            if d < 0.2:
                 k = (1 - d / 0.2) ** 2 * 0.45
                 out = out + (255 - out) * (self.glowmap * k) * self.flash_col
         out = out * self.vig + self.glowmap * self.glow_col
@@ -798,9 +761,6 @@ def build_audio(p, out):
         st, vol, ev = m.get('start', 0.0), m.get('volume', 0.14), m.get('end_volume', 0.42)
         se = p.speech_end
         expr = f"if(lt(t,{se - 0.15}),{vol},if(lt(t,{se + 0.25}),{vol}+(t-{se - 0.15})/0.4*{ev - vol},{ev}))"
-        for b0, b1 in m.get('boost', []):   # music-only stretches (no voice): music up to end_volume with short ramps
-            b0, b1 = p.t(b0), p.t(b1)
-            expr = f"if(between(t,{b0 - 0.2},{b1 + 0.2}),{vol}+({ev - vol})*min(1,min((t-{b0 - 0.2})/0.2,({b1 + 0.2}-t)/0.2)),{expr})"
         filt.append(f"[{k}:a]atrim={st}:{st + T},asetpts=PTS-STARTPTS,aformat=sample_rates=48000:channel_layouts=stereo,"
                     f"afade=t=in:d=0.05,volume='{expr}':eval=frame,afade=t=out:st={T - 1.0}:d=1.0[mus]")
         mix = ['[voice]', '[mus]']
@@ -840,13 +800,10 @@ def preview(p, times, draft=True):
         it = c.item_at(T)
         fr = c.render(T, it, read_single(p, it, T - it['t0']))
         f = os.path.join(od, f't{T:06.2f}.jpg')
-        if p.out_crop:
-            x, y, w, h = p.out_crop; fr = fr[y:y + h, x:x + w]
-        cv2.imwrite(f, cv2.cvtColor(np.ascontiguousarray(fr), cv2.COLOR_RGB2BGR), [cv2.IMWRITE_JPEG_QUALITY, 88]); files.append(f)
+        cv2.imwrite(f, cv2.cvtColor(fr, cv2.COLOR_RGB2BGR), [cv2.IMWRITE_JPEG_QUALITY, 88]); files.append(f)
     cols = min(6, len(files)); rows = math.ceil(len(files) / cols)
-    tw, th = (360, round(360 * p.out_crop[3] / p.out_crop[2])) if p.out_crop else (270, 480)
-    sheet = Image.new('RGB', (cols * tw, rows * th))
-    for i, f in enumerate(files): sheet.paste(Image.open(f).resize((tw, th)), ((i % cols) * tw, (i // cols) * th))
+    sheet = Image.new('RGB', (cols * 270, rows * 480))
+    for i, f in enumerate(files): sheet.paste(Image.open(f).resize((270, 480)), ((i % cols) * 270, (i // cols) * 480))
     sp = os.path.join(od, 'sheet.jpg'); sheet.save(sp, quality=88)
     print(sp)
 
@@ -859,11 +816,8 @@ def render(p, draft=False):
     out = p.output if not draft else p.output.replace('.mp4', '_draft.mp4')
     os.makedirs(os.path.dirname(out), exist_ok=True)
     enc = subprocess.Popen(['ffmpeg', '-v', 'error', '-y', '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-s', f'{W}x{H}', '-r', str(FPS),
-                            '-i', '-', '-i', mix,
-                            '-vf', (('crop={2}:{3}:{0}:{1},'.format(*p.out_crop) if p.out_crop else '') + 'unsharp=5:5:0.45:5:5:0'),
-                            '-c:v', 'libx264', '-preset', 'veryfast' if draft else 'slow', '-tune', 'film',
-                            '-profile:v', 'high', '-level', '4.2', '-maxrate', '30M', '-bufsize', '40M',
-                            '-crf', '22' if draft else '12', '-pix_fmt', 'yuv420p', '-color_primaries', 'bt709',
+                            '-i', '-', '-i', mix, '-c:v', 'libx264', '-preset', 'veryfast' if draft else 'slow',
+                            '-crf', '22' if draft else '16', '-pix_fmt', 'yuv420p', '-color_primaries', 'bt709',
                             '-color_trc', 'bt709', '-colorspace', 'bt709', '-movflags', '+faststart',
                             '-c:a', 'aac', '-b:a', '256k', '-shortest', out], stdin=subprocess.PIPE)
     nf = int(round(p.total * FPS)); cur = rd = None
