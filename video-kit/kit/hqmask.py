@@ -47,7 +47,7 @@ def guided(I, p_, r, eps):
     return mean(a) * I + mean(b)
 
 
-def refine(p, clip, a, b, kd, k0, k1, r=24, eps=2e-4):
+def refine(p, clip, a, b, kd, k0, k1, r=10, eps=1e-4, shrink=2):
     od = os.path.join(p.work, 'masks_hq', clip); os.makedirs(od, exist_ok=True)
     key = {}
     for k in range(k0, k1 + 1):
@@ -66,8 +66,9 @@ def refine(p, clip, a, b, kd, k0, k1, r=24, eps=2e-4):
         m = sm[lo] * (1 - w) + sm[hi] * w
         I = cv2.cvtColor(cv2.imread(f), cv2.COLOR_BGR2GRAY).astype(np.float32) / 255
         q = np.clip(guided(I, m, r, eps), 0, 1)
-        q = np.clip((q - 0.25) / 0.5, 0, 1); q = q * q * (3 - 2 * q)          # crisp but soft-edged
-        q = cv2.GaussianBlur(q, (0, 0), 1.2)
+        q = np.clip((q - 0.35) / 0.3, 0, 1); q = q * q * (3 - 2 * q)          # crisp but soft-edged
+        if shrink: q = cv2.erode(q, np.ones((2 * shrink + 1, 2 * shrink + 1), np.uint8))   # no light rim around the subject
+        q = cv2.GaussianBlur(q, (0, 0), 1.0)
         cv2.imwrite(os.path.join(od, f'{j0 + n:05d}.png'), (q * 255).astype(np.uint8))
     print('hq masks', clip, len(fs), '->', od)
 
