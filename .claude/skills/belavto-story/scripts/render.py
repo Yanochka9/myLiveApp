@@ -77,7 +77,7 @@ def make_header(cfg, path):
     img = shadowed(draw)
     if cfg.get("headline"):  # мягкое затемнение сверху, чтобы заголовок читался на светлом потолке/небе
         shade = Image.new("RGBA", (W, H))
-        grad = Image.linear_gradient("L").resize((W, 640)).point(lambda v: int((255 - v) * 0.42))
+        grad = Image.linear_gradient("L").resize((W, 640)).point(lambda v: int((255 - v) * 0.3))
         a = Image.new("L", (W, H)); a.paste(grad, (0, 0)); shade.putalpha(a)
         shade.alpha_composite(img); img = shade
     img.save(path)
@@ -148,14 +148,25 @@ def ff(*args):
 def main():
     cfg = json.load(open(sys.argv[1]))
     wd = cfg["workdir"]; meta = json.load(open(f"{wd}/words.json"))
-    main_dur = meta["main_dur"]; n = len(meta["clips"]); total = main_dur + CTA_DUR
+    main_dur = meta["main_dur"]; n = len(meta["clips"])
+    # хвост после последнего слова не нужен: там ведущая уже опускает/поворачивает камеру
+    last_png = f"{wd}/last.png"
+    if meta["words"] and meta["words"][-1]["e"] + 0.35 < main_dur - 0.05:
+        main_dur = round(meta["words"][-1]["e"] + 0.35, 3)
+        lc = meta["clips"][-1]; last_png = f"{wd}/last_cut.png"
+        ff("-ss", f"{max(0, main_dur - lc['start'] - 0.1):.3f}", "-i", f"{wd}/clip_{lc['clip']}.mov",
+           "-frames:v", "1", last_png)
+    total = main_dur + CTA_DUR
+    face = cfg.get("face_vf")  # обработка только кадров с ведущей (не подсъёмов), напр. мягкое сглаживание кожи
+    post = cfg.get("post_vf")  # общий доводчик картинки поверх всего (тени/чёткость)
+    sharpen = cfg.get("sharpen", 0.4)
     make_header(cfg, f"{wd}/header.png"); make_cta(cfg, f"{wd}/cta.png"); make_ass(cfg["subs"], main_dur, f"{wd}/subs.ass", cfg.get("hl_scale", 100))
     broll = prep_broll(cfg, wd)
 
     # финальный экран: стоп-кадр плавно размывается, сверху появляется призыв
-    ff("-loop", "1", "-t", str(CTA_DUR), "-framerate", "30", "-i", f"{wd}/last.png",
+    ff("-loop", "1", "-t", str(CTA_DUR), "-framerate", "30", "-i", last_png,
        "-loop", "1", "-t", str(CTA_DUR), "-framerate", "30", "-i", f"{wd}/cta.png", "-filter_complex",
-       "[0]format=yuv420p,split[s][b];[b]gblur=sigma=22,eq=brightness=-0.2[bb];"
+       f"[0]{face + ',' if face else ''}{post + ',' if post else ''}format=yuv420p,split[s][b];[b]gblur=sigma=22,eq=brightness=-0.2[bb];"
        "[s][bb]xfade=transition=fade:duration=0.5:offset=0,format=rgba[bg];"
        "[1]format=rgba,fade=in:st=0.15:d=0.45:alpha=1[t];[bg][t]overlay=format=auto,format=yuv420p",
        "-c:v", "libx264", "-crf", "14", "-preset", "fast", "-an", f"{wd}/cta.mov")
@@ -175,12 +186,12 @@ def main():
                 f"[mvb{j}][b{j}]overlay=enable='between(t,{bs:.3f},{be - 0.01:.3f})':eof_action=pass[mvb{j + 1}];")
     graph = (
         f"{cat}concat=n={n}:v=1:a=1[mv][ma];"
-        f"[mv]trim=duration={main_dur:.3f},setpts=PTS-STARTPTS[mvb0];{bro}"
-        f"[mvb{len(broll)}]unsharp=5:5:0.4[mv2];"
+        f"[mv]trim=duration={main_dur:.3f},setpts=PTS-STARTPTS{',' + face if face else ''}[mvb0];{bro}"
+        f"[mvb{len(broll)}]{post + ',' if post else ''}unsharp=5:5:{sharpen}[mv2];"
         f"[{i_head}]format=rgba,fade=in:st=0:d=0.3:alpha=1,fade=out:st={main_dur - 0.36:.2f}:d=0.36:alpha=1[hd];"
         f"[mv2][hd]overlay=format=auto,ass={wd}/subs.ass:fontsdir={FONTS},format=yuv420p[mvs];"
         f"[mvs][{i_cta}:v]concat=n=2:v=1:a=0[v];"
-        f"[ma]highpass=f=80,{'afftdn=nf=-28:nr=12:tn=1,' if cfg.get('denoise') else ''}acompressor=threshold=-20dB:ratio=3:attack=10:release=150,"
+        f"[ma]atrim=0:{main_dur:.3f},highpass=f=80,{'afftdn=nf=-28:nr=12:tn=1,' if cfg.get('denoise') else ''}acompressor=threshold=-20dB:ratio=3:attack=10:release=150,"
         f"loudnorm=I=-15:TP=-2:LRA=11,aresample=48000,apad,atrim=0:{total:.3f},asplit[voice][key];"
         f"[{i_tap}:a]aresample=48000,aformat=channel_layouts=stereo,adelay={tap_ms}|{tap_ms},volume=0.5,"
         f"apad,atrim=0:{total:.3f}[fx];"
