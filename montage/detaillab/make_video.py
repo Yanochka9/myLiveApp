@@ -269,7 +269,7 @@ def build(cfg):
             s0, e0 = spans.get(plate, (st, en))
             spans[plate] = (min(s0, st), max(e0, en))
     hook = cfg.get("hook_plate", "hook")
-    hook_end = spans[hook][1] if hook in spans else min(cfg.get("hook_text_dur", 3.0), body)
+    hook_end = spans[hook][1] if hook in spans else min(cfg.get("hook_text_dur", 5.0), body)
     build_subs(timeline, allw, fix, f"{w}/subs.ass", onsets(f"{w}/audio.wav"), cfg.get("sub_words", 1),
                0.0 if mini else hook_end, cfg.get("hook_title"))
 
@@ -319,8 +319,11 @@ def build(cfg):
         chain.append(f"{last}[fl{k}]overlay=0:0:enable='between(t,{max(t - din - 0.01, 0):.2f},{t + dout + 0.02:.2f})'[vf{k}]")
         last = f"[vf{k}]"
     chain.append(f"{last}ass={w}/subs.ass:fontsdir={FONTS}[vout]")
-    # голос без шумодава; aresample после loudnorm обязателен (иначе 192 кГц и обрезанный конец)
-    chain.append("[0:a]highpass=f=95,acompressor=threshold=-22dB:ratio=2.5:attack=8:release=120:makeup=2,"
+    # шумодав RNNoise (assets/sh.rnnn): фон −10 дБ, голос держит loudnorm; denoise: 0 — выключить.
+    # aresample после loudnorm обязателен (иначе 192 кГц и обрезанный конец)
+    dn = cfg.get("denoise", 0.85)
+    dn = f"arnndn=m={A}/sh.rnnn:mix={dn}," if dn else ""
+    chain.append(f"[0:a]highpass=f=95,{dn}acompressor=threshold=-22dB:ratio=2.5:attack=8:release=120:makeup=2,"
                  "loudnorm=I=-13:TP=-1.5:LRA=8,aresample=48000,asplit=2[voice][sc]")
     chain.append(f"[1:a]aresample=48000,atrim=0:{total:.2f},volume={cfg.get('music_vol', 0.22)},"
                  f"afade=t=in:d=1.0,afade=t=out:st={total - 1.5:.2f}:d=1.5[mus]")
