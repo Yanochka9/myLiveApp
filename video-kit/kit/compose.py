@@ -390,6 +390,11 @@ def draw_subs(dst, T, groups, gfx, p):
 
 
 # ================================================================== video track
+def split_dx(dx):
+    """camera offset: plain horizontal drift, or (drift, focus height) when the zoom is aimed at a point"""
+    return dx if isinstance(dx, tuple) else (dx, 0.5)
+
+
 def zoom_fn(z):
     a, b = (z, z) if isinstance(z, (int, float)) else z
     return lambda u: a + (b - a) * eio(u)
@@ -418,7 +423,8 @@ def build_items(p):
             tin = a.get('tin') if abs(s - a['t0']) < 1e-6 else next((c.get('tout') for c in p.cfg.get('cutaways', [])
                                                                        if abs(p.t(c['until'], ref=p.t(c['at'])) - s) < 1e-6), None)
             items.append(dict(clip=a['clip'], src=a['in'] + (s - a['t0']), t0=s, t1=e, span=(a['t0'], a['t1']),
-                              zoom=zoom_fn(a.get('zoom', [1.0, 1.06])), drift=None, tin=tin, speed=1.0, aroll=True))
+                              zoom=zoom_fn(a.get('zoom', [1.0, 1.06])), drift=None, tin=tin, speed=1.0, aroll=True,
+                              focus=a.get('focus')))
     items += cuts
     ec = p.cfg.get('endcard')
     if ec:
@@ -513,7 +519,7 @@ class Comp:
         """source ranges of A-roll that need a person/car mask (behind-layer elements)"""
         rng = []
         for el in self.els:
-            if el.get('layer') != 'behind': continue
+            if el.get('layer') != 'behind' and el['type'] != 'spotlight': continue
             a, b = el['_span']
             for it in self.items:
                 if not it.get('aroll'): continue
@@ -555,17 +561,19 @@ class Comp:
         dx = 0.0
         if it.get('drift'):
             d = it['drift']; dx = d[0] + (d[1] - d[0]) * eio(lt / (it['t1'] - it['t0']))
+        if it.get('focus') is not None: return z, (dx, it['focus'])   # zoom toward a height (0 top .. 1 bottom)
         return z, dx
 
     @staticmethod
     def crop(frame, z, dx):
-        s = BASEZ * z
-        M = np.array([[s, 0, W / 2 - s * (DW / 2 + dx / BASEZ)], [0, s, H / 2 - s * DH / 2]], np.float32)
+        dx, f = split_dx(dx); s = BASEZ * z
+        M = np.array([[s, 0, W / 2 - s * (DW / 2 + dx / BASEZ)], [0, s, f * H - s * f * DH]], np.float32)
         return cv2.warpAffine(frame, M, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
 
     @staticmethod
     def crop_mask(m, z, dx):
-        M = np.array([[z, 0, W / 2 - z * (W / 2 + dx)], [0, z, H / 2 - z * H / 2]], np.float32)
+        dx, f = split_dx(dx)
+        M = np.array([[z, 0, W / 2 - z * (W / 2 + dx)], [0, z, f * H - z * f * H]], np.float32)
         return cv2.warpAffine(m, M, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
 
     @staticmethod
@@ -583,7 +591,8 @@ class Comp:
         a, b = el['_span']
         x, y, sc = el.get('x', 540), el.get('y', 960), el.get('scale', 1.0)
         if behind:   # anchored to the scene: follow the camera zoom
-            x, y, sc = W / 2 + (x - W / 2 - dx) * z, H / 2 + (y - H / 2) * z, sc * z
+            dx, f = split_dx(dx)
+            x, y, sc = W / 2 + (x - W / 2 - dx) * z, f * H + (y - f * H) * z, sc * z
         t = el['type']; g = self.gfx
         if t == '3d':
             fr = self.frame3d(el, T)
@@ -631,8 +640,11 @@ class Comp:
             col = self.p.color(el.get('color', 'accent')); w = el.get('width', 8)
             for xa, xb in ((cx, cx - half), (cx, cx + half)):
                 draw_stroke(dst, np.array([[xa, yy], [xb, yy]]), 1.0, v, col, w)
-            if u > 0.98:
-                for xe in (x0, x1): draw_stroke(dst, np.array([[xe, yy - 34], [xe, yy + 34]]), 1.0, v, col, w)
+            if u > 0.98:   # end ticks, or extension lines down to the car's ends ('ext': [y at x0, y at x1])
+                ext = el.get('ext')
+                for xe, ye in zip((x0, x1), ext or (None, None)):
+                    if ye is None: draw_stroke(dst, np.array([[xe, yy - 34], [xe, yy + 34]]), 1.0, v, col, w)
+                    else: draw_stroke(dst, np.array([[xe, yy - 24], [xe, ye]]), eo3((T - a - el.get('draw', 0.5)) / 0.3), v, col, max(3, w - 3))
             if el.get('text'):
                 blend(dst, g.gold(el['text'], el.get('size', 110)), cx, yy - el.get('size', 110) * 0.75, s, al * clamp(u * 1.5))
         elif t == 'wipe':     # wavy colour bands sweep across the cut, optional big text while covered
@@ -683,8 +695,17 @@ class Comp:
             lum = base.mean(2, keepdims=True)
             tint = np.array(p.color(ec.get('tint', 'accent')), np.float32) * 0.66
             base = base * ec.get('darken', 0.38) + lum * 0.12 + tint * 0.35 * (lum / 255)
-        out = base.copy()
         active = [e for e in self.els if e['_span'][0] <= T < e['_span'][1]]
+        spot = next((e for e in active if e['type'] == 'spotlight'), None)
+        if spot and it.get('aroll'):    # everything but the car and the presenter falls into shadow
+            m = self.mask(it['clip'], it['src'] + lt)
+            if m is not None:
+                a, b = spot['_span']; k = clamp((T - a) / spot.get('fade', 0.5)) * clamp((b - T) / 0.25)
+                m = cv2.GaussianBlur(self.crop_mask(m, z, dx), (0, 0), 6)[..., None]
+                lum = base.mean(2, keepdims=True)
+                dim = (base * (1 - spot.get('desat', 0.6)) + lum * spot.get('desat', 0.6)) * (1 - spot.get('darken', 0.6))
+                base = base * (1 - k * (1 - m)) + dim * k * (1 - m)
+        out = base.copy()
         behind = [e for e in active if e.get('layer') == 'behind']
         if behind and it.get('aroll'):
             for el in behind: self.draw_el(out, el, T, z, dx, behind=True)
