@@ -18,14 +18,13 @@ def build_audio():
                  f"atempo={SP},afade=t=in:d=0.012,afade=t=out:st={d-0.02:.4f}:d=0.02,adelay={int(round(o*1000))}:all=1[v{i}]")
     n = len(pieces)
     f.append(''.join(f"[v{i}]" for i in range(n)) + f"amix=inputs={n}:normalize=0,"
-             "highpass=f=80,lowpass=f=14000,"
+             f"highpass=f=80,arnndn=m={R0}/../assets/sh.rnnn:mix=1.0,agate=threshold=0.012:ratio=3:attack=3:release=120:range=0.25,lowpass=f=14000,"
              "acompressor=threshold=-20dB:ratio=3:attack=5:release=120:makeup=2,"
              f"apad=whole_dur={TOTAL:.3f},atrim=0:{TOTAL:.3f},asplit=2[voice][key]")
     ins += ['-i', f"{R0}/music/client.wav"]
     # на меме музыка на секунду «проваливается» (комичная пауза), в финале — громче
     f.append(f"[{n}:a]atrim=start={MUSIC_OFF:.3f},asetpts=PTS-STARTPTS,aresample=48000,aformat=channel_layouts=stereo,"
              f"volume={MUSIC_DB}dB,"
-             f"volume='if(between(t,{MEME_AT:.3f},{MEME_AT+MEME-0.15:.3f}),0.25,1)':eval=frame,"
              f"volume='if(gte(t,{VOICE_END:.3f}),2.4,1)':eval=frame,"
              f"afade=t=in:d=0.4,afade=t=out:st={TOTAL-1.2:.3f}:d=1.2,apad,atrim=0:{TOTAL:.3f}[mus]")
     f.append("[key]aformat=channel_layouts=stereo[keys];"
@@ -92,7 +91,10 @@ def caption_events():
 def build_ass():
     L = []
     for st, en, txt in caption_events():
-        L.append(f"Dialogue: 5,{ts(st)},{ts(en)},Cap,,0,0,0,,{{\\pos(540,1050)\\fad(40,0)\\fscx86\\fscy86\\t(0,110,\\fscx100\\fscy100)}}{txt}")
+        import re
+        plain = re.sub(r'{[^}]*}', '', txt)
+        k = min(100, int(100 * 700 / max(1, len(plain) * 0.66 * 80)))      # не шире 700 px (безопасная зона)
+        L.append(f"Dialogue: 5,{ts(st)},{ts(en)},Cap,,0,0,0,,{{\\pos(540,1000)\\fad(40,0)\\fscx{int(k*0.86)}\\fscy{int(k*0.86)}\\t(0,110,\\fscx{k}\\fscy{k})}}{txt}")
     head = """[Script Info]
 ScriptType: v4.00+
 PlayResX: 1080
@@ -102,7 +104,7 @@ ScaledBorderAndShadow: yes
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: Cap,Montserrat ExtraBold,92,&H00FFFFFF,&H00FFFFFF,&H00141414,&H8C000000,0,0,0,0,100,100,1,0,1,3,6,5,40,40,0,1
+Style: Cap,Montserrat ExtraBold,80,&H00FFFFFF,&H00FFFFFF,&H00141414,&H8C000000,0,0,0,0,100,100,1,0,1,3,6,5,40,40,0,1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text

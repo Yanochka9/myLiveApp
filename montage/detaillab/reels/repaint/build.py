@@ -6,7 +6,7 @@ S = os.path.dirname(os.path.abspath(__file__)); R0 = os.path.dirname(S)
 SRC = f"{R0}/src"; OUT = f"{S}/out"; os.makedirs(OUT, exist_ok=True)
 FPS = 30
 SP = 1.08                      # лёгкое ускорение речи и картинки спикера
-MEME = 1.75                    # пауза под мем после «Конечно нет»
+MEME = 0.0                     # мем убран по просьбе клиента
 END_DUR = 3.6
 W = json.load(open(f"{R0}/words_medium.json"))
 SEGS = json.load(open(f"{S}/segs.json"))
@@ -24,7 +24,7 @@ def quiet(n, t, win=0.14):
 
 # микро-вырезки: повтор «подорвать лак,» и «соответственно,»
 CUTS = [('2509', quiet('2509', 25.2), quiet('2509', 26.17)),
-        ('2509', quiet('2509', 45.12), quiet('2509', 45.72))]
+        ('2509', 44.9, quiet('2509', 45.71, 0.04))]
 segs = []
 for c, s, e in SEGS:
     parts = [[s, e]]
@@ -84,17 +84,16 @@ def snap(x): return round(x * FPS) / FPS
 SH = [
     (0.0, 'wide'),
     (word('2509', 'что', 1), 'close'),
-    (word('2509', 'самый'), 'b', '2516', 0.0, 'wide'),
+    (word('2509', 'самый'), 'b', '2515', 0.0, 'wide'),
     (word('2509', 'полиуретановые'), 'close'),              # «пирог» слоёв
     (word('2509', 'когда', 2), 'wide'),
     (word('2509', 'есть'), 'close'),                         # отрыв лака
     (word('2509', 'и', 1, after=28), 'b', '2512', 0.3, 'wide'),
     (word('2509', 'несет'), 'wide'),
     (word('2509', 'конечно'), 'close'),
-    (MEME_AT, 'meme'),
     (MEME_AT + MEME, 'wide'),                                # «мы не знаем где…»
     (word('2509', 'поэтому', 1), 'close'),
-    (word('2509', 'ранее'), 'b', '2515', 0.2, 'close'),
+    (word('2509', 'ранее'), 'b', '2516', 0.0, 'close'),       # оригинал vs перекрас
     (word('2509', 'детейлинг', 3), 'wide'),
     (word('2509', 'ответственность', 1), 'close'),
     (word('2509', 'другие'), 'wide'),
@@ -111,7 +110,9 @@ SH.sort(key=lambda x: x[0])
 
 FACE = {'2509': (0.48, 0.27), '2510': (0.50, 0.26)}
 ZC = 1.42
-GRADE = open(f"{R0}/grade_default.txt").read().strip().replace("../assets", f"{R0}/../assets")
+# grade.txt: 1-я строка — перевод HDR→SDR (до кропа/zoompan) или пусто, 2-я — цвет (кривые/LUT)
+_g = open(f"{S}/grade.txt").read().replace("../assets", f"{R0}/../assets").split("\n")
+GPRE = _g[0].strip(); GRADE = _g[1].strip()
 DUR = {}
 def dur(c):
     if c not in DUR:
@@ -125,7 +126,7 @@ def render(src, ss, nfr, vf, speed=1.0, post=''):
     out = f"{OUT}/seg{idx:03d}.mp4"; idx += 1
     pre = f"setpts=(PTS-STARTPTS)/{speed}," if speed != 1.0 else ""
     cmd = ['ffmpeg', '-v', 'error', '-y', '-ss', f"{ss:.3f}", '-i', src, '-an',
-           '-vf', f"{pre}{vf},scale=1080:1920:flags=lanczos,setsar=1,fps={FPS},{GRADE}{post},format=yuv420p",
+           '-vf', f"{(GPRE + ',') if GPRE else ''}{pre}{vf},scale=1080:1920:flags=lanczos,setsar=1,fps={FPS},{GRADE}{post},format=yuv420p",
            '-frames:v', str(nfr), '-c:v', 'libx264', '-preset', 'medium', '-crf', '16', out]
     subprocess.run(cmd, check=True)
     return out
