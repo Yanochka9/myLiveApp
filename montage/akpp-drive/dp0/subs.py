@@ -91,7 +91,7 @@ def build():
         t, w = line.split(' ', 1)
         toks.append((m(float(t)), w))
     toks.sort(key=lambda x: x[0])
-    sch = gfx_timeline()['scheme']
+    _T = gfx_timeline(); sch = _T['scheme']; adr = _T['address']
     ev = []
     for i, (t0, w) in enumerate(toks):
         nxt = toks[i + 1][0] if i + 1 < len(toks) else MAIN_DUR
@@ -107,7 +107,7 @@ def build():
             size = int(size * 1.12)
         style = 'R' if red else 'W'
         anim = r"{\fscx78\fscy78\t(0,90,\fscx106\fscy106)\t(90,170,\fscx100\fscy100)}"
-        ev.append(f"Dialogue: 0,{ts(t0)},{ts(t1)},{style},,0,0,0,,{{\\pos(540,{1580 if sch[0] <= t0 < sch[1] else 1190})\\fs{size}}}{anim}{w}")
+        ev.append(f"Dialogue: 0,{ts(t0)},{ts(t1)},{style},,0,0,0,,{{\\pos(500,{1400 if sch[0] <= t0 < sch[1] else 1070 if t0 >= adr[0] - 0.05 else 1190})\\fs{size}}}{anim}{w}")
     head = """[Script Info]
 ScriptType: v4.00+
 PlayResX: 1080
