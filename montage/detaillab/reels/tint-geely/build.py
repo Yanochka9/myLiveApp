@@ -22,7 +22,9 @@ TAIL = 0.2
 MAIN = '2504'
 W = json.load(open(f"{WORK}/words_medium.json"))[MAIN]
 HDR = open(f"{S}/../grade_hdr_to_sdr.txt").read().strip()   # первым: после zoompan zscale падает
-LOOK = f"lut3d={A}/r5_light.cube,unsharp=5:5:0.4"
+# R5light + утверждённая клиентом коррекция «2Б»: темнее, тени глубже, насыщенность −10 %, контраст −5 %, чёрный чуть глубже
+LOOK = (f"lut3d={A}/r5_light.cube,eq=brightness=-0.03:saturation=0.9:contrast=0.95,"
+        "curves=all='0/0 0.08/0.05 0.25/0.2 0.5/0.46 1/0.98',unsharp=5:5:0.4")
 MUSIC_ID = '19CPc_GsOVXSTSU7amm4dPYcFdRAPm0Eq'  # «музыка и звуки», Chill Coffee Flow (другой трек, чем в историях)
 MUSIC_DB = -30                                     # тише: клиент просил
 
