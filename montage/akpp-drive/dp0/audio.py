@@ -10,7 +10,8 @@ import json
 
 T = json.load(open(SP + '/build/gfx.json'))
 SFX = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'assets', 'sfx')
-MUS, MUS_IN, MUS_LUFS = SP + '/music/267.mp3', 11.64, -19.8   # placeholder: Mixkit 267, highpassed loudness
+# client's track from Drive «музыка и звуки» (copy_FCD0D4FD…mov), starts on a strong hit at 3.41 s
+MUS, MUS_IN, MUS_LUFS = SP + '/music/FCD0.wav', 3.41, -21.4   # LUFS after highpass 110 Hz
 PEAK = {'riser': 3.06, 'click1': .11, 'click2': .14, 'click3': .11, 'click4': .16, 'click5': .06,
         'scheme-glitch': .39, 'scheme-static': .47}
 with_music = '--no-music' not in sys.argv
