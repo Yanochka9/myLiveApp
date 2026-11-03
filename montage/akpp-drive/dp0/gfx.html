@@ -200,12 +200,12 @@ function drawScheme(t) {
   const lt = t - a, e = clamp((b - t) / 0.15), k = easeOut(lt / 0.4);
   const leak = clamp((t - leakT) / 0.6);
   g.save(); darkBg(); g.globalAlpha = e;
-  text('ГИДРОБЛОК', W / 2, 312, 34, 'rgba(255,255,255,0.55)', 'UE');
+  text('ГИДРОБЛОК', W / 2, 330, 36, 'rgba(255,255,255,0.55)', 'UE');
   const shake = leak > 0 ? Math.sin(t * 80) * 3 * leak : 0;
-  g.save(); g.globalAlpha = e * k; g.translate(shake, (1 - k) * 80); place(540, 590, 0.78); block(t, lt, leak, 0); g.restore();
-  if (leak > 0) { g.save(); g.globalAlpha = e; labelBox('УТЕЧКА ДАВЛЕНИЯ', W / 2, 870, leakT, t, 42); g.restore(); }
-  const rowY = 1065;
-  const gx = 360, gy = rowY, gr = 115;
+  g.save(); g.globalAlpha = e * k; g.translate(shake, (1 - k) * 80); place(540, 645, 0.72); block(t, lt, leak, 0); g.restore();
+  if (leak > 0) { g.save(); g.globalAlpha = e; labelBox('УТЕЧКА ДАВЛЕНИЯ', W / 2, 980, leakT, t, 44); g.restore(); }
+  const rowY = 1200;
+  const gx = 350, gy = rowY, gr = 110;
   g.save(); g.globalAlpha = e * k;
   g.lineWidth = 22; g.lineCap = 'butt';
   const a0 = Math.PI * 0.8, a1 = Math.PI * 2.2;
@@ -217,8 +217,8 @@ function drawScheme(t) {
   g.strokeStyle = '#fff'; g.lineWidth = 8; g.lineCap = 'round';
   g.beginPath(); g.moveTo(gx, gy); g.lineTo(gx + Math.cos(na) * (gr - 26), gy + Math.sin(na) * (gr - 26)); g.stroke();
   g.fillStyle = '#fff'; g.beginPath(); g.arc(gx, gy, 13, 0, 7); g.fill();
-  text('ДАВЛЕНИЕ', gx, gy + 150, 28, 'rgba(255,255,255,0.8)', 'UE');
-  const cx = 720, cy = rowY, cs = 150;
+  text('ДАВЛЕНИЕ', gx, gy + 148, 28, 'rgba(255,255,255,0.8)', 'UE');
+  const cx = 730, cy = rowY, cs = 140;
   g.strokeStyle = '#9aa1aa'; g.lineWidth = 8; g.lineCap = 'butt';
   for (let i = 0; i < 5; i++) { const o = -cs / 2 + 22 + i * (cs - 44) / 4;
     g.beginPath(); g.moveTo(cx - cs / 2 - 24, cy + o); g.lineTo(cx - cs / 2, cy + o); g.moveTo(cx + cs / 2, cy + o); g.lineTo(cx + cs / 2 + 24, cy + o);
@@ -229,9 +229,9 @@ function drawScheme(t) {
   g.strokeStyle = alarm ? RED : 'rgba(255,255,255,0.25)'; g.lineWidth = 6; rrect(cx - cs / 2 + 14, cy - cs / 2 + 14, cs - 28, cs - 28, 12); g.stroke();
   if (t >= ecuT) { g.shadowColor = RED; g.shadowBlur = alarm ? 40 : 10; text('!', cx, cy + 4, 100, alarm ? RED : '#ff8a8d'); g.shadowBlur = 0; }
   else text('ЭБУ', cx, cy + 2, 38, 'rgba(255,255,255,0.7)', 'UE');
-  text('БЛОК УПРАВЛЕНИЯ', cx, gy + 150, 26, 'rgba(255,255,255,0.8)', 'UE');
+  if (t >= ecuT) { if (Math.floor((t - ecuT) * 4) % 2 === 0 || t - ecuT > 1.2) text('АВАРИЙНЫЙ РЕЖИМ', cx, gy + 148, 26, RED, 'UB'); }
+  else text('БЛОК УПРАВЛЕНИЯ', cx, gy + 148, 26, 'rgba(255,255,255,0.8)', 'UE');
   g.restore();
-  if (t >= ecuT) { g.save(); g.globalAlpha = e; labelBox('АВАРИЙНЫЙ РЕЖИМ', W / 2, 1300, ecuT + 0.1, t, 36); g.restore(); }
   g.restore();
 }
 
@@ -342,6 +342,7 @@ function brackets(t, a, b) {
 }
 function drawReasons(t) {
   const R = T.reasons, end = R[3]; if (t < R[0][0] || t >= end) return;
+  if (!T.reasons_vis.some(([a, b]) => t >= a && t < b)) return;   // never over the presenter's face
   const fo = clamp((end - t) / 0.2);
   R.slice(0, 3).forEach(([lt, sa, sb], i) => {
     if (sa != null) brackets(t, sa, sb);
@@ -376,7 +377,7 @@ function drawAddress(t) {
   const [a, b] = T.address; if (!inWin(t, a, b + 0.01)) return;
   const k = easeOut((t - a) / 0.4);
   g.save(); g.globalAlpha = clamp((t - a) / 0.2); g.translate(0, (1 - k) * 40);
-  const x = SAFE.l + 30, y = 1150, w = SAFE.r - SAFE.l - 60, h = 210;
+  const x = SAFE.l + 30, y = 1190, w = SAFE.r - SAFE.l - 60, h = 210;
   g.shadowColor = 'rgba(0,0,0,0.5)'; g.shadowBlur = 40; g.fillStyle = 'rgba(14,14,16,0.86)'; rrect(x, y, w, h, 36); g.fill();
   g.shadowBlur = 0; g.fillStyle = RED; rrect(x, y, 16, h, 8); g.fill();
   g.drawImage(logo, x + 32, y + 30, 150, 150);

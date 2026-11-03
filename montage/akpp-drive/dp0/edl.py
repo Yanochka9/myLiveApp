@@ -211,6 +211,7 @@ def gfx_timeline():
         clog=[clog['o0'], clog['o1']],
         cooler=[cool['o0'], cool['o1'], m(54.40)],
         reasons=[[m(50.64), None, None], [m(54.04), None, None], [m(68.50), None, None], m(71.90)],
+        reasons_vis=[[ring['o0'], ring['o1']], [cool['o0'], cool['o1']], [clog['o0'], clog['o1']], [oil['o0'], oil['o1']]],
         oil=[oil['o0'], oil['o1'], m(70.18)],
         free=[m(131.98), m(133.18)],
         address=[m(135.32), MAIN_DUR],

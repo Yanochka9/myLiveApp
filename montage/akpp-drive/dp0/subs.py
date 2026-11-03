@@ -100,6 +100,8 @@ def build():
         t1 = min(nxt, t0 + 1.4)
         if w.startswith('-') or t1 <= t0:
             continue
+        if sch[0] <= t0 < sch[1] or t0 >= adr[0] - 0.05:
+            continue   # scheme and address card already show these words; keep the face and graphics clear
         red = w.startswith('*')
         w = w.lstrip('*')
         # fit inside the safe zone: at most ~740 px wide (Unbounded Black ~0.86 em per letter)

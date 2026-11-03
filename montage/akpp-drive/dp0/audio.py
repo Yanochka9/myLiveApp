@@ -69,7 +69,7 @@ from intrigue import build as build_intrigue
 bed = build_intrigue(f'{SFX}/riser.flac', B + '/intrigue.wav')
 bl = lufs(bed)
 VOICE_LUFS = -28.0
-g0 = g1 = 10 ** ((VOICE_LUFS - 20 - bl) / 20)   # shape is in the file: ~-27 dB under the voice at the start, ~-17 at the flash
+g0 = g1 = 10 ** ((VOICE_LUFS - 17 - bl) / 20)   # shape is in the file: ~-21 dB under the voice at the start, ~-10 at the flash (voice is quieter there)
 print(f'intrigue bed {bl:.1f} LUFS -> gain {g0:.3f}..{g1:.3f}')
 i = add_input(bed)
 ramp = f"{g0:.4f}+({g1:.4f}-{g0:.4f})*clip((t-{HOOK_END - 3:.3f})/3\\,0\\,1)"

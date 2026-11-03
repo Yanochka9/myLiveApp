@@ -1,36 +1,40 @@
 """Intrigue bed for the question: the client's sound from «музыка и звуки» (start of copy_B2B2…mov = riser.flac),
-without heavy time-stretching. Its long decaying tail, reversed, is a natural slow swell; it is slowed gently
-(tape-style, -4.7 semitones, plus a mild tempo change) to span the whole question, and its level is shaped so it is
-audible from the first frame and rises evenly to the flash (+10 dB over the question)."""
+without heavy time-stretching (atempo x5 sounded robotic). The audible part of its decaying tail, reversed, is a natural
+slow swell; it is slowed gently (tape-style plus a mild tempo change) to span the whole question. Its level is then
+pulled onto a straight rising line: audible from the first frame, +rise_db up to the flash, never loud."""
 import subprocess, sys, wave
 import numpy as np
 from edl import HOOK_END, SP
 
-def build(src, out, length=HOOK_END, rise_db=10.0):
+def _env_db(x, sr, win_s=0.75):
+    win = int(win_s * sr)
+    p = np.pad((x ** 2).mean(1), (win, win), mode='reflect')
+    e = np.convolve(p, np.ones(win) / win, 'same')[win:-win]
+    return 10 * np.log10(e + 1e-12)
+
+def build(src, out, length=HOOK_END, rise_db=5.0):
     raw = SP + '/build/intrigue_raw.wav'
-    peak, end = 3.25, 11.6                      # tail of the riser (peak -> fade)
-    span = end - peak
-    f = span / length                           # overall speed factor
-    rate = 0.76; tempo = f / rate              # asetrate part (pitch) x atempo part (mild)
+    peak, end = 3.25, 9.0                       # audible part of the riser's tail
+    f = (end - peak) / length
+    rate = 0.72; tempo = f / rate              # -5.7 semitones tape slow-down x mild atempo
     subprocess.run(['ffmpeg', '-loglevel', 'error', '-y', '-i', src, '-af',
                     f"atrim={peak}:{end},asetpts=PTS-STARTPTS,areverse,aresample=48000,"
                     f"asetrate={48000 * rate:.0f},aresample=48000,atempo={tempo:.4f},aformat=channel_layouts=stereo",
                     '-ar', '48000', raw], check=True)
-    w = wave.open(raw); n = w.getnframes(); sr = w.getframerate()
-    a = np.frombuffer(w.readframes(n), np.int16).astype(np.float32).reshape(-1, 2) / 32768
-    a = a[:int(length * sr)]
-    if len(a) < int(length * sr):
-        a = np.pad(a, ((int(length * sr) - len(a), 0), (0, 0)))
-    win = int(0.4 * sr)
-    e = np.sqrt(np.convolve((a ** 2).mean(1), np.ones(win) / win, 'same')) + 1e-5
-    t = np.arange(len(a)) / sr
-    target_db = -rise_db + rise_db * (t / length) ** 1.3        # rising curve, 0 dB at the flash
-    env_db = 20 * np.log10(e / e[-int(0.3 * sr):].mean())
-    gain = 10 ** (np.clip(target_db - env_db, -40, 40) / 20)
-    gain = np.convolve(gain, np.ones(win) / win, 'same')
-    y = a * gain[:, None]
-    fade = int(0.25 * sr); y[:fade] *= np.linspace(0, 1, fade)[:, None]
-    y = np.clip(y, -1, 1)
+    w = wave.open(raw); sr = w.getframerate()
+    a = np.frombuffer(w.readframes(w.getnframes()), np.int16).astype(np.float32).reshape(-1, 2) / 32768
+    n = int(length * sr)
+    a = a[:n] if len(a) >= n else np.pad(a, ((n - len(a), 0), (0, 0)), mode='edge')
+    t = np.arange(n) / sr
+    target = -rise_db * (1 - t / length)        # dB, 0 at the flash
+    y = a.copy()
+    for _ in range(4):                          # converge the envelope onto the target line
+        env = _env_db(y, sr)
+        env -= env[-int(0.75 * sr):].mean()
+        corr = np.clip(target - env, -24, 24)
+        y = y * (10 ** (corr / 20))[:, None]
+    fade = int(0.2 * sr); y[:fade] *= np.linspace(0, 1, fade)[:, None]
+    y = y / max(1e-6, np.abs(y).max()) * 0.9
     o = wave.open(out, 'wb'); o.setnchannels(2); o.setsampwidth(2); o.setframerate(sr)
     o.writeframes((y * 32767).astype(np.int16).tobytes()); o.close()
     return out
