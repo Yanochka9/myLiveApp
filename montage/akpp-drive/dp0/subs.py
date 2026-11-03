@@ -102,12 +102,13 @@ def build():
             continue
         red = w.startswith('*')
         w = w.lstrip('*')
-        size = 96 if len(w) <= 10 else int(96 * 10 / len(w))
+        # fit inside the safe zone: at most ~740 px wide (Unbounded Black ~0.86 em per letter)
+        size = min(88, int(740 / (0.86 * max(len(w), 1))))
         if red:
-            size = int(size * 1.12)
+            size = min(int(size * 1.12), int(740 / (0.86 * max(len(w), 1))))
         style = 'R' if red else 'W'
         anim = r"{\fscx78\fscy78\t(0,90,\fscx106\fscy106)\t(90,170,\fscx100\fscy100)}"
-        ev.append(f"Dialogue: 0,{ts(t0)},{ts(t1)},{style},,0,0,0,,{{\\pos(500,{1400 if sch[0] <= t0 < sch[1] else 1070 if t0 >= adr[0] - 0.05 else 1190})\\fs{size}}}{anim}{w}")
+        ev.append(f"Dialogue: 0,{ts(t0)},{ts(t1)},{style},,0,0,0,,{{\\pos(540,{1380 if sch[0] <= t0 < sch[1] else 1030 if t0 >= adr[0] - 0.05 else 1190})\\fs{size}}}{anim}{w}")
     head = """[Script Info]
 ScriptType: v4.00+
 PlayResX: 1080

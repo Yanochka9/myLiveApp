@@ -38,14 +38,17 @@ function labelBox(s, x, y, t0, t, size = 46) {
   if (t < t0) return;
   const k = easeBack((t - t0) / 0.28);
   g.save(); g.translate(x, y); g.scale(k, k);
-  g.font = `900 ${size}px UB`; const w = g.measureText(s).width + 56, h = size + 38;
+  g.font = `900 ${size}px UB`; let w = g.measureText(s).width + 56; const fit = Math.min(1, 740 / w); g.scale(fit, fit); const h = size + 38;
   g.shadowColor = 'rgba(0,0,0,0.5)'; g.shadowBlur = 24; g.fillStyle = RED; rrect(-w / 2, -h / 2, w, h, 18); g.fill();
   g.shadowBlur = 0; text(s, 0, 2, size, '#fff'); g.restore();
 }
 
-// SAFE ZONE (TikTok + Reels UI): keep content in x 60..940, y 260..1450
+// SAFE ZONE (TikTok + Reels): every label, card and animation stays centred inside
+// x 150..930 (780 px, equal side margins), y 280..1420. Only full-screen backgrounds and the flash go edge to edge.
+const SAFE = { l: 150, r: 930, t: 280, b: 1420 };
 // ---------- light-leak flash ----------
 function drawFlash(t) {
+  if (window.QA) return;
   for (const tc of T.flashes) {
     const d = (t - tc) / 0.24; if (Math.abs(d) >= 1) continue;
     const a = 1 - Math.abs(d);
@@ -64,7 +67,7 @@ function drawFlash(t) {
 // key facts get a red marker, and the card flies off on the flash into the answer.
 let CARD = null; // layout cache
 function layoutCard() {
-  const x = 60, w = 880, pad = 34, size = 31, lh = 43, maxW = w - pad * 2;
+  const x = SAFE.l + 20, w = SAFE.r - SAFE.l - 40, pad = 30, size = 29, lh = 41, maxW = w - pad * 2;
   g.font = `500 ${size}px Inter`;
   const sp = g.measureText(' ').width;
   let cx = 0, line = 0; const items = [];
@@ -75,7 +78,7 @@ function layoutCard() {
   }
   const lines = line + 1, head = 82, foot = 30;
   const h = head + lines * lh + foot;
-  const y = 1440 - h;
+  const y = SAFE.b - 30 - h;
   CARD = { x, y, w, h, pad, size, lh, head, items };
 }
 function drawCard(t) {
@@ -89,7 +92,7 @@ function drawCard(t) {
   g.translate(0, (1 - kin) * 140 - kout * 260);
   const sc = 0.94 + 0.06 * kin; g.translate(W / 2, y + h / 2); g.scale(sc, sc); g.translate(-W / 2, -(y + h / 2));
   // frosted card
-  g.shadowColor = 'rgba(0,0,0,0.28)'; g.shadowBlur = 50; g.shadowOffsetY = 14;
+  g.shadowColor = 'rgba(0,0,0,0.28)'; g.shadowBlur = 22; g.shadowOffsetY = 6;
   g.fillStyle = 'rgba(246,246,248,0.94)'; rrect(x, y, w, h, 36); g.fill();
   g.shadowBlur = 0; g.shadowOffsetY = 0;
   g.strokeStyle = 'rgba(255,255,255,0.9)'; g.lineWidth = 2; rrect(x + 1, y + 1, w - 2, h - 2, 35); g.stroke();
@@ -178,6 +181,7 @@ function block(t, lt, leak, clog) {
   }
 }
 function darkBg() {
+  if (window.QA) return;            // safe-zone check: backgrounds are allowed edge to edge
   const bg = g.createRadialGradient(W / 2, 700, 100, W / 2, 900, 1300);
   bg.addColorStop(0, '#24262c'); bg.addColorStop(1, '#0a0a0c'); g.fillStyle = bg; g.fillRect(0, 0, W, H);
   g.strokeStyle = 'rgba(255,255,255,0.04)'; g.lineWidth = 2;
@@ -193,12 +197,12 @@ function drawScheme(t) {
   const lt = t - a, e = clamp((b - t) / 0.15), k = easeOut(lt / 0.4);
   const leak = clamp((t - leakT) / 0.6);
   g.save(); darkBg(); g.globalAlpha = e;
-  text('ГИДРОБЛОК', W / 2, 280, 38, 'rgba(255,255,255,0.55)', 'UE');
+  text('ГИДРОБЛОК', W / 2, 312, 34, 'rgba(255,255,255,0.55)', 'UE');
   const shake = leak > 0 ? Math.sin(t * 80) * 3 * leak : 0;
-  g.save(); g.globalAlpha = e * k; g.translate(shake, (1 - k) * 80); place(540, 560, 0.80); block(t, lt, leak, 0); g.restore();
-  if (leak > 0) { g.save(); g.globalAlpha = e; labelBox('УТЕЧКА ДАВЛЕНИЯ', W / 2, 850, leakT, t, 44); g.restore(); }
-  const rowY = 1050;
-  const gx = 330, gy = rowY, gr = 120;
+  g.save(); g.globalAlpha = e * k; g.translate(shake, (1 - k) * 80); place(540, 590, 0.78); block(t, lt, leak, 0); g.restore();
+  if (leak > 0) { g.save(); g.globalAlpha = e; labelBox('УТЕЧКА ДАВЛЕНИЯ', W / 2, 870, leakT, t, 42); g.restore(); }
+  const rowY = 1065;
+  const gx = 360, gy = rowY, gr = 115;
   g.save(); g.globalAlpha = e * k;
   g.lineWidth = 22; g.lineCap = 'butt';
   const a0 = Math.PI * 0.8, a1 = Math.PI * 2.2;
@@ -211,7 +215,7 @@ function drawScheme(t) {
   g.beginPath(); g.moveTo(gx, gy); g.lineTo(gx + Math.cos(na) * (gr - 26), gy + Math.sin(na) * (gr - 26)); g.stroke();
   g.fillStyle = '#fff'; g.beginPath(); g.arc(gx, gy, 13, 0, 7); g.fill();
   text('ДАВЛЕНИЕ', gx, gy + 150, 28, 'rgba(255,255,255,0.8)', 'UE');
-  const cx = 740, cy = rowY, cs = 160;
+  const cx = 720, cy = rowY, cs = 150;
   g.strokeStyle = '#9aa1aa'; g.lineWidth = 8; g.lineCap = 'butt';
   for (let i = 0; i < 5; i++) { const o = -cs / 2 + 22 + i * (cs - 44) / 4;
     g.beginPath(); g.moveTo(cx - cs / 2 - 24, cy + o); g.lineTo(cx - cs / 2, cy + o); g.moveTo(cx + cs / 2, cy + o); g.lineTo(cx + cs / 2 + 24, cy + o);
@@ -222,9 +226,9 @@ function drawScheme(t) {
   g.strokeStyle = alarm ? RED : 'rgba(255,255,255,0.25)'; g.lineWidth = 6; rrect(cx - cs / 2 + 14, cy - cs / 2 + 14, cs - 28, cs - 28, 12); g.stroke();
   if (t >= ecuT) { g.shadowColor = RED; g.shadowBlur = alarm ? 40 : 10; text('!', cx, cy + 4, 100, alarm ? RED : '#ff8a8d'); g.shadowBlur = 0; }
   else text('ЭБУ', cx, cy + 2, 38, 'rgba(255,255,255,0.7)', 'UE');
-  text('БЛОК УПРАВЛЕНИЯ', cx, gy + 150, 28, 'rgba(255,255,255,0.8)', 'UE');
+  text('БЛОК УПРАВЛЕНИЯ', cx, gy + 150, 26, 'rgba(255,255,255,0.8)', 'UE');
   g.restore();
-  if (t >= ecuT) { g.save(); g.globalAlpha = e; labelBox('АВАРИЙНЫЙ РЕЖИМ', W / 2, 1290, ecuT + 0.1, t, 38); g.restore(); }
+  if (t >= ecuT) { g.save(); g.globalAlpha = e; labelBox('АВАРИЙНЫЙ РЕЖИМ', W / 2, 1300, ecuT + 0.1, t, 36); g.restore(); }
   g.restore();
 }
 
@@ -233,16 +237,20 @@ function drawRing(t) {
   const [a, b, pinchT] = T.ring; if (!inWin(t, a, b)) return;
   const lt = t - a, e = clamp((b - t) / 0.15), k = easeOut(lt / 0.4);
   g.save(); darkBg(); g.globalAlpha = e * k; g.translate(0, (1 - k) * 60);
-  const cy = 860, r = 110, gx = 520;               // shaft axis y, radius, groove x
+  const cy = 860, r = 105, gx = 540;               // shaft axis y, radius, groove x
   // shaft (cylinder seen from the side)
   const sg = g.createLinearGradient(0, cy - r, 0, cy + r);
   sg.addColorStop(0, '#5d646d'); sg.addColorStop(0.18, '#eef1f4'); sg.addColorStop(0.45, '#a9b0b9'); sg.addColorStop(1, '#3c4148');
-  g.fillStyle = sg; g.fillRect(-20, cy - r, W + 40, 2 * r);
+  const sx0 = SAFE.l + 60, sx1 = SAFE.r - 60;
+  g.fillStyle = sg; g.fillRect(sx0, cy - r, sx1 - sx0, 2 * r);
+  const capg = g.createRadialGradient(sx1 - 10, cy - 30, 10, sx1, cy, r); capg.addColorStop(0, '#e9ecf0'); capg.addColorStop(1, '#5d646d');
+  g.fillStyle = capg; g.beginPath(); g.ellipse(sx1, cy, 34, r, 0, 0, 7); g.fill();
+  g.fillStyle = '#3c4148'; g.beginPath(); g.ellipse(sx0, cy, 34, r, 0, Math.PI / 2, Math.PI * 1.5); g.fill();
   // groove
   const gw = 64; const gg = g.createLinearGradient(0, cy - r, 0, cy + r); gg.addColorStop(0, '#2a2e34'); gg.addColorStop(0.3, '#6d747d'); gg.addColorStop(1, '#1d2025');
   g.fillStyle = gg; g.fillRect(gx - gw / 2, cy - r + 14, gw, 2 * r - 28);
   // teflon ring slides into the groove
-  const slide = easeOut(lt / 0.6), rx = gx - (1 - slide) * 420;
+  const slide = easeOut(lt / 0.6), rx = gx - (1 - slide) * 300;
   const rg = g.createLinearGradient(0, cy - r - 10, 0, cy + r + 10); rg.addColorStop(0, '#bfb6a0'); rg.addColorStop(0.2, '#fbf6ea'); rg.addColorStop(0.5, '#e4dccb'); rg.addColorStop(1, '#8e8674');
   g.fillStyle = rg; rrect(rx - 26, cy - r - 10, 52, 2 * r + 20, 12); g.fill();
   g.fillStyle = 'rgba(255,255,255,0.5)'; g.fillRect(rx - 18, cy - r - 6, 6, 2 * r + 12);
@@ -271,7 +279,7 @@ function drawCooler(t) {
   const bad = clamp((t - badT) / 0.3);
   g.save(); darkBg(); g.globalAlpha = e * k; g.translate(0, (1 - k) * 60);
   // radiator core with fins (pseudo-3D)
-  const rx = 220, ry = 600, rw = 560, rh = 270, d = 24;
+  const rx = 290, ry = 620, rw = 480, rh = 250, d = 22;
   g.fillStyle = '#2f343b'; g.beginPath(); g.moveTo(rx + rw, ry); g.lineTo(rx + rw + d, ry + d); g.lineTo(rx + rw + d, ry + rh + d); g.lineTo(rx + d, ry + rh + d); g.lineTo(rx, ry + rh); g.lineTo(rx + rw, ry + rh); g.closePath(); g.fill();
   const cg = g.createLinearGradient(rx, ry, rx + rw, ry + rh); cg.addColorStop(0, '#d5d9de'); cg.addColorStop(0.5, '#8d949d'); cg.addColorStop(1, '#4e555e');
   g.fillStyle = cg; rrect(rx, ry, rw, rh, 14); g.fill();
@@ -279,7 +287,7 @@ function drawCooler(t) {
   for (let x = rx + 40; x < rx + rw - 30; x += 14) { g.beginPath(); g.moveTo(x, ry + 26); g.lineTo(x, ry + rh - 26); g.stroke(); }
   g.fillStyle = '#5b626b'; g.fillRect(rx - 30, ry + 20, 30, rh - 40); g.fillRect(rx + rw, ry + 20, 30, rh - 40);
   // gearbox housing below
-  const bx = 310, by = 990, bw = 400, bh = 130;
+  const bx = 360, by = 990, bw = 360, bh = 120;
   const hg = g.createLinearGradient(bx, by, bx, by + bh); hg.addColorStop(0, '#9aa1aa'); hg.addColorStop(1, '#3d434b');
   g.fillStyle = hg; rrect(bx, by, bw, bh, 26); g.fill();
   text('АКПП', bx + bw / 2, by + bh / 2 + 2, 46, 'rgba(255,255,255,0.85)', 'UB');
@@ -297,13 +305,13 @@ function drawCooler(t) {
     const fx = rx + rw + 15, fy = ry + rh - 40;
     g.strokeStyle = `rgba(240,41,47,${0.6 + 0.4 * Math.sin(t * 25)})`; g.lineWidth = 12; g.shadowColor = RED; g.shadowBlur = 30;
     const q = easeOut((t - badT) / 0.45);
-    g.beginPath(); g.ellipse(fx + 30, fy + 10, 110, 80, 0, -Math.PI / 2, -Math.PI / 2 + q * Math.PI * 2.05); g.stroke(); g.shadowBlur = 0;
+    g.beginPath(); g.ellipse(fx + 10, fy + 10, 85, 70, 0, -Math.PI / 2, -Math.PI / 2 + q * Math.PI * 2.05); g.stroke(); g.shadowBlur = 0;
     for (let i = 0; i < 10; i++) { const life = ((t - badT) * 1.3 + rnd(i)) % 1;
       g.fillStyle = `rgba(255,${150 + rnd(i) * 60},40,${(1 - life) * bad})`;
       g.beginPath(); g.ellipse(fx + 20 + rnd(i + 4) * 40, fy + 30 + life * 160, 8, 12, 0, 0, 7); g.fill(); }
-    pop('!', fx + 150, fy - 70, 110, RED, badT + 0.1, t, 'UB', 10);
+    pop('!', fx + 40, fy - 150, 100, RED, badT + 0.1, t, 'UB', 10);
   }
-  text('ВЫНОСНОЙ РАДИАТОР', 500, 560, 34, 'rgba(255,255,255,0.75)', 'UE');
+  text('ВЫНОСНОЙ РАДИАТОР', W / 2, 570, 32, 'rgba(255,255,255,0.75)', 'UE');
   g.restore();
 }
 
@@ -321,7 +329,7 @@ const REASONS = ['КОЛЬЦО / УПЛОТНЕНИЕ', 'РАДИАТОР', 'Г�
 function brackets(t, a, b) {
   if (!inWin(t, a, b)) return;
   const k = easeOut((t - a) / 0.35), e = clamp((b - t) / 0.12);
-  const x0 = 90, y0 = 640, x1 = 930, y1 = 1420, L = 100, grow = (1 - k) * 80;
+  const x0 = SAFE.l + 20, y0 = 640, x1 = SAFE.r - 20, y1 = 1400, L = 90, grow = (1 - k) * 80;
   g.save(); g.globalAlpha = e * clamp((t - a) / 0.1); g.strokeStyle = RED; g.lineWidth = 12; g.lineCap = 'square';
   g.shadowColor = 'rgba(240,41,47,0.8)'; g.shadowBlur = 20;
   [[x0 - grow, y0 - grow, 1, 1], [x1 + grow, y0 - grow, -1, 1], [x0 - grow, y1 + grow, 1, -1], [x1 + grow, y1 + grow, -1, -1]].forEach(([x, y, sx, sy]) => {
@@ -336,12 +344,12 @@ function drawReasons(t) {
     if (sa != null) brackets(t, sa, sb);
     if (t < lt) return;
     const k = easeBack((t - lt) / 0.3), cur = (i === 2 || t < R[i + 1][0]);
-    const y = 300 + i * 108, x = 70;
-    g.save(); g.globalAlpha = fo * clamp((t - lt) / 0.1) * (cur ? 1 : 0.8); g.translate(x + 50, y); g.scale(k, k); g.translate(-(x + 50), -y);
-    g.font = '900 38px UB'; const w = g.measureText(REASONS[i]).width + 150;
-    g.shadowColor = 'rgba(0,0,0,0.5)'; g.shadowBlur = 24; g.fillStyle = 'rgba(14,14,16,0.86)'; rrect(x, y - 46, w, 92, 46); g.fill(); g.shadowBlur = 0;
-    g.fillStyle = cur ? RED : '#5a5e66'; g.beginPath(); g.arc(x + 46, y, 34, 0, 7); g.fill();
-    text(String(i + 1), x + 46, y + 2, 40, '#fff'); text(REASONS[i], x + 100, y + 2, 38, '#fff', 'UB', 'left');
+    const y = 350 + i * 100, x = SAFE.l + 30;
+    g.save(); g.globalAlpha = fo * clamp((t - lt) / 0.1) * (cur ? 1 : 0.8); g.translate(x + 40, y); g.scale(k, k); g.translate(-(x + 40), -y);
+    g.font = '900 32px UB'; const w = g.measureText(REASONS[i]).width + 130;
+    g.shadowColor = 'rgba(0,0,0,0.5)'; g.shadowBlur = 24; g.fillStyle = 'rgba(14,14,16,0.86)'; rrect(x, y - 40, w, 80, 40); g.fill(); g.shadowBlur = 0;
+    g.fillStyle = cur ? RED : '#5a5e66'; g.beginPath(); g.arc(x + 40, y, 29, 0, 7); g.fill();
+    text(String(i + 1), x + 40, y + 2, 34, '#fff'); text(REASONS[i], x + 86, y + 2, 32, '#fff', 'UB', 'left');
     g.restore();
   });
 }
@@ -349,34 +357,32 @@ function drawReasons(t) {
 // ---------- wear particles label on the dipstick shot ----------
 function drawOil(t) {
   const [a, b, lt] = T.oil; if (!inWin(t, a, b)) return;
-  g.save(); g.globalAlpha = clamp((b - t) / 0.12); labelBox('ПРОДУКТЫ ИЗНОСА', 500, 1360, lt, t, 48); g.restore();
+  g.save(); g.globalAlpha = clamp((b - t) / 0.12); labelBox('ПРОДУКТЫ ИЗНОСА', W / 2, 1340, lt, t, 44); g.restore();
 }
 
 // ---------- free diagnostics ----------
 function drawFree(t) {
   const [a, b] = T.free; if (!inWin(t, a, b)) return;
   g.save(); g.globalAlpha = clamp((b - t) / 0.15);
-  const sh = g.createLinearGradient(0, 1300, 0, 1920); sh.addColorStop(0, 'rgba(0,0,0,0)'); sh.addColorStop(1, 'rgba(0,0,0,0.55)');
-  g.fillStyle = sh; g.fillRect(0, 1300, W, 620);
-  pop('ДИАГНОСТИКА', 500, 1290, 72, '#fff', a, t, 'UB', 10);
-  labelBox('БЕСПЛАТНО', 500, 1400, a + 0.25, t, 76);
+  pop('ДИАГНОСТИКА', W / 2, 1250, 64, '#fff', a, t, 'UB', 10);
+  labelBox('БЕСПЛАТНО', W / 2, 1355, a + 0.25, t, 68);
   g.restore();
 }
 // ---------- address card ----------
 function drawAddress(t) {
   const [a, b] = T.address; if (!inWin(t, a, b + 0.01)) return;
   const k = easeOut((t - a) / 0.4);
-  g.save(); g.globalAlpha = clamp((t - a) / 0.15); g.translate(0, (1 - k) * 260);
-  const x = 60, y = 1200, w = 880, h = 240;
+  g.save(); g.globalAlpha = clamp((t - a) / 0.2); g.translate(0, (1 - k) * 40);
+  const x = SAFE.l + 30, y = 1150, w = SAFE.r - SAFE.l - 60, h = 210;
   g.shadowColor = 'rgba(0,0,0,0.5)'; g.shadowBlur = 40; g.fillStyle = 'rgba(14,14,16,0.86)'; rrect(x, y, w, h, 36); g.fill();
   g.shadowBlur = 0; g.fillStyle = RED; rrect(x, y, 16, h, 8); g.fill();
-  g.drawImage(logo, x + 44, y + 35, 180, 180);
-  text('АКПП ДРАЙВ', x + 256, y + 72, 60, '#fff', 'UB', 'left');
+  g.drawImage(logo, x + 32, y + 30, 150, 150);
+  text('АКПП ДРАЙВ', x + 206, y + 66, 50, '#fff', 'UB', 'left');
   // pin
-  const px = x + 270, py = y + 146; g.fillStyle = RED; g.beginPath(); g.arc(px, py - 8, 15, Math.PI, 0); g.lineTo(px, py + 20); g.closePath(); g.fill();
+  const px = x + 218, py = y + 128; g.fillStyle = RED; g.beginPath(); g.arc(px, py - 8, 15, Math.PI, 0); g.lineTo(px, py + 20); g.closePath(); g.fill();
   g.fillStyle = '#0e0e10'; g.beginPath(); g.arc(px, py - 8, 6, 0, 7); g.fill();
-  text('пр. Дзержинского, 82А', x + 300, py, 33, 'rgba(255,255,255,0.9)', 'UE', 'left');
-  text('подземный автокомплекс', x + 300, py + 52, 27, 'rgba(255,255,255,0.6)', 'UE', 'left');
+  text('пр. Дзержинского, 82А', x + 244, py, 29, 'rgba(255,255,255,0.9)', 'UE', 'left');
+  text('подземный автокомплекс', x + 244, py + 46, 24, 'rgba(255,255,255,0.6)', 'UE', 'left');
   g.restore();
 }
 
@@ -386,16 +392,16 @@ function drawEnd(t) {
   const lt = t - a;
   g.save();
   const k = easeBack(lt / 0.45);
-  g.translate(500, 520); g.scale(k, k);
-  g.shadowColor = 'rgba(240,41,47,0.45)'; g.shadowBlur = 40; g.drawImage(logo, -190, -190, 380, 380);
+  g.translate(W / 2, 520); g.scale(k, k);
+  g.shadowColor = 'rgba(240,41,47,0.45)'; g.shadowBlur = 40; g.drawImage(logo, -160, -160, 320, 320);
   g.restore();
   const lines = [['А У ВАС', '#fff'], ['БЫЛА ТАКАЯ', '#fff'], ['ПРОБЛЕМА', '#fff'], ['С DP0?', RED]];
-  lines.forEach(([s, col], i) => pop(s, 500, 820 + i * 100, 76, col, a + 0.25 + i * 0.12, t, 'UB', 10));
+  lines.forEach(([s, col], i) => pop(s, W / 2, 800 + i * 96, 70, col, a + 0.25 + i * 0.12, t, 'UB', 10));
   if (lt > 1.0) {
     g.save(); g.globalAlpha = clamp((lt - 1.0) / 0.2);
-    text('ПИШИТЕ В КОММЕНТАРИЯХ', 500, 1270, 40, 'rgba(255,255,255,0.92)', 'UE');
+    text('ПИШИТЕ В КОММЕНТАРИЯХ', W / 2, 1240, 36, 'rgba(255,255,255,0.92)', 'UE');
     const bob = Math.sin(lt * 6) * 14; g.strokeStyle = RED; g.lineWidth = 12; g.lineCap = 'round'; g.lineJoin = 'round';
-    for (let i = 0; i < 2; i++) { g.beginPath(); g.moveTo(460, 1320 + i * 40 + bob); g.lineTo(500, 1355 + i * 40 + bob); g.lineTo(540, 1320 + i * 40 + bob); g.stroke(); }
+    for (let i = 0; i < 2; i++) { g.beginPath(); g.moveTo(500, 1290 + i * 40 + bob); g.lineTo(540, 1325 + i * 40 + bob); g.lineTo(580, 1290 + i * 40 + bob); g.stroke(); }
     g.restore();
   }
 }
