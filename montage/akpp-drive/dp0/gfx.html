@@ -65,9 +65,9 @@ function drawFlash(t) {
 // Like a screenshot of the client's message (clean frosted card, system font), but alive:
 // it rises in like a notification, words turn from grey to black as the master reads them,
 // key facts get a red marker, and the card flies off on the flash into the answer.
-let CARD = null; // layout cache
+let CARD = null, CARD_SC = 1, CARD_Y = 0; // layout cache
 function layoutCard() {
-  const x = SAFE.l + 20, w = SAFE.r - SAFE.l - 40, pad = 30, size = 29, lh = 41, maxW = w - pad * 2;
+  const x = 50, w = 980, pad = 38, size = 32, lh = 44, maxW = w - pad * 2;   // v3 layout, scaled by CARD_SC
   g.font = `500 ${size}px Inter`;
   const sp = g.measureText(' ').width;
   let cx = 0, line = 0; const items = [];
@@ -78,8 +78,10 @@ function layoutCard() {
   }
   const lines = line + 1, head = 82, foot = 30;
   const h = head + lines * lh + foot;
-  const y = SAFE.b - 30 - h;
+  const y = 1680 - h;
   CARD = { x, y, w, h, pad, size, lh, head, items };
+  CARD_SC = (SAFE.r - SAFE.l - 40) / w;             // whole card shrunk uniformly
+  CARD_Y = SAFE.b - 20 - h * CARD_SC;               // as low as the safe zone allows
 }
 function drawCard(t) {
   const { a, b } = T.card; if (t < a || t >= b + 0.35) return;
@@ -89,7 +91,8 @@ function drawCard(t) {
   const kout = easeOut((t - b + 0.05) / 0.3);         // flies up and fades on the flash
   g.save();
   g.globalAlpha = clamp((t - a) / 0.25) * (1 - kout);
-  g.translate(0, (1 - kin) * 140 - kout * 260);
+  g.translate(0, (1 - kin) * 100 - kout * 200);
+  g.translate(W / 2, CARD_Y); g.scale(CARD_SC, CARD_SC); g.translate(-W / 2, -y);
   const sc = 0.94 + 0.06 * kin; g.translate(W / 2, y + h / 2); g.scale(sc, sc); g.translate(-W / 2, -(y + h / 2));
   // frosted card
   g.shadowColor = 'rgba(0,0,0,0.28)'; g.shadowBlur = 22; g.shadowOffsetY = 6;

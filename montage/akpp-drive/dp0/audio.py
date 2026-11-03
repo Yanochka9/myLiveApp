@@ -65,19 +65,11 @@ for n, (t, sid, vol) in enumerate(ev):
 # whole question and its level evened out (dynaudnorm), so it is audible from the start, then a gentle
 # lift into the flash. Quiet: ~24 dB under the voice, ~20 dB at the end.
 RISE = PEAK['riser']
-f = RISE / (HOOK_END + 0.2)
-steps = []
-while f < 0.5:
-    steps.append(0.5); f /= 0.5
-steps.append(f)
-tempo = ','.join(f'atempo={x:.5f}' for x in steps)
-bed = B + '/intrigue.wav'
-subprocess.run(['ffmpeg', '-loglevel', 'error', '-y', '-i', f'{SFX}/riser.flac', '-af',
-                f"atrim=0:{RISE:.3f},asetpts=PTS-STARTPTS,aresample=48000,aformat=channel_layouts=stereo,{tempo},"
-                f"dynaudnorm=f=400:g=31:m=30,atrim=0:{HOOK_END:.3f}", bed], check=True)
+from intrigue import build as build_intrigue
+bed = build_intrigue(f'{SFX}/riser.flac', B + '/intrigue.wav')
 bl = lufs(bed)
 VOICE_LUFS = -28.0
-g0 = 10 ** ((VOICE_LUFS - 24 - bl) / 20); g1 = 10 ** ((VOICE_LUFS - 20 - bl) / 20)
+g0 = g1 = 10 ** ((VOICE_LUFS - 20 - bl) / 20)   # shape is in the file: ~-27 dB under the voice at the start, ~-17 at the flash
 print(f'intrigue bed {bl:.1f} LUFS -> gain {g0:.3f}..{g1:.3f}')
 i = add_input(bed)
 ramp = f"{g0:.4f}+({g1:.4f}-{g0:.4f})*clip((t-{HOOK_END - 3:.3f})/3\\,0\\,1)"
