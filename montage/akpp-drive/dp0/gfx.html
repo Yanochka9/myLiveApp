@@ -63,7 +63,7 @@ function drawFlash(t) {
 // key facts get a red marker, and the card flies off on the flash into the answer.
 let CARD = null; // layout cache
 function layoutCard() {
-  const x = 50, w = 980, pad = 44, size = 40, lh = 56, maxW = w - pad * 2;
+  const x = 50, w = 980, pad = 38, size = 32, lh = 44, maxW = w - pad * 2;
   g.font = `500 ${size}px Inter`;
   const sp = g.measureText(' ').width;
   let cx = 0, line = 0; const items = [];
@@ -72,9 +72,9 @@ function layoutCard() {
     if (cx > 0 && cx + ww > maxW) { cx = 0; line++; }
     items.push({ t, wd, key, x: cx, line, w: ww }); cx += ww + sp;
   }
-  const lines = line + 1, head = 112, foot = 112;
+  const lines = line + 1, head = 82, foot = 30;
   const h = head + lines * lh + foot;
-  const y = 1640 - h;
+  const y = 1680 - h;
   CARD = { x, y, w, h, pad, size, lh, head, items };
 }
 function drawCard(t) {
@@ -89,17 +89,16 @@ function drawCard(t) {
   const sc = 0.94 + 0.06 * kin; g.translate(W / 2, y + h / 2); g.scale(sc, sc); g.translate(-W / 2, -(y + h / 2));
   // frosted card
   g.shadowColor = 'rgba(0,0,0,0.28)'; g.shadowBlur = 50; g.shadowOffsetY = 14;
-  g.fillStyle = 'rgba(246,246,248,0.94)'; rrect(x, y, w, h, 44); g.fill();
+  g.fillStyle = 'rgba(246,246,248,0.94)'; rrect(x, y, w, h, 36); g.fill();
   g.shadowBlur = 0; g.shadowOffsetY = 0;
-  g.strokeStyle = 'rgba(255,255,255,0.9)'; g.lineWidth = 2; rrect(x + 1, y + 1, w - 2, h - 2, 43); g.stroke();
-  // header: avatar, name, time
-  const av = g.createLinearGradient(x + pad, y + 30, x + pad + 64, y + 94); av.addColorStop(0, '#c9ccd3'); av.addColorStop(1, '#9ea3ad');
-  g.fillStyle = av; g.beginPath(); g.arc(x + pad + 32, y + 62, 32, 0, 7); g.fill();
-  g.fillStyle = '#fff'; g.beginPath(); g.arc(x + pad + 32, y + 52, 11, 0, 7); g.fill();
-  g.beginPath(); g.ellipse(x + pad + 32, y + 82, 19, 12, 0, Math.PI, 0); g.fill();
-  g.font = '600 32px Inter'; g.textAlign = 'left'; g.textBaseline = 'middle'; g.fillStyle = '#1c1c1e';
-  g.fillText('Вопрос подписчика', x + pad + 84, y + 50);
-  g.font = '400 26px Inter'; g.fillStyle = '#8e8e93'; g.fillText('сообщение · сейчас', x + pad + 84, y + 84);
+  g.strokeStyle = 'rgba(255,255,255,0.9)'; g.lineWidth = 2; rrect(x + 1, y + 1, w - 2, h - 2, 35); g.stroke();
+  // header: avatar + name
+  const av = g.createLinearGradient(x + pad, y + 18, x + pad + 46, y + 64); av.addColorStop(0, '#c9ccd3'); av.addColorStop(1, '#9ea3ad');
+  g.fillStyle = av; g.beginPath(); g.arc(x + pad + 23, y + 44, 23, 0, 7); g.fill();
+  g.fillStyle = '#fff'; g.beginPath(); g.arc(x + pad + 23, y + 37, 8, 0, 7); g.fill();
+  g.beginPath(); g.ellipse(x + pad + 23, y + 58, 14, 9, 0, Math.PI, 0); g.fill();
+  g.font = '600 28px Inter'; g.textAlign = 'left'; g.textBaseline = 'middle'; g.fillStyle = '#1c1c1e';
+  g.fillText('Вопрос подписчика', x + pad + 60, y + 45);
   // body: read-along
   g.font = `500 ${size}px Inter`;
   for (const it of items) {
@@ -107,20 +106,13 @@ function drawCard(t) {
     const r = clamp((t - it.t + 0.04) / 0.16);
     if (it.key && r > 0) {             // red marker sweeps under key words
       const mk = easeOut((t - it.t) / 0.25);
-      g.fillStyle = 'rgba(240,41,47,0.18)'; rrect(px - 6, py - 26, (it.w + 12) * mk, 52, 10); g.fill();
+      g.fillStyle = 'rgba(240,41,47,0.18)'; rrect(px - 5, py - 21, (it.w + 10) * mk, 42, 8); g.fill();
     }
     const grey = 168 - 140 * r;
     g.fillStyle = it.key && r > 0 ? `rgb(${Math.round(150 + 90 * r)},${Math.round(grey * (1 - r) + 30 * r)},${Math.round(grey * (1 - r) + 36 * r)})`
                                   : `rgb(${grey},${grey},${grey + 4})`;
     g.fillText(it.wd, px, py + 2);
   }
-  // reply row like in the app
-  const ry = y + h - 84;
-  g.fillStyle = '#e5e5ea'; rrect(x + pad, ry, w - pad * 2 - 90, 60, 30); g.fill();
-  g.font = '400 28px Inter'; g.fillStyle = '#8e8e93'; g.fillText('Ответить…', x + pad + 28, ry + 32);
-  g.fillStyle = RED; g.beginPath(); g.arc(x + w - pad - 32, ry + 30, 30, 0, 7); g.fill();
-  g.strokeStyle = '#fff'; g.lineWidth = 6; g.lineCap = 'round'; g.lineJoin = 'round';
-  g.beginPath(); g.moveTo(x + w - pad - 32, ry + 44); g.lineTo(x + w - pad - 32, ry + 16); g.moveTo(x + w - pad - 44, ry + 28); g.lineTo(x + w - pad - 32, ry + 16); g.lineTo(x + w - pad - 20, ry + 28); g.stroke();
   g.restore();
 }
 
