@@ -8,8 +8,13 @@ os.makedirs(OUT, exist_ok=True)
 
 GRADE = ("eq=saturation=0.82:contrast=1.06:brightness=-0.01,"
          "curves=all='0/0.03 0.25/0.22 0.75/0.78 1/0.97',colorbalance=bs=0.03:bm=0.01:rh=0.01")
-TONEMAP = ("zscale=t=linear:npl=203,format=gbrpf32le,zscale=p=bt709,tonemap=mobius:desat=0:param=0.4,"
-           "zscale=t=bt709:m=bt709:r=tv,format=yuv420p")
+# HLG (iPhone HDR) -> SDR matched to the look of the oil-change (variator) source, which was an
+# SDR iPhone export: tone-map with a high nominal peak (darker, keeps the wall texture), then the
+# punch an iPhone SDR export has (contrast, saturation, slightly lifted blacks, a touch cooler).
+# GRADE (variator grade) goes on top unchanged.
+TONEMAP = ("zscale=t=linear:npl=700,format=gbrpf32le,zscale=p=bt709,tonemap=mobius:desat=0:param=0.3,"
+           "zscale=t=bt709:m=bt709:r=tv,format=yuv420p,"
+           "eq=contrast=1.12:saturation=1.35,curves=all='0/0.05 1/1',colorbalance=rm=-0.03:bm=0.02:bs=0.02")
 
 def motion(kind, n):
     """zoompan expression: short punch on entry, then slow push-in or pull-out."""
@@ -23,7 +28,7 @@ def cmd(i, s):
     out = f"{OUT}/{i:03d}.mp4"
     k = s['kind']
     pre = ['ffmpeg', '-loglevel', 'error', '-y']
-    if k == 'scheme':
+    if k in ('scheme', 'ring', 'clog', 'cooler'):
         return pre + ['-f', 'lavfi', '-i', f'color=c=0x0d0d10:s=1080x1920:r={FPS}', '-frames:v', str(n),
                       '-pix_fmt', 'yuv420p', '-c:v', 'libx264', '-crf', '17', out], out
     inp = ['-ss', f"{s['cin']:.3f}", '-i', s['src']]
@@ -41,6 +46,12 @@ def cmd(i, s):
         cx = f"(iw-ih*9/16)*{c}"
         vf = (f"fps={FPS},crop=ih*9/16:ih:{cx}:0{extra},scale=1296:2304:flags=lanczos,unsharp=5:5:0.6,{GRADE},"
               f"noise=alls=7:allf=t,{motion(s['motion'], n)}")
+    elif k == 'image':
+        key = os.path.basename(s['src']).split('.')[0]
+        c, extra = STOCK_FIX.get(key, (0.5, ''))
+        vf = (f"scale=-2:2304:flags=lanczos,crop=1296:2304:(iw-1296)*{c}:0{extra},unsharp=5:5:0.4,{GRADE},"
+              f"noise=alls=5:allf=t,{motion(s['motion'], n)}")
+        inp = ['-loop', '1', '-framerate', str(FPS), '-i', s['src']]
     elif k == 'hlg':
         vf = f"{TONEMAP},fps={FPS},scale=1296:2304:flags=lanczos,{GRADE},{motion(s['motion'], n)}"
     elif k == 'endplate':

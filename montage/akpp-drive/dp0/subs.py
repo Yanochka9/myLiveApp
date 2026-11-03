@@ -1,33 +1,7 @@
 """Word-by-word subtitles (ASS) in output time. '*' marks red accent words, '-' hides a token."""
-from edl import m, HOOK_END, MAIN_DUR, segs, SP
+from edl import m, HOOK_END, MAIN_DUR, segs, SP, gfx_timeline
 
 TOKENS = """
-9.93 ПРОЕХАВ
-10.12 -ТЫСЯЧУ
-10.44 -КИЛОМЕТРОВ
-10.86 КОРОБКА
-11.26 НАЧАЛА
-11.42 УХОДИТЬ
-11.82 *В АВАРИЮ
-12.18 НА МАЛОЙ
-12.48 СКОРОСТИ
-12.94 -10–20 КМ/Ч
-4.04 -DP0,
-4.52 -AL4
-5.45 СДЕЛАЛИ
-5.68 *КАПИТАЛКУ
-6.14 ПОСЛЕ
-6.32 ОБКАТКИ
-6.80 ПОМЕНЯЛИ
-7.10 МАСЛО
-7.91 *ТЕПЛООБМЕННИК
-8.32 ВЫРЕЗАЛИ
-9.03 ПОСТАВИЛИ
-9.38 *РАДИАТОР
-19.12 ЧТО ЗА
-19.26 ПРОБЛЕМА
-19.66 МОЖЕТ
-19.82 БЫТЬ?
 34.20 ПРОБЛЕМА
 34.48 ДАННОЙ
 34.78 КОРОБКИ
@@ -59,15 +33,15 @@ TOKENS = """
 49.06 БАНАЛЬНО
 49.92 *ЗАКУСИТЬ
 50.38 ГДЕ-ТО
-50.64 ТЕФЛОНОВОЕ
-51.12 *КОЛЬЦО
+50.64 -ТЕФЛОНОВОЕ
+51.12 -КОЛЬЦО
 51.46 ЛИБО
 51.74 *УПЛОТНЕНИЕ
 53.05 МОГЛИ
 53.12 *НЕПРАВИЛЬНО
 53.62 УСТАНОВИТЬ
-54.04 РАДИАТОР
-54.76 ВЫНОСНОЙ
+54.04 -РАДИАТОР
+54.76 -ВЫНОСНОЙ
 67.15 ТАКЖЕ
 67.24 ПРОСТО
 67.54 МОГ
@@ -117,6 +91,7 @@ def build():
         t, w = line.split(' ', 1)
         toks.append((m(float(t)), w))
     toks.sort(key=lambda x: x[0])
+    sch = gfx_timeline()['scheme']
     ev = []
     for i, (t0, w) in enumerate(toks):
         nxt = toks[i + 1][0] if i + 1 < len(toks) else MAIN_DUR
@@ -132,7 +107,7 @@ def build():
             size = int(size * 1.12)
         style = 'R' if red else 'W'
         anim = r"{\fscx78\fscy78\t(0,90,\fscx106\fscy106)\t(90,170,\fscx100\fscy100)}"
-        ev.append(f"Dialogue: 0,{ts(t0)},{ts(t1)},{style},,0,0,0,,{{\\pos(540,1190)\\fs{size}}}{anim}{w}")
+        ev.append(f"Dialogue: 0,{ts(t0)},{ts(t1)},{style},,0,0,0,,{{\\pos(540,{1580 if sch[0] <= t0 < sch[1] else 1190})\\fs{size}}}{anim}{w}")
     head = """[Script Info]
 ScriptType: v4.00+
 PlayResX: 1080

@@ -41,11 +41,7 @@ labels.append('[voice]')
 
 # --- sfx: only key moments ---
 ev = []  # (time of peak, id, gain)
-ev.append((HOOK_END, 'riser', 0.034))                       # hook -> main
-ev.append((T['counter'][1], 'click2', 0.05))                # 1000 KM
-ev.append((T['counter'][2] + 0.05, 'click4', 0.04))         # 10-20 KM/H
-ev.append((T['header'][0] + 0.05, 'click1', 0.04))
-ev.append((T['flashes'][1], 'click3', 0.045))               # question -> answer
+ev.append((HOOK_END + 0.02, 'click3', 0.03))                # question -> answer (on the flash, barely audible)
 ev.append((T['scheme'][0], 'scheme-glitch', 0.033))         # hydraulic scheme
 ev.append((T['scheme'][2], 'scheme-static', 0.05))          # leak
 ev.append((T['scheme'][3] + 0.1, 'click5', 0.04))           # control unit alarm
@@ -65,19 +61,22 @@ for n, (t, sid, vol) in enumerate(ev):
                   f"adelay={int(max(0, d) * 1000)}:all=1[e{n}]")
     labels.append(f'[e{n}]')
 
-# --- hook drone (no music on the hook) ---
-i = add_input(f'{SFX}/hook-drone.mp3')
-chains.append(f"[{i}:a]atrim=0:{HOOK_END + 0.4:.3f},aresample=48000,aformat=channel_layouts=stereo,"
-              f"volume=0.05,afade=t=in:d=1.0,afade=t=out:st={HOOK_END - 0.1:.3f}:d=0.5[drone]")
-labels.append('[drone]')
-
-# --- counter blips: 10 quiet rising sines while 0 -> 1000 climbs ---
-ca, chit = T['counter'][0], T['counter'][1]
-D = (chit - ca) / 10
-i = add_input(f"aevalsrc=0.5*sin(2*PI*(650+95*floor(t/{D:.4f}))*t)*exp(-38*mod(t\\,{D:.4f}))*lt(t\\,{10 * D:.4f}):s=48000:d={10 * D + 0.1:.3f}",
-              ('-f', 'lavfi'))
-chains.append(f"[{i}:a]aformat=channel_layouts=stereo,volume=0.05,adelay={int(ca * 1000)}:all=1[blips]")
-labels.append('[blips]')
+# --- question: the riser is stretched over the whole question (slow, barely audible build),
+# peaking on the flash into the answer; nothing else under the question, no music.
+RISE = PEAK['riser']                       # build part of riser.flac
+f = RISE / HOOK_END                        # tempo factor (<1 = slower), split into atempo steps >= 0.5
+steps = []
+while f < 0.5:
+    steps.append(0.5); f /= 0.5
+steps.append(f)
+tempo = ','.join(f'atempo={x:.5f}' for x in steps)
+i = add_input(f'{SFX}/riser.flac')
+chains.append(f"[{i}:a]atrim=0:{RISE:.3f},asetpts=PTS-STARTPTS,aresample=48000,aformat=channel_layouts=stereo,{tempo},"
+              f"volume=0.016,afade=t=in:d=2.5[rise]")
+i = add_input(f'{SFX}/riser.flac')
+chains.append(f"[{i}:a]atrim={RISE:.3f}:{RISE + 2.5:.3f},asetpts=PTS-STARTPTS,aresample=48000,aformat=channel_layouts=stereo,"
+              f"volume=0.016,afade=t=out:st=0.6:d=1.9,adelay={int(HOOK_END * 1000)}:all=1[risetail]")
+labels += ['[rise]', '[risetail]']
 
 # --- music: starts on the first frame after the hook, ~13.5 dB under the voice, up on the end plate ---
 if with_music:
