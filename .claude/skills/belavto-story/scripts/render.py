@@ -109,9 +109,12 @@ def prep_broll(cfg, wd):
         tin = {"arib-std-b67": "arib-std-b67", "smpte2084": "smpte2084"}.get(trc)
         vf = (TONEMAP.format(tin=tin) + "," if tin else "format=yuv420p,") + LOOKS[cfg.get("look", "cold")] + "," + FRAME
         dst = f"{wd}/broll_{k}.mov"
-        ff("-ss", str(b["ss"]), "-t", f"{b['e'] - b['s']:.3f}", "-i", b["src"], "-an", "-vf", vf,
+        # +0.2 с запаса: иначе подсъём выходит на кадр короче окна и на стыке мелькает кадр с ведущей
+        ff("-ss", str(b["ss"]), "-t", f"{b['e'] - b['s'] + 0.2:.3f}", "-i", b["src"], "-an", "-vf", vf,
            "-c:v", "libx264", "-crf", "14", "-preset", "fast", dst)
-        out.append((dst, b["s"], b["e"]))
+        # начало/конец — ровно на кадре 30 fps: иначе первый кадр подсъёма округляется вверх
+        # и на стыке на один кадр проглядывает ролик с ведущей
+        out.append((dst, round(b["s"] * 30) / 30, round(b["e"] * 30) / 30))
     return out
 
 
@@ -160,6 +163,11 @@ def main():
     face = cfg.get("face_vf")  # обработка только кадров с ведущей (не подсъёмов), напр. мягкое сглаживание кожи
     post = cfg.get("post_vf")  # общий доводчик картинки поверх всего (тени/чёткость)
     sharpen = cfg.get("sharpen", 0.4)
+    # шумодав RNNoise (assets/sh.rnnn), denoise — доля обработанного сигнала (0.6 — мягко).
+    # FFT-шумодав (afftdn) делал голос глухим, «как из динамика телефона», — не использовать.
+    dn = cfg.get("denoise") or 0
+    dn = 0.6 if dn is True else dn
+    denoise_f = f"arnndn=m={HERE}/../assets/sh.rnnn:mix={dn}," if dn else ""
     make_header(cfg, f"{wd}/header.png"); make_cta(cfg, f"{wd}/cta.png"); make_ass(cfg["subs"], main_dur, f"{wd}/subs.ass", cfg.get("hl_scale", 100))
     broll = prep_broll(cfg, wd)
 
@@ -183,7 +191,7 @@ def main():
     for j, (path, bs, be) in enumerate(broll):
         extra_b.append(path)
         bro += (f"[{base + j}:v]setpts=PTS-STARTPTS+{bs:.3f}/TB[b{j}];"
-                f"[mvb{j}][b{j}]overlay=enable='between(t,{bs:.3f},{be - 0.01:.3f})':eof_action=pass[mvb{j + 1}];")
+                f"[mvb{j}][b{j}]overlay=enable='between(t,{bs:.3f},{be:.3f})':eof_action=pass[mvb{j + 1}];")
     graph = (
         f"{cat}concat=n={n}:v=1:a=1[mv][ma];"
         f"[mv]trim=duration={main_dur:.3f},setpts=PTS-STARTPTS{',' + face if face else ''}[mvb0];{bro}"
@@ -191,7 +199,7 @@ def main():
         f"[{i_head}]format=rgba,fade=in:st=0:d=0.3:alpha=1,fade=out:st={main_dur - 0.36:.2f}:d=0.36:alpha=1[hd];"
         f"[mv2][hd]overlay=format=auto,ass={wd}/subs.ass:fontsdir={FONTS},format=yuv420p[mvs];"
         f"[mvs][{i_cta}:v]concat=n=2:v=1:a=0[v];"
-        f"[ma]atrim=0:{main_dur:.3f},highpass=f=80,{'afftdn=nf=-28:nr=12:tn=1,' if cfg.get('denoise') else ''}acompressor=threshold=-20dB:ratio=3:attack=10:release=150,"
+        f"[ma]atrim=0:{main_dur:.3f},highpass=f=80,{denoise_f}acompressor=threshold=-20dB:ratio=3:attack=10:release=150,"
         f"loudnorm=I=-15:TP=-2:LRA=11,aresample=48000,apad,atrim=0:{total:.3f},asplit[voice][key];"
         f"[{i_tap}:a]aresample=48000,aformat=channel_layouts=stereo,adelay={tap_ms}|{tap_ms},volume=0.5,"
         f"apad,atrim=0:{total:.3f}[fx];"
