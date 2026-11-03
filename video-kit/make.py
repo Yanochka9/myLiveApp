@@ -33,7 +33,8 @@ def main():
     elif cmd == 'hqmask':
         from hqmask import hqmask
         for m in p.cfg.get('hq_masks', []):
-            hqmask(p, m['clip'], m['from'], m['to'], m.get('model', 'birefnet-general-lite'), [tuple(c) for c in m.get('crops', [])])
+            hqmask(p, m['clip'], m['from'], m['to'], m.get('model', 'birefnet-general-lite'), [tuple(c) for c in m.get('crops', [])],
+                   m.get('fps', 15), m.get('grow', 4))
     elif cmd == 'check':
         from check import check; check(p)
     elif cmd == 'preview':
