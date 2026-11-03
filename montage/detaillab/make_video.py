@@ -28,8 +28,19 @@ PLATE_HOLD = 2.5             # сколько висит плашка темы (
 PLATE_FADE = 0.3
 
 
+CLIENT_GRADE = open(f"{A}/grade_client.txt").read().replace("ASSETS/", f"{A}/").split("\n")   # [HDR→SDR, цвет]
+
+
+def use_client(cfg):
+    """Цвет клиента (утверждён 03.11.2026, снят с её правки в CapCut) — по умолчанию,
+    если в конфиге не задан свой `lut` (старые ролики) или `"grade": "legacy"`."""
+    return not cfg.get("lut") and cfg.get("grade", "client") == "client"
+
+
 def grade(cfg):
-    """LUT (`lut` в конфиге, по умолчанию look.cube) с силой lut_mix (1.0 — как Leopard)."""
+    """Цвет клиента (assets/grade_client.txt) или LUT (`lut` в конфиге) с силой lut_mix."""
+    if use_client(cfg):
+        return f"{CLIENT_GRADE[1].strip()},unsharp=5:5:0.4"
     mix = cfg.get("lut_mix", 1.0)
     lut = f"{A}/{cfg['lut']}" if cfg.get("lut") else f"{A}/look.cube"
     if cfg.get("lut") and mix >= 1:
@@ -79,7 +90,10 @@ def prep(cfg):
     w = cfg["work"]
     src = f"{w}/source.mov"
     drive_download(cfg["source_drive_id"], src)
-    run(f"ffmpeg -v error -y -i '{src}' -map 0:v:0 -map 0:a:0 -vf scale={W}:{H}:flags=lanczos,fps={FPS} "
+    hlg = "arib-std-b67" in subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries",
+                                            "stream=color_transfer", "-of", "csv=p=0", src], capture_output=True, text=True).stdout
+    pre = f"{CLIENT_GRADE[0].strip()}," if (use_client(cfg) and hlg) else ""   # iPhone HDR → SDR до цвета
+    run(f"ffmpeg -v error -y -i '{src}' -map 0:v:0 -map 0:a:0 -vf {pre}scale={W}:{H}:flags=lanczos,fps={FPS} "
         f"-c:v libx264 -preset veryfast -crf 14 -pix_fmt yuv420p -c:a pcm_s16le {w}/proxy.mov")
     run(f"ffmpeg -v error -y -i {w}/proxy.mov -vn -ac 1 -ar 16000 {w}/audio.wav")
     from faster_whisper import WhisperModel

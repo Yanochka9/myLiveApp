@@ -1,7 +1,7 @@
 # speech pieces for the "repaint" reel: (clip, from, to) in playback order
 import numpy as np, json, os
 S = os.path.dirname(os.path.abspath(__file__)); R0 = os.path.dirname(S)
-R = [('2509', 1.0, 50.35), ('2509', 58.45, 61.15), ('2510', 0.9, 16.3), ('2509', 61.93, 65.6)]
+R = [('2509', 1.0, 50.35), ('2509', 58.45, 60.5), ('2510', 0.9, 16.3), ('2509', 61.93, 65.6)]
 out = []
 for n, a, b in R:
     x = np.frombuffer(open(f'{R0}/wav/{n}.wav', 'rb').read()[44:], dtype='int16').astype(float) / 32768
