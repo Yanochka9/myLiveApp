@@ -61,21 +61,30 @@ for n, (t, sid, vol) in enumerate(ev):
                   f"adelay={int(max(0, d) * 1000)}:all=1[e{n}]")
     labels.append(f'[e{n}]')
 
-# --- question: the riser is stretched over the whole question (slow, barely audible build),
-# peaking on the flash into the answer; nothing else under the question, no music.
-RISE = PEAK['riser']                       # build part of riser.flac
-f = RISE / HOOK_END                        # tempo factor (<1 = slower), split into atempo steps >= 0.5
+# --- question: intrigue bed from the first frame to the flash. The riser's build is stretched over the
+# whole question and its level evened out (dynaudnorm), so it is audible from the start, then a gentle
+# lift into the flash. Quiet: ~24 dB under the voice, ~20 dB at the end.
+RISE = PEAK['riser']
+f = RISE / (HOOK_END + 0.2)
 steps = []
 while f < 0.5:
     steps.append(0.5); f /= 0.5
 steps.append(f)
 tempo = ','.join(f'atempo={x:.5f}' for x in steps)
+bed = B + '/intrigue.wav'
+subprocess.run(['ffmpeg', '-loglevel', 'error', '-y', '-i', f'{SFX}/riser.flac', '-af',
+                f"atrim=0:{RISE:.3f},asetpts=PTS-STARTPTS,aresample=48000,aformat=channel_layouts=stereo,{tempo},"
+                f"dynaudnorm=f=400:g=31:m=30,atrim=0:{HOOK_END:.3f}", bed], check=True)
+bl = lufs(bed)
+VOICE_LUFS = -28.0
+g0 = 10 ** ((VOICE_LUFS - 24 - bl) / 20); g1 = 10 ** ((VOICE_LUFS - 20 - bl) / 20)
+print(f'intrigue bed {bl:.1f} LUFS -> gain {g0:.3f}..{g1:.3f}')
+i = add_input(bed)
+ramp = f"{g0:.4f}+({g1:.4f}-{g0:.4f})*clip((t-{HOOK_END - 3:.3f})/3\\,0\\,1)"
+chains.append(f"[{i}:a]volume='{ramp}':eval=frame,afade=t=in:d=0.3,afade=t=out:st={HOOK_END - 0.15:.3f}:d=0.15[rise]")
 i = add_input(f'{SFX}/riser.flac')
-chains.append(f"[{i}:a]atrim=0:{RISE:.3f},asetpts=PTS-STARTPTS,aresample=48000,aformat=channel_layouts=stereo,{tempo},"
-              f"volume=0.016,afade=t=in:d=2.5[rise]")
-i = add_input(f'{SFX}/riser.flac')
-chains.append(f"[{i}:a]atrim={RISE:.3f}:{RISE + 2.5:.3f},asetpts=PTS-STARTPTS,aresample=48000,aformat=channel_layouts=stereo,"
-              f"volume=0.016,afade=t=out:st=0.6:d=1.9,adelay={int(HOOK_END * 1000)}:all=1[risetail]")
+chains.append(f"[{i}:a]atrim={RISE:.3f}:{RISE + 2.0:.3f},asetpts=PTS-STARTPTS,aresample=48000,aformat=channel_layouts=stereo,"
+              f"volume=0.012,afade=t=out:st=0.4:d=1.6,adelay={int(HOOK_END * 1000)}:all=1[risetail]")
 labels += ['[rise]', '[risetail]']
 
 # --- music: starts on the first frame after the hook, ~13.5 dB under the voice, up on the end plate ---
@@ -84,12 +93,12 @@ if with_music:
     subprocess.run(['ffmpeg', '-loglevel', 'error', '-y', '-i', MAIN, '-filter_complex_script', '/dev/stdin',
                     '-map', '[voice]', vtmp], input=';\n'.join(chains[:len(segs) + 1]), text=True, check=True)
     vl = lufs(vtmp)
-    bed = 10 ** ((vl - 13.5 - MUS_LUFS) / 20)
+    bedg = 10 ** ((vl - 17.0 - MUS_LUFS) / 20)
     top = 10 ** ((vl - 1.0 - MUS_LUFS) / 20)
-    print(f'voice {vl:.1f} LUFS -> music bed gain {bed:.3f}, end plate {top:.3f}')
+    print(f'voice {vl:.1f} LUFS -> music bed gain {bedg:.3f}, end plate {top:.3f}')
     i = add_input(MUS, ('-ss', str(MUS_IN)))
     md = TOTAL - HOOK_END
-    vol = f"{bed:.4f}+({top:.4f}-{bed:.4f})*clip((t-{MAIN_DUR - HOOK_END - 0.3:.3f})/0.6\\,0\\,1)"
+    vol = f"{bedg:.4f}+({top:.4f}-{bedg:.4f})*clip((t-{MAIN_DUR - HOOK_END - 0.3:.3f})/0.6\\,0\\,1)"
     chains.append(f"[{i}:a]atrim=0:{md:.3f},aresample=48000,aformat=channel_layouts=stereo,highpass=f=110,"
                   f"volume='{vol}':eval=frame,afade=t=out:st={md - 0.8:.3f}:d=0.8,"
                   f"adelay={int(HOOK_END * 1000)}:all=1[mus]")
