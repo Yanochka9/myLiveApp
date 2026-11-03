@@ -338,8 +338,8 @@ def build_audio():
                  f"adelay={int(round(o * 1000))}:all=1[v{i}]")
     n = len(pieces)
     f.append(''.join(f"[v{i}]" for i in range(n)) + f"amix=inputs={n}:normalize=0,"
-             f"highpass=f=80,arnndn=m={A}/sh.rnnn:mix=1,"
-             "agate=threshold=0.02:ratio=4:attack=5:release=200:range=0.12,lowpass=f=14000,"
+             # гейт (agate) глушил тихие слова рассказчика — не использовать; шумодав мягкий, как в историях
+             f"highpass=f=80,arnndn=m={A}/sh.rnnn:mix=0.85,lowpass=f=14000,"
              "acompressor=threshold=-20dB:ratio=3:attack=5:release=120:makeup=2,"
              f"apad=whole_dur={TOTAL:.3f},atrim=0:{TOTAL:.3f},asplit=2[voice][key]")
     music = f"{WORK}/music_{MUSIC_ID[:6]}.wav"

@@ -2,7 +2,7 @@
 
   python3 -I prep.py [--look=capcut] WORKDIR clip1.MOV clip2.MOV ...
 
---look: cold (по умолчанию, «машина дня») или capcut (говорящие сторис: натуральная кожа, мягкие света, лёгкий холод —
+--look: cold (по умолчанию, «машина дня»), capcut_a (говорящие сторис, утверждён) или capcut (говорящие сторис: натуральная кожа, мягкие света, лёгкий холод —
 подогнан по скриншотам CapCut пользователя).
 
 Для каждого клипа (в переданном порядке):
@@ -21,7 +21,12 @@ TONEMAP = ("zscale=tin={tin}:min=bt2020nc:pin=bt2020:rin=tv:t=linear:npl=203,for
 LOOKS = {"cold": GRADE,
          "capcut": ("eq=saturation=0.88:contrast=1.08:gamma=1.05,"
                     "colorbalance=rs=-0.04:bs=0.05:rm=-0.02:bm=0.03:rh=-0.02:bh=0.03,"
-                    "curves=all='0/0.04 0.25/0.27 0.5/0.52 0.8/0.76 1/0.88'")}
+                    "curves=all='0/0.04 0.25/0.27 0.5/0.52 0.8/0.76 1/0.88'"),
+         # говорящие сторис, утверждено пользователем: её настройки CapCut на исходнике — контраст +2, насыщ. −4,
+         # HSL оранжевый насыщ. −12, тени −4, белый +4, чёрный −4, температура −3
+         "capcut_a": ("eq=contrast=1.04:saturation=0.92,huesaturation=saturation=-0.18:colors=r+y,"
+                      "colorbalance=rs=-0.015:bs=0.02:rm=-0.015:bm=0.02:rh=-0.01:bh=0.01,"
+                      "curves=all='0/0 0.06/0.045 0.25/0.235 0.5/0.5 0.85/0.88 1/1'")}
 FRAME = "scale=1080:1920:force_original_aspect_ratio=increase:flags=lanczos,crop=1080:1920,fps=30"
 
 
