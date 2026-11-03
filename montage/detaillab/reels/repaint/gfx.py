@@ -387,16 +387,11 @@ def compare(t):
         u0, u1 = i / n, (i + 0.55) / n
         d.line([(a[0] + (b[0] - a[0]) * u0, a[1] + (b[1] - a[1]) * u0), (a[0] + (b[0] - a[0]) * u1, a[1] + (b[1] - a[1]) * u1)],
                fill=WHITE + (int(230 * out),), width=5)
-    y = 1180; xs = seam_x(a, b, y)
-    q1 = eo((tl - 0.25) / 0.3); q2 = eo((tl - 0.6) / 0.3)
-    xl = clamp(xs - TAG_OR.width / 2 - 30, 110 + TAG_OR.width / 2, 970 - TAG_OR.width / 2)
-    xr = clamp(xs + TAG_RE.width / 2 + 30, 110 + TAG_RE.width / 2, 970 - TAG_RE.width / 2)
-    if xr - xl < (TAG_OR.width + TAG_RE.width) / 2 + 10:      # шов у края — ставим метки друг под другом
-        put(lay, TAG_OR, 540, 1120 + 20 * (1 - q1), alpha=q1 * out)
-        put(lay, TAG_RE, 540, 1280 + 20 * (1 - q2), alpha=q2 * out)
-    else:
-        put(lay, TAG_OR, xl, y + 20 * (1 - q1), alpha=q1 * out)
-        put(lay, TAG_RE, xr, y + 160 + 20 * (1 - q2), alpha=q2 * out)
+    # метки стоят на месте весь план (раньше «прыгали»): перекрас — сверху справа (там всегда капот),
+    # оригинал — снизу слева (там всегда крыло); шов идёт из левого верха в правый низ
+    q1 = eo((tl - 0.2) / 0.35); q2 = eo((tl - 0.45) / 0.35)
+    put(lay, TAG_RE, 740, 560 + 16 * (1 - q1), alpha=q1 * out)
+    put(lay, TAG_OR, 330, 1400 + 16 * (1 - q2), alpha=q2 * out)
     return lay
 
 # ---------- 5. где / за сколько / как ----------

@@ -23,7 +23,7 @@ def quiet(n, t, win=0.14):
     return round((i0 + int(np.argmin(e)) * h + h / 2) / 16000, 3)
 
 # микро-вырезки: повтор «подорвать лак,» и «соответственно,»
-CUTS = [('2509', quiet('2509', 25.2), quiet('2509', 26.17)),
+CUTS = [('2509', 24.7, quiet('2509', 26.16, 0.04)),
         ('2509', 44.9, quiet('2509', 45.71, 0.04))]
 segs = []
 for c, s, e in SEGS:
@@ -111,7 +111,7 @@ SH.sort(key=lambda x: x[0])
 FACE = {'2509': (0.48, 0.27), '2510': (0.50, 0.26)}
 ZC = 1.42
 # grade.txt: 1-я строка — перевод HDR→SDR (до кропа/zoompan) или пусто, 2-я — цвет (кривые/LUT)
-_g = open(f"{S}/grade.txt").read().replace("../assets", f"{R0}/../assets").split("\n")
+_g = open(f"{S}/grade.txt").read().replace("ASSETS/", f"{R0}/../assets/").replace("../assets", f"{R0}/../assets").split("\n")
 GPRE = _g[0].strip(); GRADE = _g[1].strip()
 DUR = {}
 def dur(c):
