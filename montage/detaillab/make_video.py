@@ -93,6 +93,13 @@ def prep(cfg):
     hlg = "arib-std-b67" in subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries",
                                             "stream=color_transfer", "-of", "csv=p=0", src], capture_output=True, text=True).stdout
     pre = f"{CLIENT_GRADE[0].strip()}," if (use_client(cfg) and hlg) else ""   # iPhone HDR → SDR до цвета
+    if use_client(cfg) and cfg.get("autograde", True):
+        # подравнять свет/баланс/насыщенность исходника под эталон, чтобы стиль клиента лёг одинаково
+        sys.path.insert(0, HERE)            # запуск с -I не добавляет папку скрипта
+        import autograde
+        nf, info = autograde.norm_filter(src)
+        pre += nf + ","
+        print("autograde:", info)
     run(f"ffmpeg -v error -y -i '{src}' -map 0:v:0 -map 0:a:0 -vf {pre}scale={W}:{H}:flags=lanczos,fps={FPS} "
         f"-c:v libx264 -preset veryfast -crf 14 -pix_fmt yuv420p -c:a pcm_s16le {w}/proxy.mov")
     run(f"ffmpeg -v error -y -i {w}/proxy.mov -vn -ac 1 -ar 16000 {w}/audio.wav")

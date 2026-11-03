@@ -113,6 +113,18 @@ ZC = 1.42
 # grade.txt: 1-я строка — перевод HDR→SDR (до кропа/zoompan) или пусто, 2-я — цвет (кривые/LUT)
 _g = open(f"{S}/grade.txt").read().replace("../assets", f"{R0}/../assets").replace("ASSETS/", f"{R0}/../assets/").split("\n")
 GPRE = _g[0].strip(); GRADE = _g[1].strip()
+# Новые рилсы: AUTO = True — у каждого клипа своя нормализация света под эталон (../../autograde.py),
+# стиль GRADE общий. Этот рилс утверждён без неё (он сам — эталон), поэтому здесь False.
+AUTO = False
+_NORM = {}
+def gpre_for(src):
+    if not AUTO: return GPRE
+    if src not in _NORM:
+        import sys; sys.path.insert(0, f"{R0}/..")
+        import autograde
+        nf, _ = autograde.norm_filter(src)
+        _NORM[src] = (f"{GPRE}," if (GPRE and autograde.is_hlg(src)) else "") + nf
+    return _NORM[src]
 DUR = {}
 def dur(c):
     if c not in DUR:
@@ -126,7 +138,7 @@ def render(src, ss, nfr, vf, speed=1.0, post=''):
     out = f"{OUT}/seg{idx:03d}.mp4"; idx += 1
     pre = f"setpts=(PTS-STARTPTS)/{speed}," if speed != 1.0 else ""
     cmd = ['ffmpeg', '-v', 'error', '-y', '-ss', f"{ss:.3f}", '-i', src, '-an',
-           '-vf', f"{(GPRE + ',') if GPRE else ''}{pre}{vf},scale=1080:1920:flags=lanczos,setsar=1,fps={FPS},{GRADE}{post},format=yuv420p",
+           '-vf', f"{(gpre_for(src) + ',') if gpre_for(src) else ''}{pre}{vf},scale=1080:1920:flags=lanczos,setsar=1,fps={FPS},{GRADE}{post},format=yuv420p",
            '-frames:v', str(nfr), '-c:v', 'libx264', '-preset', 'medium', '-crf', '16', out]
     subprocess.run(cmd, check=True)
     return out
