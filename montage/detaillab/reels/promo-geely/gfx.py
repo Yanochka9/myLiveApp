@@ -5,7 +5,7 @@ from PIL import Image, ImageDraw, ImageFilter
 from gfx_base import *
 
 def pst(c, s0): return [o for pc, s, e, o in pieces if pc == c and abs(s - s0) < 0.05][0]
-T_SKID = word('2714', 'скидка'); T_BAZ = pst('2722', 3.28); T_ZASCH = word('2722', 'защита')
+T_SKID = word('2714', 'скидка'); T_INTRO = pst('2722', 0.66); T_BAZ = pst('2722', 3.28); T_ZASCH = word('2722', 'защита')
 T_OPT = word('2722', 'передняя'); T_KAP = word('2722', 'капот'); T_KRYL = word('2722', 'крылья')
 T_STOI = word('2722', 'стойки'); T_POL = word('2722', 'полоса'); T_ANTI = word('2722', 'антиманикюры')
 T_KANT = word('2722', 'канты'); T_BAG = word('2722', 'багажника')
@@ -42,14 +42,14 @@ def show(t, im, a, b, y=1290):
     return lay
 
 # ---------- 1. «GEELY EX2 / −10%» объёмно за спиной ----------
-W1 = word3d("GEELY EX2", 130, (255, 255, 255), (170, 174, 184), (58, 60, 68), maxw=560)
-W2 = word3d("−10%", 300, (255, 228, 145), (178, 128, 28), (96, 64, 12), maxw=560)
+W1 = word3d("GEELY EX2", 96, (255, 255, 255), (170, 174, 184), (58, 60, 68), maxw=520)
+W2 = word3d("−10%", 220, (255, 228, 145), (178, 128, 28), (96, 64, 12), maxw=600)
 MATTE = np.load(f"{OUT}/matte.npy")
-BX = 400          # спикер стоит справа — текст левее него, в безопасной зоне (x ≥ 110)
+BX = 540          # в этом дубле спикер по центру — надпись над головой (y 250–480)
 def behind(fi, t):
-    if t >= T_SKID or fi >= len(MATTE): return None
-    lay = blank(); out = clamp((T_SKID - t) / 0.25); push = 1.0 + 0.035 * eio(t / T_SKID)
-    for (parts, xs), cy, t0 in [(W1, 400, 0.15), (W2, 660, 0.5)]:
+    if t >= T_INTRO or fi >= len(MATTE): return None
+    lay = blank(); out = clamp((T_INTRO - t) / 0.25); push = 1.0 + 0.035 * eio(t / T_INTRO)
+    for (parts, xs), cy, t0 in [(W1, 285, 0.15), (W2, 400, 0.45)]:
         for i, ((im, adv), x) in enumerate(zip(parts, xs)):
             p = eo((t - t0 - i * 0.05) / 0.4)
             if p <= 0: continue
@@ -247,7 +247,7 @@ def glint(t):
     return None
 
 ELEMS = [glint, scheme, chain, endcard,
-         lambda t: show(t, PL_PROMO, T_SKID, T_BAZ),
+         lambda t: show(t, PL_PROMO, T_SKID, T_BAZ - 0.05),
          lambda t: show(t, CH_BAZ, T_BAZ + 0.05, T_ZASCH - 0.05),
          lambda t: show(t, CH_POROG, T_POROG, T_PRISP - 0.05),
          lambda t: show(t, CH_PRISP, T_PRISP, T_POSK - 0.05),

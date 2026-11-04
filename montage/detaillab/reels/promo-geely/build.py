@@ -52,9 +52,9 @@ PH = {'front0': ('full0', 1216, 0, 1215, 2160, 1.12, 0),
       'front6': ('full6', 1250, 500, 1339, 2380, 1.12, 0)}
 
 SH = [
-    (0.0, 'wide'),                                             # «−10%» за спиной
-    (word('2714', 'скидка'), 'close'),
-    (word('2714', 'все'), 'p', 'front0'),
+    (0.0, 'wide'),                                             # скидка 10% + «−10%» за спиной — весь кадр
+    (pstart('2722', 0.66), 'close'),                           # «Сегодня у нас в оклейке Geely EX2»
+    (word('2722', 'geely'), 'p', 'front0'),
     (pstart('2722', 3.28), 'wide'),                            # комплекс «Базовый»
     (word('2722', 'защита'), 'close'),
     (word('2722', 'передняя'), 'p', 'head6'),
@@ -84,11 +84,18 @@ SH.sort(key=lambda x: x[0])
 ZC = 1.35
 _g = open(f"{S}/grade.txt").read().replace("ASSETS/", f"{R0}/../assets/").split("\n")
 GPRE = _g[0].strip(); GRADE = _g[1].strip()
-AUTO = True                                     # адаптивный цвет: каждый клип подравниваем под эталон
+AUTO = False   # цвет — LUT, подогнанный по скриншоту клиента из CapCut (assets/client_capcut_nov4.cube)
+# светлые дубли темнее ДО цвета клиента (как «Экспозиция» в CapCut: оттенки не сдвигаются; кривая поверх LUT давала фиолетовый)
+CLIP_EXPO = {'2724': 0.80, '2727': 0.68}
+def pre_expo(k):
+    xs = np.linspace(0, 1, 12); y = np.minimum((xs ** 2.2 * k) ** (1 / 2.2), 1)
+    return "curves=interp=pchip:all='" + ' '.join(f'{a:.3f}/{b:.3f}' for a, b in zip(xs, y)) + "'"
 _NORM = {}
 def gpre_for(src):
     if src.endswith('.jpg'): return ''
-    if not AUTO: return GPRE
+    if not AUTO:
+        c = os.path.basename(src)[4:8]
+        return GPRE + (f",{pre_expo(CLIP_EXPO[c])}" if c in CLIP_EXPO else "")
     if src not in _NORM:
         sys.path.insert(0, f"{R0}/..")
         import autograde
@@ -124,7 +131,7 @@ def photo_gamma(f, x0, y0, w, h):
     from PIL import Image
     im = Image.open(f"{S}/stock/{f}.jpg").convert('L').crop((x0, y0, x0 + w, y0 + h)).resize((200, 360))
     m = np.median(np.asarray(im, float) / 255)
-    g = np.log(max(m, 0.05)) / np.log(0.42)
+    g = np.log(max(m, 0.05)) / np.log(0.50)          # к яркости наших кадров до LUT клиента
     return float(np.clip(g, 0.75, 1.6))
 
 def photo(key, nfr):
