@@ -2,7 +2,7 @@
 
   python3 -I prep.py [--look=capcut] WORKDIR clip1.MOV clip2.MOV ...
 
---look: cold (по умолчанию, «машина дня»), capcut_a (говорящие сторис, утверждён) или capcut (говорящие сторис: натуральная кожа, мягкие света, лёгкий холод —
+--look: cold (по умолчанию, «машина дня» в паркинге), cold_soft («машина дня» на улице), capcut_a (говорящие сторис, утверждён) или capcut (говорящие сторис: натуральная кожа, мягкие света, лёгкий холод —
 подогнан по скриншотам CapCut пользователя).
 
 Для каждого клипа (в переданном порядке):
@@ -19,6 +19,9 @@ TONEMAP = ("zscale=tin={tin}:min=bt2020nc:pin=bt2020:rin=tv:t=linear:npl=203,for
            "zscale=p=bt709,tonemap=hable:desat=0,zscale=t=bt709:m=bt709:r=tv,format=yuv420p")
 # говорящие сторис: подогнано по эталонным кадрам из CapCut (чёрное ≈12 %, белое ≈75 %, низкая насыщенность, лёгкий холод)
 LOOKS = {"cold": GRADE,
+         # «машина дня» на улице (пасмурный дневной свет уже холодный): холод вдвое слабее, утверждено пользователем
+         "cold_soft": ("eq=saturation=0.85:contrast=1.06,"
+                       "colorbalance=rs=-0.015:bs=0.025:rm=-0.015:bm=0.015:rh=-0.015:bh=0.015"),
          "capcut": ("eq=saturation=0.88:contrast=1.08:gamma=1.05,"
                     "colorbalance=rs=-0.04:bs=0.05:rm=-0.02:bm=0.03:rh=-0.02:bh=0.03,"
                     "curves=all='0/0.04 0.25/0.27 0.5/0.52 0.8/0.76 1/0.88'"),
@@ -43,17 +46,21 @@ def probe(path):
     return float(out["format"]["duration"]), v.get("color_transfer", ""), has_audio
 
 
-def speech_bounds(path, dur):
-    """Начало и конец речи по silencedetect; без речи — весь клип."""
-    log = subprocess.run(["ffmpeg", "-i", path, "-af", "silencedetect=n=-35dB:d=0.15", "-f", "null", "-"],
-                         capture_output=True, text=True).stderr
-    starts = [float(x) for x in re.findall(r"silence_start: ([\d.]+)", log)]
-    ends = [float(x) for x in re.findall(r"silence_end: ([\d.]+)", log)]
-    a, b = 0.0, dur
-    if starts and starts[0] < 0.05 and ends:
-        a = max(0.0, ends[0] - 0.1)
-    if starts and starts[-1] > a and (len(ends) < len(starts) or ends[-1] >= dur - 0.05):
-        b = min(dur, starts[-1] + 0.1)
+def speech_bounds(path, dur, model):
+    """Начало речи — по VAD (silero), конец — по концу последнего слова whisper; без речи — весь клип.
+    silencedetect по порогу не годится: на улице ветер и шум выше порога, паузы не находились."""
+    import numpy as np
+    from faster_whisper.vad import get_speech_timestamps, VadOptions
+    pcm = subprocess.run(["ffmpeg", "-v", "error", "-i", path, "-ac", "1", "-ar", "16000", "-f", "s16le", "-"],
+                         capture_output=True, check=True).stdout
+    a16 = np.frombuffer(pcm, np.int16).astype(np.float32) / 32768
+    ts = get_speech_timestamps(a16, VadOptions(min_silence_duration_ms=300, speech_pad_ms=0))
+    if not ts:
+        return 0.0, dur
+    a = max(0.0, ts[0]["start"] / 16000 - 0.12)
+    segs, _ = model.transcribe(a16, language="ru", word_timestamps=True)
+    ws = [w for sg in segs for w in sg.words]
+    b = min(dur, ws[-1].end + 0.15) if ws else dur
     return (a, b) if b - a > 0.5 else (0.0, dur)
 
 
@@ -72,7 +79,7 @@ def main():
     words, offset, parts = [], 0.0, []
     for i, src in enumerate(clips, 1):
         dur, trc, has_audio = probe(src)
-        a, b = speech_bounds(src, dur) if has_audio else (0.0, dur)
+        a, b = speech_bounds(src, dur, model) if has_audio else (0.0, dur)
         tin = {"arib-std-b67": "arib-std-b67", "smpte2084": "smpte2084"}.get(trc)
         vf = (TONEMAP.format(tin=tin) + "," if tin else "format=yuv420p,") + grade + "," + FRAME
         out = f"{work}/clip_{i}.mov"
