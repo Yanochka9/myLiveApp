@@ -47,6 +47,7 @@ W2 = word3d("−10%", 220, (255, 228, 145), (178, 128, 28), (96, 64, 12), maxw=6
 MATTE = np.load(f"{OUT}/matte.npy")
 BX = 540          # в этом дубле спикер по центру — надпись над головой (y 250–480)
 def behind(fi, t):
+    return None   # «за головой» клиенту не понравилось — крупное «−10%» спереди (promo_big)
     if t >= T_INTRO or fi >= len(MATTE): return None
     lay = blank(); out = clamp((T_INTRO - t) / 0.25); push = 1.0 + 0.035 * eio(t / T_INTRO)
     for (parts, xs), cy, t0 in [(W1, 285, 0.15), (W2, 400, 0.45)]:
@@ -64,6 +65,36 @@ def behind(fi, t):
     m = Image.fromarray(MATTE[fi]).resize((WD, HT), Image.BILINEAR).filter(ImageFilter.GaussianBlur(2))
     a = np.asarray(lay.split()[3], np.float32) * (1 - np.asarray(m, np.float32) / 255)
     lay.putalpha(Image.fromarray(a.astype(np.uint8)))
+    return lay
+
+
+# ---------- 1b. крупно: «АКЦИЯ GEELY EX2 / −10% / на все комплексы» спереди ----------
+BIG = word3d("−10%", 300, (255, 232, 150), (182, 130, 26), (98, 66, 12), maxw=700)
+TOP = chip("АКЦИЯ ДЛЯ GEELY EX2", 34, check=False)
+SUB = plate2("НА ВСЕ КОМПЛЕКСЫ", "ОКЛЕЙКИ ПЛЁНКОЙ")
+def promo_big(t):
+    a, b = 0.0, T_BAZ
+    if not (a <= t < b): return None
+    lay = blank(); out = clamp((b - t) / 0.25)
+    put(lay, TOP, 540, 330 + 14 * (1 - eo(t / 0.3)), alpha=eo(t / 0.3) * out)
+    t0 = T_SKID - 0.05
+    if t >= t0:
+        parts, xs = BIG
+        for i, ((im, adv), x) in enumerate(zip(parts, xs)):
+            p = eo((t - t0 - i * 0.05) / 0.35)
+            if p <= 0: continue
+            put(lay, im, 540 + x, 1230 + 40 * (1 - p), alpha=p * out, scale=0.6 + 0.4 * p)
+        q = eo((t - t0 - 0.35) / 0.3)
+        put(lay, SUB, 540, 1470 + 14 * (1 - q), alpha=q * out)
+        # блик по «−10%»
+        g = (t - t0 - 0.6) / 0.7
+        if 0 < g < 1:
+            arr = np.asarray(lay, np.float32).copy(); a_ = arr[..., 3:4] / 255
+            yy, xx = np.mgrid[0:HT, 0:WD]
+            band = np.exp(-((xx + 0.45 * yy - (300 + g * 1300)) / 50.0) ** 2) * 0.6
+            band[:1050] = 0
+            arr[..., :3] = arr[..., :3] + (255 - arr[..., :3]) * band[..., None] * a_
+            lay = Image.fromarray(arr.clip(0, 255).astype(np.uint8), 'RGBA')
     return lay
 
 # ---------- 2. акция / комплекс ----------
@@ -246,8 +277,7 @@ def glint(t):
             return Image.fromarray(gl, 'RGBA').resize((WD, HT), Image.BILINEAR)
     return None
 
-ELEMS = [glint, scheme, chain, endcard,
-         lambda t: show(t, PL_PROMO, T_SKID, T_BAZ - 0.05),
+ELEMS = [scheme, chain, endcard, promo_big,
          lambda t: show(t, CH_BAZ, T_BAZ + 0.05, T_ZASCH - 0.05),
          lambda t: show(t, CH_POROG, T_POROG, T_PRISP - 0.05),
          lambda t: show(t, CH_PRISP, T_PRISP, T_POSK - 0.05),
