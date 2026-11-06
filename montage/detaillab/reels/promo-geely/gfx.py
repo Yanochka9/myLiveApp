@@ -34,11 +34,11 @@ def chip(txt, fs=28, check=True, col=GOLD):
         p.alpha_composite(ck, (14, (h - ck.height) // 2)); x = 84
     p.alpha_composite(tx, (x, (h - tx.height) // 2))
     return p
-def show(t, im, a, b, y=1290):
+def show(t, im, a, b, top=1072):
     al = fade(t, a, b, 0.22, 0.2)
     if al <= 0: return None
     lay = blank(); p = eo((t - a) / 0.25)
-    put(lay, im, 540, y + 20 * (1 - p), alpha=al, scale=0.95 + 0.05 * p)
+    put(lay, im, 540, top + im.height / 2 + 20 * (1 - p), alpha=al, scale=0.95 + 0.05 * p)
     return lay
 
 # ---------- 1. «GEELY EX2 / −10%» объёмно за спиной ----------
@@ -94,24 +94,18 @@ def promo_big(t):
         arr = np.zeros((HT, WD, 4), np.uint8); arr[..., 3] = (al * 255).astype(np.uint8).repeat(WD, 1)
         GRAD = Image.fromarray(arr, 'RGBA')
     lay = GRAD.copy(); lay.putalpha(lay.split()[3].point(lambda v: int(v * out * eo(t / 0.3))))
-    parts, xs = L1a
-    for i, ((im, adv), x) in enumerate(zip(parts, xs)):
-        p = eo((t - 0.08 - i * 0.05) / 0.35)
-        if p > 0: put(lay, im, 540 + x, 880 + 40 * (1 - p), alpha=p * out, scale=0.7 + 0.3 * p)
-    p1 = eo((t - 0.45) / 0.3)
-    put(lay, L1b, 540, 1040 + 20 * (1 - p1), alpha=p1 * out)
     if t >= T_VSK - 0.1 and B3D:
         k = min(len(B3D) - 1, int((t - (T_VSK - 0.1)) * FPS))
         p2 = eo((t - (T_VSK - 0.1)) / 0.3)
-        put(lay, B3D[k], 540, 1255, alpha=p2 * out, scale=0.75 + 0.25 * p2)
+        put(lay, B3D[k], 540, 1110, alpha=p2 * out, scale=0.75 + 0.25 * p2)
     if t >= T_VVSE - 0.05:
         p3 = eo((t - (T_VVSE - 0.05)) / 0.3)
-        put(lay, L3, 540, 1470 + 20 * (1 - p3), alpha=p3 * out)
+        put(lay, L3, 540, 1300 + L3.height / 2 + 20 * (1 - p3), alpha=p3 * out)
     return lay
 
 # ---------- 2. акция / комплекс ----------
 PL_PROMO = plate2("АКЦИЯ ДЛЯ GEELY EX2", "−10% НА ВСЕ КОМПЛЕКСЫ")
-CH_BAZ = chip("КОМПЛЕКС «БАЗОВЫЙ»", 30, check=False)
+CH_BAZ = plate2("ЧТО ВХОДИТ В КОМПЛЕКС", "«БАЗОВЫЙ»")
 
 # ---------- 3. зоны «Базового» на настоящей EX2 (вырезана из фото, ex2_zones.py) ----------
 import json as _json, ex2_zones as _z
@@ -124,7 +118,7 @@ def _P(x, y): return ((x * 4 - _BB[0]) * _sc, (y * 4 - _BB[1]) * _sc)
 def _zone(i, k=2):
     im = Image.new('RGBA', (CW * k, CH * k), (0, 0, 0, 0)); d = ImageDraw.Draw(im); col = GOLD2 + (255,)
     for kind, a in _z.ZONES[i][2]:
-        if kind == 'poly': d.polygon([tuple(v * k for v in _P(*p)) for p in a], fill=col)
+        if kind == 'poly': d.polygon([tuple(v * k for v in _P(*p)) for p in a], fill=GOLD2 + (175,), outline=col, width=3 * k)
         elif kind == 'line': d.line([tuple(v * k for v in _P(*p)) for p in a], fill=col, width=7 * k, joint='curve')
         elif kind == 'cap':
             x, y = _P(*a); d.rounded_rectangle(((x - 17) * k, (y - 6) * k, (x + 17) * k, (y + 6) * k), 6 * k, fill=col)
@@ -159,7 +153,7 @@ def scheme(t):
         lb = ZLBL[cur]; q = eo((t - ZONES[cur][1]) / 0.2)
         lb2 = lb.copy(); lb2.putalpha(lb2.split()[3].point(lambda v: int(v * q)))
         card.alpha_composite(lb2, ((SAFE_W - lb.width) // 2, card.height - lb.height - 26))
-    lay = blank(); put(lay, card, 540, 1290 + 24 * (1 - pin), alpha=pin * out, scale=0.94 + 0.06 * pin)
+    lay = blank(); put(lay, card, 540, 1068 + card.height / 2 + 24 * (1 - pin), alpha=pin * out, scale=0.94 + 0.06 * pin)
     return lay
 
 # ---------- 4. пороги ----------
@@ -181,7 +175,7 @@ def ic_scratch(col):
         d.line([(c + x * k, c + y * k) for x, y in P], fill=col, width=int(7 * k), joint='curve')
     return f
 CHAIN = [("РЕЗИНКИ", ic_rubber, T_REZ, GOLD), ("КАМУШКИ", ic_pebbles, T_KAM, GOLD), ("ТРУТ ЛКП", ic_scratch, T_PROT, RED)]
-CX = [330, 540, 750]; CY = 1270
+CX = [330, 540, 750]; CY = 1072 + 105
 CH_PANEL = panel(SAFE_W, 250)
 C_OFF = [circle_icon(50, ring=(110, 110, 110), inner=f((150, 150, 150, 255)), sc=0.8) for _, f, _, _ in CHAIN]
 C_ON = [circle_icon(50, ring=col, inner=f(col + (255,)), sc=0.8) for _, f, _, col in CHAIN]
@@ -190,7 +184,7 @@ def chain(t):
     a, b = T_POSK, T_C0
     if not (a <= t < b): return None
     lay = blank(); out = clamp((b - t) / 0.25); pin = eo((t - a) / 0.3)
-    put(lay, CH_PANEL, 540, 1295, alpha=0.95 * pin * out)
+    put(lay, CH_PANEL, 540, 1072 + CH_PANEL.height / 2, alpha=0.95 * pin * out)
     d = ImageDraw.Draw(lay)
     d.line([(CX[0], CY), (CX[-1], CY)], fill=(90, 90, 90, int(220 * pin * out)), width=5)
     for i in range(1, 3):
