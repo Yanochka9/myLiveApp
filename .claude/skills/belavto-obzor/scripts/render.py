@@ -188,10 +188,14 @@ def main():
     tap_ms = int((main_dur + 0.15) * 1000)
     base = n + 3 + (1 if cfg.get("music") else 0)
     bro = ""
+    # кадры подсъёма и окно enable сдвинуты на полкадра раньше сетки 30 fps: если метки попадают ровно на сетку,
+    # из-за округления overlay то повторяет, то пропускает кадр (подсъём «дёргается», кажется замедленным),
+    # а на стыке двух подсъёмов подряд проскакивает один кадр с ведущей
+    hf = 0.5 / 30
     for j, (path, bs, be) in enumerate(broll):
         extra_b.append(path)
-        bro += (f"[{base + j}:v]setpts=PTS-STARTPTS+{bs:.3f}/TB[b{j}];"
-                f"[mvb{j}][b{j}]overlay=enable='between(t,{bs:.3f},{be:.3f})':eof_action=pass[mvb{j + 1}];")
+        bro += (f"[{base + j}:v]setpts=N/(30*TB)+{bs - hf:.4f}/TB[b{j}];"
+                f"[mvb{j}][b{j}]overlay=enable='between(t,{bs - hf:.4f},{be - hf:.4f})':eof_action=pass[mvb{j + 1}];")
     graph = (
         f"{cat}concat=n={n}:v=1:a=1[mv][ma];"
         f"[mv]trim=duration={main_dur:.3f},setpts=PTS-STARTPTS{',' + face if face else ''}[mvb0];{bro}"
