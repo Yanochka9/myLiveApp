@@ -1,6 +1,6 @@
 ---
-name: detaillab-video
-description: Монтаж вертикальных роликов DetailLab (ТикТок + сторис) по утверждённому шаблону — когда пользователь присылает ссылку на видео/папку в Google Drive и просит смонтировать «как Leopard», «по шаблону», «как в прошлый раз».
+name: detaillab-stories
+description: Сторис DetailLab (команда /detaillab-stories, раньше detaillab-video) — одно длинное видео режется на вертикальные сторис + ТикТок по утверждённому шаблону «как Leopard». Используй, когда пишут /detaillab-stories, «сторис DetailLab», «смонтируй как Leopard», «по шаблону DetailLab», «как в прошлый раз» и присылают ссылку на видео/папку в Google Drive. Рилс из нескольких дублей — в detaillab-reels.
 ---
 
 # Монтаж роликов DetailLab по шаблону
