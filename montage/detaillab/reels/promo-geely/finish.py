@@ -80,6 +80,8 @@ def caption_events():
             i += 1; g.append(ws[i])
         groups.append(g); i += 1
     ev = []
+    t_intro = [o for pc, s0, e0, o in pieces if pc == '2722' and abs(s0 - 0.66) < 0.05][0]
+    groups = [g for g in groups if g[0][0] >= t_intro - 0.05]      # на блоке акции субтитров нет — там крупные надписи
     for j, g in enumerate(groups):
         st = g[0][0]
         nxt = groups[j + 1][0][0] if j + 1 < len(groups) else VOICE_END

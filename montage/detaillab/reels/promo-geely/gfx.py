@@ -5,7 +5,7 @@ from PIL import Image, ImageDraw, ImageFilter
 from gfx_base import *
 
 def pst(c, s0): return [o for pc, s, e, o in pieces if pc == c and abs(s - s0) < 0.05][0]
-T_SKID = word('2714', 'скидка'); T_INTRO = pst('2722', 0.66); T_BAZ = pst('2722', 3.28); T_ZASCH = word('2722', 'защита')
+T_SKID = word('2709', 'скидка'); T_INTRO = pst('2722', 0.66); T_BAZ = pst('2722', 3.28); T_ZASCH = word('2722', 'защита')
 T_OPT = word('2722', 'передняя'); T_KAP = word('2722', 'капот'); T_KRYL = word('2722', 'крылья')
 T_STOI = word('2722', 'стойки'); T_POL = word('2722', 'полоса'); T_ANTI = word('2722', 'антиманикюры')
 T_KANT = word('2722', 'канты'); T_BAG = word('2722', 'багажника')
@@ -68,109 +68,98 @@ def behind(fi, t):
     return lay
 
 
-# ---------- 1b. крупно: «АКЦИЯ GEELY EX2 / −10% / на все комплексы» спереди ----------
-BIG = word3d("−10%", 300, (255, 232, 150), (182, 130, 26), (98, 66, 12), maxw=700)
-TOP = chip("АКЦИЯ ДЛЯ GEELY EX2", 34, check=False)
-SUB = plate2("НА ВСЕ КОМПЛЕКСЫ", "ОКЛЕЙКИ ПЛЁНКОЙ")
+# ---------- 1b. начало: «АКЦИЯ ДЛЯ GEELY EX2» → 3D «−10%» (Blender) → «НА ВСЕ КОМПЛЕКСЫ ОКЛЕЙКИ» ----------
+T_V0 = pst('2709', 0.52); T_VSK = word('2709', 'скидка'); T_VVSE = word('2709', 'все')
+L1a = word3d("АКЦИЯ", 190, (255, 236, 160), (190, 140, 30), (100, 70, 14), maxw=SAFE_W)
+L1b = fitw(text_img("ДЛЯ GEELY EX2", FO(92), WHITE + (255,), spacing=4, shadow=(5, 10, 170)), SAFE_W)
+L3 = plate2("НА ВСЕ КОМПЛЕКСЫ", "ОКЛЕЙКИ ПЛЁНКОЙ")
+import glob as _glob
+B3D = [Image.open(p).convert('RGBA') for p in sorted(_glob.glob(f"{OUT}/b3d/*.png"))]
+B3D = [fitw(im.crop(im.getbbox()) if im.getbbox() else im, 720) for im in B3D]
+def _goldify(im):   # Blender-кадр → насыщенное золото (яркость сохраняем, цвет — градиент тёмное→светлое золото)
+    a = np.asarray(im, np.float32); L = (a[..., :3] @ np.array([.3, .59, .11])) / 255
+    lo = np.array([120, 78, 12]); hi = np.array([255, 226, 140])
+    rgb = lo + (hi - lo) * np.clip(L ** 1.15, 0, 1)[..., None]
+    out = np.concatenate([rgb, a[..., 3:4]], -1).clip(0, 255).astype(np.uint8)
+    return Image.fromarray(out, 'RGBA')
+B3D = [_goldify(im) for im in B3D]
+GRAD = None
 def promo_big(t):
-    a, b = 0.0, T_BAZ
+    global GRAD
+    a, b = 0.0, T_INTRO
     if not (a <= t < b): return None
-    lay = blank(); out = clamp((b - t) / 0.25)
-    put(lay, TOP, 540, 330 + 14 * (1 - eo(t / 0.3)), alpha=eo(t / 0.3) * out)
-    t0 = T_SKID - 0.05
-    if t >= t0:
-        parts, xs = BIG
-        for i, ((im, adv), x) in enumerate(zip(parts, xs)):
-            p = eo((t - t0 - i * 0.05) / 0.35)
-            if p <= 0: continue
-            put(lay, im, 540 + x, 1230 + 40 * (1 - p), alpha=p * out, scale=0.6 + 0.4 * p)
-        q = eo((t - t0 - 0.35) / 0.3)
-        put(lay, SUB, 540, 1470 + 14 * (1 - q), alpha=q * out)
-        # блик по «−10%»
-        g = (t - t0 - 0.6) / 0.7
-        if 0 < g < 1:
-            arr = np.asarray(lay, np.float32).copy(); a_ = arr[..., 3:4] / 255
-            yy, xx = np.mgrid[0:HT, 0:WD]
-            band = np.exp(-((xx + 0.45 * yy - (300 + g * 1300)) / 50.0) ** 2) * 0.6
-            band[:1050] = 0
-            arr[..., :3] = arr[..., :3] + (255 - arr[..., :3]) * band[..., None] * a_
-            lay = Image.fromarray(arr.clip(0, 255).astype(np.uint8), 'RGBA')
+    out = clamp((b - t) / 0.25)
+    if GRAD is None:      # мягкое затемнение снизу, чтобы надписи читались на любом фоне
+        yy = np.linspace(0, 1, HT)[:, None]; al = np.clip((yy - 0.38) / 0.18, 0, 1) * 0.62
+        arr = np.zeros((HT, WD, 4), np.uint8); arr[..., 3] = (al * 255).astype(np.uint8).repeat(WD, 1)
+        GRAD = Image.fromarray(arr, 'RGBA')
+    lay = GRAD.copy(); lay.putalpha(lay.split()[3].point(lambda v: int(v * out * eo(t / 0.3))))
+    parts, xs = L1a
+    for i, ((im, adv), x) in enumerate(zip(parts, xs)):
+        p = eo((t - 0.08 - i * 0.05) / 0.35)
+        if p > 0: put(lay, im, 540 + x, 880 + 40 * (1 - p), alpha=p * out, scale=0.7 + 0.3 * p)
+    p1 = eo((t - 0.45) / 0.3)
+    put(lay, L1b, 540, 1040 + 20 * (1 - p1), alpha=p1 * out)
+    if t >= T_VSK - 0.1 and B3D:
+        k = min(len(B3D) - 1, int((t - (T_VSK - 0.1)) * FPS))
+        p2 = eo((t - (T_VSK - 0.1)) / 0.3)
+        put(lay, B3D[k], 540, 1255, alpha=p2 * out, scale=0.75 + 0.25 * p2)
+    if t >= T_VVSE - 0.05:
+        p3 = eo((t - (T_VVSE - 0.05)) / 0.3)
+        put(lay, L3, 540, 1470 + 20 * (1 - p3), alpha=p3 * out)
     return lay
 
 # ---------- 2. акция / комплекс ----------
 PL_PROMO = plate2("АКЦИЯ ДЛЯ GEELY EX2", "−10% НА ВСЕ КОМПЛЕКСЫ")
 CH_BAZ = chip("КОМПЛЕКС «БАЗОВЫЙ»", 30, check=False)
 
-# ---------- 3. схема EX2 сбоку, зоны загораются ----------
-PW, PH_ = SAFE_W, 400
-OX, OY = 540 - PW // 2, 1300 - PH_ // 2
-BODY = [(80, 255), (78, 195), (92, 152), (122, 108), (205, 92), (420, 92), (500, 150), (600, 166), (640, 190), (646, 238), (628, 262), (88, 262)]
-WIN = [(138, 114), (205, 101), (408, 101), (470, 145), (140, 145)]
-ZONES = [  # (подпись, время, рисовалка)
-    ('ПЕРЕДНЯЯ ОПТИКА', T_OPT, lambda d, c, w: d.polygon([(588, 172), (634, 181), (632, 194), (590, 188)], fill=c)),
-    ('КАПОТ ЦЕЛИКОМ', T_KAP, lambda d, c, w: d.line([(500, 150), (600, 166), (640, 190)], fill=c, width=w, joint='curve')),
-    ('КРЫЛЬЯ ЧАСТИЧНО', T_KRYL, lambda d, c, w: (d.arc((452, 204, 588, 340), 200, 340, fill=c, width=w),
-                                                 d.arc((122, 204, 258, 340), 200, 340, fill=c, width=w))),
-    ('СТОЙКИ ЧАСТИЧНО', T_STOI, lambda d, c, w: (d.line([(420, 94), (498, 150)], fill=c, width=w),
-                                                 d.line([(300, 100), (300, 146)], fill=c, width=w))),
-    ('ПОЛОСА НА КРЫШУ', T_POL, lambda d, c, w: d.line([(330, 90), (420, 90)], fill=c, width=w + 2)),
-    ('АНТИМАНИКЮРЫ', T_ANTI, lambda d, c, w: (d.rounded_rectangle((318, 168, 352, 178), 4, fill=c),
-                                              d.rounded_rectangle((432, 168, 466, 178), 4, fill=c))),
-    ('КАНТЫ ДВЕРЕЙ', T_KANT, lambda d, c, w: (d.line([(300, 150), (300, 255)], fill=c, width=w),
-                                              d.line([(456, 150), (472, 255)], fill=c, width=w))),
-    ('КАНТ КРЫШКИ БАГАЖНИКА', T_BAG, lambda d, c, w: d.line([(122, 108), (92, 152), (80, 195)], fill=c, width=w, joint='curve')),
-]
-def car_base():
-    def fn(d, k):
-        sc = lambda P: [(x * k, y * k) for x, y in P]
-        d.rounded_rectangle((2 * k, 2 * k, (PW - 2) * k, (PH_ - 2) * k), 24 * k, fill=DARK + (215,), outline=GOLD + (255,), width=2 * k)
-        d.polygon(sc(BODY), fill=(40, 40, 46, 255), outline=(200, 200, 205, 255), width=3 * k)
-        d.polygon(sc(WIN), fill=(70, 80, 95, 255), outline=(170, 170, 180, 255), width=2 * k)
-        for cx in (190, 520):
-            d.ellipse(((cx - 44) * k, (272 - 44) * k, (cx + 44) * k, (272 + 44) * k), fill=(20, 20, 20, 255), outline=(200, 200, 205, 255), width=3 * k)
-            d.ellipse(((cx - 20) * k, (272 - 20) * k, (cx + 20) * k, (272 + 20) * k), outline=(150, 150, 155, 255), width=3 * k)
-        d.line([(452 * k, 262 * k), (588 * k, 262 * k)], fill=(40, 40, 46, 255), width=4 * k)
-    return hires(PW, PH_, fn)
-CAR = car_base()
-def zone_layer(i, alpha):
-    im = Image.new('RGBA', (PW * 2, PH_ * 2), (0, 0, 0, 0)); d = ImageDraw.Draw(im)
-    class K:  # масштаб ×2 для рисовалок
-        pass
-    def S2(f):
-        return f
-    sc = ImageDraw.Draw(im)
-    # рисуем в ×2: оборачиваем координаты
-    class D2:
-        def polygon(self, P, **kw): sc.polygon([(x * 2, y * 2) for x, y in P], **kw)
-        def line(self, P, width=1, **kw): sc.line([(x * 2, y * 2) for x, y in P], width=width * 2, **kw)
-        def arc(self, b, a0, a1, width=1, **kw): sc.arc(tuple(v * 2 for v in b), a0, a1, width=width * 2, **kw)
-        def rounded_rectangle(self, b, r, **kw): sc.rounded_rectangle(tuple(v * 2 for v in b), r * 2, **kw)
-    ZONES[i][2](D2(), GOLD2 + (int(255 * alpha),), 6)
-    im = im.resize((PW, PH_), Image.LANCZOS)
-    glow = im.filter(ImageFilter.GaussianBlur(6))
-    out = Image.new('RGBA', (PW, PH_), (0, 0, 0, 0)); out.alpha_composite(glow); out.alpha_composite(glow); out.alpha_composite(im)
-    return out
-ZL = [zone_layer(i, 1.0) for i in range(len(ZONES))]
-ZLBL = [fitw(text_img(n, FI(30), GOLD + (255,), spacing=1), 640) for n, _, _ in ZONES]
-TTL = text_img("ЧТО ВХОДИТ В «БАЗОВЫЙ»", FI(24), (200, 200, 200, 255), spacing=1)
+# ---------- 3. зоны «Базового» на настоящей EX2 (вырезана из фото, ex2_zones.py) ----------
+import json as _json, ex2_zones as _z
+_BB = _json.load(open(f"{S}/stock/ex2_side_cut.json"))
+_CAR = Image.open(f"{S}/stock/ex2_side_cut.png").convert('RGBA')
+CW = 700; _sc = CW / _CAR.width; CH = int(_CAR.height * _sc)
+CAR = _CAR.resize((CW, CH), Image.LANCZOS)
+_a = np.asarray(CAR, np.float32).copy(); _a[..., :3] *= 0.82; CARD = Image.fromarray(_a.astype(np.uint8), 'RGBA')
+def _P(x, y): return ((x * 4 - _BB[0]) * _sc, (y * 4 - _BB[1]) * _sc)
+def _zone(i, k=2):
+    im = Image.new('RGBA', (CW * k, CH * k), (0, 0, 0, 0)); d = ImageDraw.Draw(im); col = GOLD2 + (255,)
+    for kind, a in _z.ZONES[i][2]:
+        if kind == 'poly': d.polygon([tuple(v * k for v in _P(*p)) for p in a], fill=col)
+        elif kind == 'line': d.line([tuple(v * k for v in _P(*p)) for p in a], fill=col, width=7 * k, joint='curve')
+        elif kind == 'cap':
+            x, y = _P(*a); d.rounded_rectangle(((x - 17) * k, (y - 6) * k, (x + 17) * k, (y + 6) * k), 6 * k, fill=col)
+        elif kind == 'arc':
+            cx, cy, r, a0, a1 = a; x, y = _P(cx, cy); rr = r * 4 * _sc
+            d.arc(((x - rr) * k, (y - rr) * k, (x + rr) * k, (y + rr) * k), a0, a1, fill=col, width=8 * k)
+    im = im.resize((CW, CH), Image.LANCZOS); gl = im.filter(ImageFilter.GaussianBlur(9))
+    o = Image.new('RGBA', (CW, CH), (0, 0, 0, 0)); o.alpha_composite(gl); o.alpha_composite(gl); o.alpha_composite(im); return o
+ZWORD = {'оптика': 'передняя', 'капот': 'капот', 'крылья': 'крылья', 'стойки': 'стойки', 'полоса': 'полоса',
+         'антиманикюры': 'антиманикюры', 'канты': 'канты', 'багажника': 'багажника'}
+ZONES = [(n, word('2722', ZWORD[key])) for n, key, _ in _z.ZONES]
+ZL = [_zone(i) for i in range(len(ZONES))]
+ZLBL = [fitw(text_img(n, FO(54), GOLD + (255,), spacing=2, shadow=(3, 6, 170)), 640) for n, _ in ZONES]
+TTL = text_img("ЧТО ВХОДИТ В «БАЗОВЫЙ»", FI(26), (215, 215, 215, 255), spacing=1)
+PNL = panel(SAFE_W, CH + 170, alpha=225)
 def scheme(t):
     a, b = T_ZASCH, T_P0
     if not (a <= t < b): return None
-    out = clamp((b - t) / 0.25); pin = eo((t - a) / 0.3)
-    card = CAR.copy()
-    card.alpha_composite(TTL, ((PW - TTL.width) // 2, 22))
+    out = clamp((b - t) / 0.25); pin = eo((t - a) / 0.35)
+    card = PNL.copy(); card.alpha_composite(TTL, ((SAFE_W - TTL.width) // 2, 22))
+    # машина «въезжает» и чуть поворачивается к камере
+    car = CARD
+    card.alpha_composite(car, ((SAFE_W - CW) // 2, 66))
     cur = None
-    for i, (n, t0, _) in enumerate(ZONES):
+    for i, (n, t0) in enumerate(ZONES):
         p = eo((t - t0 + 0.05) / 0.25)
         if p <= 0: continue
-        pulse = 1.0 if t - t0 > 0.6 else 0.75 + 0.25 * math.sin((t - t0) * 20)
+        pulse = 1.0 if t - t0 > 0.6 else 0.7 + 0.3 * math.sin((t - t0) * 20)
         z = ZL[i].copy(); z.putalpha(z.split()[3].point(lambda v: int(v * p * pulse)))
-        card.alpha_composite(z); cur = i
+        card.alpha_composite(z, ((SAFE_W - CW) // 2, 66)); cur = i
     if cur is not None:
         lb = ZLBL[cur]; q = eo((t - ZONES[cur][1]) / 0.2)
         lb2 = lb.copy(); lb2.putalpha(lb2.split()[3].point(lambda v: int(v * q)))
-        card.alpha_composite(lb2, ((PW - lb.width) // 2, PH_ - lb.height - 22))
-    lay = blank(); put(lay, card, 540, 1300 + 18 * (1 - pin), alpha=pin * out, scale=0.96 + 0.04 * pin)
+        card.alpha_composite(lb2, ((SAFE_W - lb.width) // 2, card.height - lb.height - 26))
+    lay = blank(); put(lay, card, 540, 1290 + 24 * (1 - pin), alpha=pin * out, scale=0.94 + 0.06 * pin)
     return lay
 
 # ---------- 4. пороги ----------

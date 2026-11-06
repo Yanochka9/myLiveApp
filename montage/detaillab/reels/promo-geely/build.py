@@ -63,7 +63,7 @@ SH = [
     (word('2722', 'защита'), 'close'),
     (word('2722', 'передняя'), 'p', 'head0'),
     (word('2722', 'капот'), 'p', 'hood0'),
-    (word('2722', 'крылья'), 'p', 'fender4'),
+    (word('2722', 'крылья'), 'b', '9310', 0.6),               # видео клиента: арка крупно
     (pstart('2722', 19.24), 'wide'),
     (word('2722', 'стойки'), 'p', 'pillar4'),
     (word('2722', 'полоса'), 'p', 'roof5'),
@@ -71,10 +71,10 @@ SH = [
     (word('2722', 'канты'), 'p', 'edge5'),
     (word('2722', 'багажника'), 'p', 'tail7'),
     (word('2724', 'этот'), 'wide'),
-    (word('2724', 'порогов'), 'p', 'sill4'),
+    (word('2724', 'порогов'), 'b', '9311', 0.0),              # видео клиента: порог крупно
     (word('2724', 'клиентов'), 'close'),
     (word('2724', 'поскольку'), 'wide'),
-    (word('2724', 'резинки'), 'p', 'lower5'),
+    (word('2724', 'резинки'), 'b', '9311', 1.0),
     (word('2724', 'камушки'), 'close'),
     (word('2724', 'протирать'), 'wide'),
     (pstart('2727', 0.44), 'close'),
@@ -165,6 +165,13 @@ for i, sh in enumerate(SH):
         segfiles.append(photo('front6', nfr))
     elif kind == 'p':
         segfiles.append(photo(sh[2], nfr))
+    elif kind == 'b':
+        clip, ss = sh[2], sh[3]
+        d = float(subprocess.check_output(['ffprobe', '-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', f"{SRC}/IMG_{clip}.MOV"]))
+        nb = min(nfr, int((d - ss - 0.05) * FPS))
+        segfiles.append(render(f"{SRC}/IMG_{clip}.MOV", ss, nb, "crop=iw/1.04:ih/1.04,scale=2160:3840,"
+                               f"zoompan=z='1+0.05*on/{max(1,nb)}':x='iw/2-iw/zoom/2':y='ih/2-ih/zoom/2':d=1:s=2160x3840:fps={FPS}"))
+        if nb < nfr: segfiles.append(photo('front6', nfr - nb))
     else:
         speaker(a, b, kind)
     shotlog.append([a, b, kind] + list(sh[2:]))
