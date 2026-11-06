@@ -316,6 +316,42 @@ def doodle(kind, size, fill, line):
         for col, w in ((line, lw * 3), (fill, int(lw * 1.6))):
             d.line([(c + S * 0.1, c - S * 0.16), (c + S * 0.42, c + S * 0.16)], fill=col, width=w)
             d.line([(c + S * 0.1, c + S * 0.16), (c + S * 0.42, c - S * 0.16)], fill=col, width=w)
+    elif kind == 'wheel':     # tyre with tread notches, rim and five spokes
+        R = S * 0.44; d.ellipse((c - R, c - R, c + R, c + R), fill=line)
+        for k in range(16):
+            a = k * np.pi / 8; d.line([(c + np.cos(a) * R * 0.8, c + np.sin(a) * R * 0.8), (c + np.cos(a) * R * 0.98, c + np.sin(a) * R * 0.98)], fill=fill, width=lw)
+        r = R * 0.62; d.ellipse((c - r, c - r, c + r, c + r), fill=fill, outline=line, width=lw)
+        for k in range(5):
+            a = k * 2 * np.pi / 5 - np.pi / 2; d.line([(c, c), (c + np.cos(a) * r * 0.9, c + np.sin(a) * r * 0.9)], fill=line, width=lw)
+        h = r * 0.24; d.ellipse((c - h, c - h, c + h, c + h), fill=fill, outline=line, width=lw)
+    elif kind == 'gauge':     # speedometer arc with ticks and a needle in the red
+        R = S * 0.42; box = (c - R, c - R + S * 0.08, c + R, c + R + S * 0.08); cy = c + S * 0.08
+        d.pieslice(box, 150, 390, fill=fill, outline=line, width=lw)
+        for k in range(7):
+            a = np.radians(150 + k * 40); d.line([(c + np.cos(a) * R * 0.7, cy + np.sin(a) * R * 0.7), (c + np.cos(a) * R * 0.92, cy + np.sin(a) * R * 0.92)], fill=line, width=lw)
+        a = np.radians(330); d.line([(c, cy), (c + np.cos(a) * R * 0.78, cy + np.sin(a) * R * 0.78)], fill=line, width=int(lw * 1.8))
+        h = S * 0.06; d.ellipse((c - h, cy - h, c + h, cy + h), fill=line)
+    elif kind == 'shield':    # safety shield with a tick
+        pts = [(c, c - S * 0.42), (c + S * 0.34, c - S * 0.28), (c + S * 0.3, c + S * 0.12), (c, c + S * 0.42), (c - S * 0.3, c + S * 0.12), (c - S * 0.34, c - S * 0.28)]
+        d.polygon(pts, fill=fill, outline=line, width=lw)
+        d.line([(c - S * 0.15, c), (c - S * 0.03, c + S * 0.13), (c + S * 0.17, c - S * 0.13)], fill=line, width=int(lw * 1.8), joint='curve')
+    elif kind == 'phone':     # smartphone with a screen and two waves (CarPlay / Android Auto)
+        d.rounded_rectangle((c - S * 0.2, c - S * 0.4, c + S * 0.2, c + S * 0.4), S * 0.07, fill=fill, outline=line, width=lw)
+        d.rounded_rectangle((c - S * 0.13, c - S * 0.3, c + S * 0.13, c + S * 0.24), S * 0.03, fill=(255, 255, 255, 230))
+        h = S * 0.035; d.ellipse((c - h, c + S * 0.29, c + h, c + S * 0.29 + 2 * h), fill=line)
+    elif kind == 'car':       # side view of a small crossover
+        d.rounded_rectangle((c - S * 0.44, c - S * 0.04, c + S * 0.44, c + S * 0.22), S * 0.08, fill=fill, outline=line, width=lw)
+        d.polygon([(c - S * 0.3, c - S * 0.04), (c - S * 0.18, c - S * 0.26), (c + S * 0.16, c - S * 0.26), (c + S * 0.3, c - S * 0.04)], fill=fill, outline=line, width=lw)
+        d.line([(c - S * 0.01, c - S * 0.25), (c - S * 0.01, c - S * 0.05)], fill=line, width=lw)
+        for x in (-0.25, 0.25):
+            r = S * 0.11; d.ellipse((c + x * S - r, c + S * 0.2 - r, c + x * S + r, c + S * 0.2 + r), fill=line)
+            r2 = r * 0.45; d.ellipse((c + x * S - r2, c + S * 0.2 - r2, c + x * S + r2, c + S * 0.2 + r2), fill=fill)
+    elif kind == 'key':       # car key fob
+        d.rounded_rectangle((c - S * 0.16, c - S * 0.4, c + S * 0.16, c + S * 0.06), S * 0.12, fill=fill, outline=line, width=lw)
+        for yy in (-0.26, -0.1):
+            h = S * 0.05; d.ellipse((c - h, c + yy * S - h, c + h, c + yy * S + h), fill=line)
+        d.rectangle((c - S * 0.05, c + S * 0.06, c + S * 0.05, c + S * 0.42), fill=fill, outline=line, width=lw)
+        for yy in (0.2, 0.32): d.line([(c + S * 0.05, c + yy * S), (c + S * 0.13, c + yy * S)], fill=line, width=lw)
     return im.resize((size, size), Image.LANCZOS)
 
 
