@@ -90,7 +90,9 @@ _g = open(f"{S}/grade.txt").read().replace("ASSETS/", f"{R0}/../assets/").split(
 GPRE = _g[0].strip(); GRADE = _g[1].strip()
 AUTO = False   # цвет — LUT, подогнанный по скриншоту клиента из CapCut (assets/client_capcut_nov4.cube)
 # светлые дубли темнее ДО цвета клиента (как «Экспозиция» в CapCut: оттенки не сдвигаются; кривая поверх LUT давала фиолетовый)
-CLIP_EXPO = {'2724': 0.80, '2727': 0.68}
+CLIP_EXPO = {'2724': 0.88, '2727': 0.80}   # «Середина 1» (06.11): между «как было» и A
+# после цвета клиента: мягкая нейтрализация серого к первому кадру + чуть насыщенность/контраст (color_mid_chains.json)
+CLIP_POST = {"2724": "colorchannelmixer=rr=0.9965:gg=1.0008:bb=1.0028,eq=saturation=0.96:contrast=1.02", "2727": "colorchannelmixer=rr=1.0028:gg=0.9943:bb=1.0028,eq=saturation=0.95:contrast=1.02"}
 def pre_expo(k):
     xs = np.linspace(0, 1, 12); y = np.minimum((xs ** 2.2 * k) ** (1 / 2.2), 1)
     return "curves=interp=pchip:all='" + ' '.join(f'{a:.3f}/{b:.3f}' for a, b in zip(xs, y)) + "'"
@@ -114,8 +116,10 @@ def render(src, ss, nfr, vf, speed=1.0, still=False):
     pre = f"setpts=(PTS-STARTPTS)/{speed}," if speed != 1.0 else ""
     inp = ['-loop', '1', '-i', src] if still else ['-ss', f"{ss:.3f}", '-i', src]
     g = gpre_for(src)
+    c = os.path.basename(src)[4:8]
+    post = ',' + CLIP_POST[c] if (c in CLIP_POST and not src.endswith('.jpg')) else ''
     cmd = ['ffmpeg', '-v', 'error', '-y', *inp, '-an',
-           '-vf', f"{(g + ',') if g else ''}{pre}{vf},scale=1080:1920:flags=lanczos,setsar=1,fps={FPS},{GRADE},format=yuv420p",
+           '-vf', f"{(g + ',') if g else ''}{pre}{vf},scale=1080:1920:flags=lanczos,setsar=1,fps={FPS},{GRADE}{post},format=yuv420p",
            '-frames:v', str(nfr), '-c:v', 'libx264', '-preset', 'medium', '-crf', '16', out]
     subprocess.run(cmd, check=True)
     return out
