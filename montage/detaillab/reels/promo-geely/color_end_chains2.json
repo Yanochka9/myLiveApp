@@ -1,0 +1,6 @@
+{
+ "A_2724": "lut3d=../assets/client_capcut_nov4.cube,colorchannelmixer=rr=1.0021:gg=1.0078:bb=0.9904,colorbalance=rs=-0.003:gs=-0.007:bs=0.010,eq=brightness=0.02:contrast=1.06:saturation=0.9",
+ "A_2727": "lut3d=../assets/client_capcut_nov4.cube,colorchannelmixer=rr=0.9517:gg=1.0114:bb=1.0396,colorbalance=rs=0.025:gs=0.021:bs=-0.035,eq=brightness=0.02:contrast=1.06:saturation=0.9",
+ "B_2724": "lut3d=../assets/client_capcut_nov4.cube,colorchannelmixer=rr=1.0021:gg=1.0078:bb=0.9904,colorbalance=rs=-0.003:gs=-0.007:bs=0.010,eq=brightness=0.035:contrast=1.1:saturation=0.84",
+ "B_2727": "lut3d=../assets/client_capcut_nov4.cube,colorchannelmixer=rr=0.9517:gg=1.0114:bb=1.0396,colorbalance=rs=0.025:gs=0.021:bs=-0.035,eq=brightness=0.035:contrast=1.1:saturation=0.84"
+}
