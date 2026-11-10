@@ -103,18 +103,55 @@ def make_cta(cfg, path):
 
 def prep_broll(cfg, wd):
     """Подсъёмы: тот же тонмаппинг/грейд/кадр, что в prep.py; звук подсъёма не используется (голос идёт дальше)."""
-    out = []
+    # Каждый подсъём режется ровно на (конец − начало) кадров 30 fps. Подсъёмы, идущие подряд (стык ≤ 1 кадра),
+    # склеиваются в ОДИН файл и накладываются одним overlay: на стыке двух отдельных overlay проскакивал
+    # кадр с ведущей (было не раз: Soul → BMW в «Подарке», ряд кроссоверов → Qashqai в «Зиме»).
+    # Стыки дублей ведущей (в кадрах, по реальному числу кадров clip_N): край подсъёма в ≤ 3 кадрах от стыка
+    # притягивается к нему — иначе между подсъёмом и следующим дублем мелькал 1 кадр соседнего дубля.
+    # concat ставит следующий дубль после самого длинного потока (звук бывает длиннее видео на долю кадра),
+    # а недостающий кадр заполняет повтором последнего кадра предыдущего дубля — он и мелькал.
+    # Поэтому стык = начало дубля по words.json, округлённое вверх до кадра.
+    # Точное время стыка не угадать до кадра, поэтому подсъём у стыка перекрывает его с запасом 1 кадр:
+    # начало — на кадр раньше стыка, конец — на кадр позже.
+    import math
+    clips = json.load(open(f"{wd}/words.json"))["clips"]
+    jt = [sum(c["dur"] for c in clips[:i]) * 30 for i in range(1, len(clips))]
+    snap_s = lambda f: next((math.floor(j) - 1 for j in jt if abs(f - j) <= 3), f)
+    snap_e = lambda f: next((math.ceil(j) + 1 for j in jt if abs(f - j) <= 3), f)
+    parts = []
     for k, b in enumerate(cfg.get("broll", []), 1):
         _, trc, _ = probe(b["src"])
         tin = {"arib-std-b67": "arib-std-b67", "smpte2084": "smpte2084"}.get(trc)
         vf = (TONEMAP.format(tin=tin) + "," if tin else "format=yuv420p,") + LOOKS[cfg.get("look", "cold")] + "," + FRAME
+        fs, fe = snap_s(round(b["s"] * 30)), snap_e(round(b["e"] * 30))
+        if parts and 0 <= fs - parts[-1][2] <= 1:
+            fs = parts[-1][2]  # стык вплотную, без дырки в кадр
         dst = f"{wd}/broll_{k}.mov"
-        # +0.2 с запаса: иначе подсъём выходит на кадр короче окна и на стыке мелькает кадр с ведущей
-        ff("-ss", str(b["ss"]), "-t", f"{b['e'] - b['s'] + 0.2:.3f}", "-i", b["src"], "-an", "-vf", vf,
+        # +0.3 с запаса на входе, затем ровно fe − fs кадров на выходе
+        ff("-ss", str(b["ss"]), "-t", f"{(fe - fs) / 30 + 0.3:.3f}", "-i", b["src"], "-an",
+           "-vf", vf + f",trim=end_frame={fe - fs},setpts=N/(30*TB)", "-r", "30",
            "-c:v", "libx264", "-crf", "14", "-preset", "fast", dst)
-        # начало/конец — ровно на кадре 30 fps: иначе первый кадр подсъёма округляется вверх
-        # и на стыке на один кадр проглядывает ролик с ведущей
-        out.append((dst, round(b["s"] * 30) / 30, round(b["e"] * 30) / 30))
+        n = int(subprocess.run(["ffprobe", "-v", "error", "-count_frames", "-select_streams", "v:0", "-show_entries",
+                                "stream=nb_read_frames", "-of", "csv=p=0", dst], capture_output=True, text=True).stdout.strip())
+        if n < fe - fs:
+            raise SystemExit(f"подсъём {b['src']}: {n} кадров вместо {fe - fs} — исходник короче окна, сдвинь ss/e")
+        parts.append((dst, fs, fe))
+    groups = []
+    for p in parts:
+        if groups and groups[-1][-1][2] == p[1]:
+            groups[-1].append(p)
+        else:
+            groups.append([p])
+    out = []
+    for g, grp in enumerate(groups, 1):
+        if len(grp) == 1:
+            path = grp[0][0]
+        else:
+            path = f"{wd}/broll_grp_{g}.mov"
+            ins = sum((["-i", p[0]] for p in grp), [])
+            ff(*ins, "-filter_complex", "".join(f"[{i}:v]" for i in range(len(grp))) + f"concat=n={len(grp)}:v=1:a=0,setpts=N/(30*TB)[v]",
+               "-map", "[v]", "-r", "30", "-c:v", "libx264", "-crf", "14", "-preset", "fast", path)
+        out.append((path, grp[0][1] / 30, grp[-1][2] / 30))
     return out
 
 
@@ -195,7 +232,7 @@ def main():
     for j, (path, bs, be) in enumerate(broll):
         extra_b.append(path)
         bro += (f"[{base + j}:v]setpts=N/(30*TB)+{bs - hf:.4f}/TB[b{j}];"
-                f"[mvb{j}][b{j}]overlay=enable='between(t,{bs - hf:.4f},{be - hf:.4f})':eof_action=pass[mvb{j + 1}];")
+                f"[mvb{j}][b{j}]overlay=enable='between(t,{bs - hf:.4f},{be - hf:.4f})':eof_action=repeat[mvb{j + 1}];")
     graph = (
         f"{cat}concat=n={n}:v=1:a=1[mv][ma];"
         f"[mv]trim=duration={main_dur:.3f},setpts=PTS-STARTPTS{',' + face if face else ''}[mvb0];{bro}"

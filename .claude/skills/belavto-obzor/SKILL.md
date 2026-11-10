@@ -49,7 +49,7 @@ description: Сторис Белавто «обзор авто» (команда
 
 5. **Музыка.** Папка «музыка и звуки» на Диске: id `1ZbAan11DVIC-36TzhXd-72B4k7EUs8h6`. Трек по умолчанию — `copy_8AEA83FF-6912-4DDA-B9E4-929F03F5E58A.mov` (id `19CPc_GsOVXSTSU7amm4dPYcFdRAPm0Eq`), начало с 5-й секунды. Скачай и вытащи звук: `ffmpeg -i music.mov -vn -ar 48000 -ac 2 music.wav`. `copy_B2B212EF…` — это видео-переписка со звуками, не музыка.
 
-6. **Сборка:** `python3 -I scripts/render.py WORKDIR/config.json`. Посмотри `WORKDIR/final_sheet.jpg` (шапка, субтитры, финальный экран), затем отправь ролик через `SendUserFile` (display: render). Файлы клади в scratchpad.
+6. **Сборка:** `python3 -I scripts/render.py WORKDIR/config.json`. Посмотри `WORKDIR/final_sheet.jpg` (шапка, субтитры, финальный экран), прогони `python3 -I scripts/check.py ролик.mp4` (вспышки кадров, дёрганье, паузы — должно быть OK), затем отправь ролик через `SendUserFile` (display: render). Файлы клади в scratchpad.
 
 7. Правки пользователя вноси точечно, только то, что просили. Не меняй остальное оформление.
 
