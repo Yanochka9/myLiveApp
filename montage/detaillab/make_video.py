@@ -86,10 +86,8 @@ def load(cfg_path):
 
 
 # ---------------- prep ----------------
-def prep(cfg):
-    w = cfg["work"]
-    src = f"{w}/source.mov"
-    drive_download(cfg["source_drive_id"], src)
+def pre_filter(cfg, src):
+    """HDR→SDR (iPhone HLG) + подравнивание под эталон (autograde) — для исходника и каждого подсъёма."""
     hlg = "arib-std-b67" in subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries",
                                             "stream=color_transfer", "-of", "csv=p=0", src], capture_output=True, text=True).stdout
     pre = f"{CLIENT_GRADE[0].strip()}," if (use_client(cfg) and hlg) else ""   # iPhone HDR → SDR до цвета
@@ -99,7 +97,40 @@ def prep(cfg):
         import autograde
         nf, info = autograde.norm_filter(src)
         pre += nf + ","
-        print("autograde:", info)
+        print("autograde:", os.path.basename(src), info)
+    return pre
+
+
+def prep_broll(cfg):
+    """Подсъёмы: cfg["broll"] = {"имя": drive_id}. Proxy 1080×1920 в work/broll/<имя>.mov + листы broll_XX.jpg.
+    В edl v_start = ["имя", t] — картинка из подсъёма, голос из основного видео."""
+    br = cfg.get("broll") or {}
+    if not br:
+        return
+    d = f"{cfg['work']}/broll"
+    os.makedirs(d, exist_ok=True)
+    for name, ref in br.items():
+        src = f"{d}/{name}_src.mov"
+        drive_download(ref, src)
+        if not os.path.exists(f"{d}/{name}.mov"):
+            run(f"ffmpeg -v error -y -i '{src}' -map 0:v:0 -vf {pre_filter(cfg, src)}scale={W}:{H}:flags=lanczos,fps={FPS} "
+                f"-c:v libx264 -preset veryfast -crf 14 -pix_fmt yuv420p -an {d}/{name}.mov")
+    names = sorted(br)
+    for i in range(0, len(names), 12):
+        grp = names[i:i + 12]
+        ins = " ".join(f"-i {d}/{n}.mov" for n in grp)
+        fc = ";".join(f"[{j}]fps=2,scale=120:-1,drawtext=fontfile={FONTS}/Inter-Bold.otf:text='{n} %{{pts\\:flt\\:1}}':"
+                      f"fontcolor=yellow:fontsize=16:x=3:y=3,tile=1x8[t{j}]" for j, n in enumerate(grp))
+        stack = f";{''.join(f'[t{j}]' for j in range(len(grp)))}hstack=inputs={len(grp)}" if len(grp) > 1 else ""
+        run(f"ffmpeg -v error -y {ins} -filter_complex \"{fc}{stack}\" -frames:v 1 {cfg['work']}/broll_{i // 12:02d}.jpg")
+
+
+def prep(cfg):
+    w = cfg["work"]
+    src = f"{w}/source.mov"
+    drive_download(cfg["source_drive_id"], src)
+    prep_broll(cfg)
+    pre = pre_filter(cfg, src)
     run(f"ffmpeg -v error -y -i '{src}' -map 0:v:0 -map 0:a:0 -vf {pre}scale={W}:{H}:flags=lanczos,fps={FPS} "
         f"-c:v libx264 -preset veryfast -crf 14 -pix_fmt yuv420p -c:a pcm_s16le {w}/proxy.mov")
     run(f"ffmpeg -v error -y -i {w}/proxy.mov -vn -ac 1 -ar 16000 {w}/audio.wav")
@@ -255,14 +286,17 @@ def build(cfg):
     segs = []
     for a, b, v, z, part, plate in cfg["edl"]:
         for pa, pb in split_pauses(a, b, allw):
-            segs.append((pa, pb, None if v is None else v + (pa - a), z, part, plate))
+            if isinstance(v, list):  # ["подсъём", t]
+                segs.append((pa, pb, [v[0], v[1] + (pa - a)], z, part, plate))
+            else:
+                segs.append((pa, pb, None if v is None else v + (pa - a), z, part, plate))
     files, timeline, meta, o = [], [], [], 0.0
     for i, (a, b, v, z, part, plate) in enumerate(segs):
         d = b - a
         f = f"{w}/seg/s{i:03d}.mov"
-        vs = a if v is None else v
-        run(f"ffmpeg -v error -y -ss {vs:.3f} -t {d:.3f} -i {proxy} -ss {a:.3f} -t {d:.3f} -i {proxy} -map 0:v -map 1:a "
-            f"-vf \"crop=iw/{z}:ih/{z},scale={W}:{H}:flags=lanczos,setsar=1,fps={FPS},{grade(cfg)}\" "
+        vsrc, vs = (f"{w}/broll/{v[0]}.mov", v[1]) if isinstance(v, list) else (proxy, a if v is None else v)
+        run(f"ffmpeg -v error -y -ss {vs:.3f} -t {d:.3f} -i {vsrc} -ss {a:.3f} -t {d:.3f} -i {proxy} -map 0:v -map 1:a "
+            f"-vf \"crop=iw/{z}:ih/{z},scale={W}:{H}:flags=lanczos,setsar=1,fps={FPS},tpad=stop_mode=clone:stop_duration=10,{grade(cfg)}\" "
             f"-af afade=t=in:d=0.015,afade=t=out:st={max(d - 0.025, 0):.3f}:d=0.025 "
             f"-c:v libx264 -preset fast -crf 15 -pix_fmt yuv420p -c:a pcm_s16le -ar 48000 -ac 2 -shortest {f}")
         dd = dur(f)
