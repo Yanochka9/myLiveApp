@@ -4,7 +4,7 @@
 music/client.wav и reel.py, который описывает куски речи, планы и графику.
 Сборка: python3 reel.py build && python3 reel.py finish  ->  out/final.mp4
 """
-import json, subprocess, os, glob
+import json, subprocess, os, glob, sys
 import numpy as np
 
 FPS = 30
@@ -61,19 +61,20 @@ def rect(x1, y1, x2, y2):
 PIN = ("m 0 -28 b 16 -28 26 -16 26 -2 b 26 14 0 40 0 40 b 0 40 -26 14 -26 -2 b -26 -16 -16 -28 0 -28 "
        "m 0 -12 b -7 -12 -11 -7 -11 -2 b -11 5 -7 9 0 9 b 7 9 11 5 11 -2 b 11 -7 7 -12 0 -12")
 
-STYLES = """Style: Cap,Montserrat ExtraBold,96,&H00FFFFFF,&H00FFFFFF,&H00000000,&H90000000,0,0,0,0,100,100,1,0,1,0,6,5,70,70,0,1
+STYLES = """Style: Cap,Montserrat ExtraBold,84,&H00FFFFFF,&H00FFFFFF,&H00141414,&H8C000000,0,0,0,0,100,100,1,0,1,3,6,5,180,180,0,1
 Style: Shape,Arial,20,&H00FFFFFF,&H00FFFFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,0,0,7,0,0,0,1
-Style: Small,Montserrat ExtraBold,50,&H00FFFFFF,&H00FFFFFF,&H00000000,&H80000000,0,0,0,0,100,100,4,0,1,0,3,5,0,0,0,1
-Style: Big,Oswald,120,&H00FFFFFF,&H00FFFFFF,&H00000000,&H80000000,0,0,0,0,100,100,3,0,1,0,4,5,0,0,0,1
-Style: Item,Montserrat ExtraBold,36,&H00FFFFFF,&H00FFFFFF,&H00000000,&H80000000,0,0,0,0,100,100,1,0,1,0,2,4,0,0,0,1
+Style: Small,Montserrat ExtraBold,40,&H00FFFFFF,&H00FFFFFF,&H00000000,&H80000000,0,0,0,0,100,100,4,0,1,0,3,5,0,0,0,1
+Style: Big,Oswald,104,&H00FFFFFF,&H00FFFFFF,&H00000000,&H80000000,0,0,0,0,100,100,3,0,1,0,4,5,0,0,0,1
+Style: Item,Montserrat ExtraBold,30,&H00FFFFFF,&H00FFFFFF,&H00000000,&H80000000,0,0,0,0,100,100,1,0,1,0,2,4,0,0,0,1
 Style: Huge,Oswald,300,&H00FFFFFF,&H00FFFFFF,&H00000000,&H70000000,0,0,0,0,100,100,0,0,1,0,6,5,0,0,0,1
 Style: Days,Montserrat ExtraBold,76,&H00FFFFFF,&H00FFFFFF,&H00000000,&H80000000,0,0,0,0,100,100,2,0,1,0,3,4,0,0,0,1
 Style: Num,Oswald,62,&H00FFFFFF,&H00FFFFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,0,0,5,0,0,0,1
 Style: Step,Montserrat ExtraBold,44,&H00FFFFFF,&H00FFFFFF,&H00000000,&H80000000,0,0,0,0,100,100,1,0,1,0,2,5,0,0,0,1
 Style: Chip,Oswald,92,&H00FFFFFF,&H00FFFFFF,&H00000000,&H80000000,0,0,0,0,100,100,2,0,1,0,3,5,0,0,0,1
-Style: Cta,Oswald,130,&H00FFFFFF,&H00FFFFFF,&H00000000,&H80000000,0,0,0,0,100,100,2,0,1,0,4,5,0,0,0,1
-Style: Addr,Montserrat ExtraBold,54,&H00FFFFFF,&H00FFFFFF,&H00000000,&H80000000,0,0,0,0,100,100,1,0,1,0,3,4,0,0,0,1
-Style: Tiny,Montserrat ExtraBold,38,&H00C8C8C8,&H00FFFFFF,&H00000000,&H80000000,0,0,0,0,100,100,3,0,1,0,2,5,0,0,0,1"""
+Style: Cta,Oswald,100,&H00FFFFFF,&H00FFFFFF,&H00000000,&H80000000,0,0,0,0,100,100,2,0,1,0,4,5,0,0,0,1
+Style: Addr,Montserrat ExtraBold,40,&H00FFFFFF,&H00FFFFFF,&H00000000,&H80000000,0,0,0,0,100,100,1,0,1,0,3,4,0,0,0,1
+Style: D3,Oswald,150,&H00FFFFFF,&H00FFFFFF,&H00000000,&H00000000,0,0,0,0,100,100,2,0,1,0,0,5,0,0,0,1
+Style: Tiny,Montserrat ExtraBold,28,&H00C8C8C8,&H00FFFFFF,&H00000000,&H80000000,0,0,0,0,100,100,3,0,1,0,2,5,0,0,0,1"""
 
 
 class Reel:
@@ -82,7 +83,11 @@ class Reel:
         os.makedirs(self.OUT, exist_ok=True)
         self.W = json.load(open(f"{P}/words.json"))
         self.FACES = json.load(open(f"{P}/faces.json"))
-        self.GRADE = open(f"{P}/grade.txt").read().strip().replace("$A", ASSETS)
+        g = open(f"{P}/grade.txt").read().strip().replace("$A", ASSETS).replace("ASSETS/", ASSETS + "/").split("\n")
+        self.AUTO = g[0].strip() == 'AUTO'
+        self.GRADE = g[0].strip() if not self.AUTO else None
+        self.GEXTRA = g[1].strip() if self.AUTO and len(g) > 1 else ''
+        self._norm = {}
         self.ZC = 1.42; self.TAIL = 0.2; self.END_DUR = 3.4
         self.hook_z = (1.36, 1.46)
         self.pieces = []; self.hook_clip = None; self.TAIL_AT = None
@@ -164,37 +169,67 @@ class Reel:
         sel = [t for t in tr if s is None or s - 0.5 <= t[0] <= e + 0.5] or tr
         return float(np.median([t[1] for t in sel])), float(np.median([t[2] for t in sel]))
 
+    def grade_for(self, src):
+        """AUTO: HDR→SDR + нормализация клипа под эталон (autograde) + фирменный стиль + правка; иначе grade.txt"""
+        P = "setparams=color_primaries=bt2020:color_trc=arib-std-b67:colorspace=bt2020nc:range=tv,"
+        if not self.AUTO:
+            return P + self.GRADE
+        if src not in self._norm:
+            sys.path.insert(0, os.path.dirname(HERE))
+            import autograde
+            nf, _ = autograde.norm_filter(src)
+            self._norm[src] = (P + autograde.HDR + "," + nf + "," + autograde.STYLE.replace("ASSETS/", ASSETS + "/")
+                               + ("," + self.GEXTRA if self.GEXTRA else ""))
+        return self._norm[src]
+
     def render(self, src, ss, nfr, vf, post=''):
         out = f"{self.OUT}/seg{len(self.segfiles):03d}.mp4"
         cmd = ['ffmpeg', '-v', 'error', '-y', '-ss', f"{ss:.3f}", '-i', src, '-an',
-               '-vf', f"{vf},scale=1080:1920:flags=lanczos,setsar=1,fps={FPS},setparams=color_primaries=bt2020:color_trc=arib-std-b67:colorspace=bt2020nc:range=tv,{self.GRADE}{post},format=yuv420p",
+               '-vf', f"{vf},scale=1080:1920:flags=lanczos,setsar=1,fps={FPS},{self.grade_for(src)}{post},format=yuv420p",
                '-frames:v', str(nfr), '-c:v', 'libx264', '-preset', 'medium', '-crf', '17', out]
         subprocess.run(cmd, check=True)
         self.segfiles.append(out)
 
-    def spk_crop(self, c, kind, s, e):
-        if kind == 'wide':
-            return "crop=iw:ih"
-        fx, fy = self.face(c, s, e); Z = self.ZC
-        return (f"crop=iw/{Z}:ih/{Z}:'max(0,min(iw-iw/{Z},iw*{fx:.3f}-iw/{Z}/2))':"
-                f"'max(0,min(ih-ih/{Z},ih*{fy:.3f}-ih/{Z}*0.30))'")
-
-    def zoom(self, c, fxy, nfr, off, tot):
-        fx, fy = fxy; z0, z1 = self.hook_z
-        z = f"({z0}+({z1}-{z0})*(1-cos(PI*(on+{off})/{max(1, tot-1)}))/2)"
-        return (f"zoompan=z='{z}':d=1:s=2160x3840:fps={FPS}:"
+    def zp(self, fx, fy, z):
+        return (f"zoompan=z='{z}':d=1:s=1080x1920:fps={FPS}:"
                 f"x='max(0,min(iw-iw/zoom,iw*{fx:.3f}-iw/zoom/2))':y='max(0,min(ih-ih/zoom,ih*{fy:.3f}-ih/zoom*0.30))'")
 
+    def zexpr(self, kind, off, tot):
+        """плавный наезд на весь план (непрерывно через склейки кусков речи)"""
+        n = f"(on+{off})"; T = max(1, tot - 1)
+        if kind == 'wide':
+            return f"1.0+0.06*{n}/{T}"
+        if kind == 'close':
+            return f"{self.ZC}+0.07*{n}/{T}"
+        if kind == 'intro':   # резкий наезд в начале ролика, потом медленный дрейф
+            N1 = 14
+            return f"if(lt({n},{N1}),1.0+0.32*sin(PI/2*{n}/{N1}),1.32+0.06*({n}-{N1})/{max(1, tot-N1)})"
+        raise ValueError(kind)
+
+    def zoom(self, c, fxy, nfr, off, tot):
+        fx, fy = fxy; hz = self.hook_z
+        n = f"(on+{off})"
+        if len(hz) == 3:      # начало со спикера: резкий наезд z0→zm, потом zm→z1
+            N1 = 14
+            z = f"if(lt({n},{N1}),{hz[0]}+({hz[1]}-{hz[0]})*sin(PI/2*{n}/{N1}),{hz[1]}+({hz[2]}-{hz[1]})*({n}-{N1})/{max(1, tot-N1)})"
+        else:
+            z0, z1 = hz
+            z = f"({z0}+({z1}-{z0})*(1-cos(PI*{n}/{max(1, tot-1)}))/2)"
+        return self.zp(fx, fy, z)
+
     def speaker(self, a, b, kind, post_first=''):
-        first = True
+        parts = []
         for pc, s, e, o in self.pieces:
             lo, hi = max(a, o), min(b, o + (e - s))
             nfr = round((hi - lo) * FPS)
-            if nfr <= 0:
-                continue
-            self.render(f"{self.SRC}/IMG_{pc}.MOV", s + (lo - o), nfr, self.spk_crop(pc, kind, s, e),
-                        post=post_first if first else '')
-            first = False
+            if nfr > 0:
+                parts.append((pc, s, e, o, lo, nfr))
+        tot = sum(p[5] for p in parts); off = 0
+        for k, (pc, s, e, o, lo, nfr) in enumerate(parts):
+            fx, fy = self.face(pc, s, e)
+            self.render(f"{self.SRC}/IMG_{pc}.MOV", s + (lo - o), nfr, self.zp(fx, fy, self.zexpr(kind, off, tot)),
+                        post=post_first if k == 0 else '')
+            off += nfr
 
     def build(self, SH, end_clip, end_ss=0.0):
         SH = [(snap(x[0]),) + tuple(x[1:]) for x in SH] + [(snap(self.VOICE_END), 'end')]
@@ -209,7 +244,7 @@ class Reel:
             if kind == 'end':
                 self.render(f"{self.SRC}/IMG_{end_clip}.MOV", end_ss, nfr,
                             f"crop=iw/1.08:ih/1.08,tpad=stop_mode=clone:stop_duration={self.END_DUR},"
-                            f"scale=2160:3840,zoompan=z='1+0.08*on/{nfr}':d=1:s=2160x3840:fps={FPS}:"
+                            f"zoompan=z='1+0.08*on/{nfr}':d=1:s=1080x1920:fps={FPS}:"
                             f"x='iw/2-iw/zoom/2':y='ih/2-ih/zoom/2'")
             elif kind in ('hook', 'tail'):
                 hp = [p for p in self.pieces if p[0] == self.hook_clip and p[3] < self.TAIL_AT]
@@ -217,7 +252,7 @@ class Reel:
                 if kind == 'hook':
                     hook_n['n'] = nfr; hook_n['tot'] = nfr + round(self.TAIL * FPS)
                     # hook pieces are contiguous enough: play from the source time under `a`
-                    pc, s, e, o = [p for p in hp if p[3] <= a + 1e-6][-1]
+                    pc, s, e, o = ([p for p in hp if p[3] <= a + 1e-6] or hp[:1])[-1]
                     self.render(f"{self.SRC}/IMG_{pc}.MOV", s + (a - o), nfr,
                                 self.zoom(pc, fxy, nfr, 0, hook_n['tot']))
                 else:
@@ -228,7 +263,9 @@ class Reel:
             elif kind == 'b':
                 _, _, c, ss, fb = sh
                 nb = min(nfr, int((self.dur(c) - ss - 0.05) * FPS))
-                self.render(f"{self.SRC}/IMG_{c}.MOV", ss, nb, "crop=iw/1.06:ih/1.06", post=flash_in)
+                z = (f"1.05+0.07*on/{max(1, nb-1)}" if i % 2 else f"1.12-0.07*on/{max(1, nb-1)}")
+                self.render(f"{self.SRC}/IMG_{c}.MOV", ss, nb,
+                            f"zoompan=z='{z}':d=1:s=1080x1920:fps={FPS}:x='iw/2-iw/zoom/2':y='ih/2-ih/zoom/2'", post=flash_in)
                 if nb < nfr:
                     self.speaker(a + nb / FPS, b, fb)
             else:
@@ -272,7 +309,8 @@ class Reel:
         k = n + (1 if mf else 0)
         mix = ['[voice]'] + (['[musd]'] if mf else [])
         for j, (nm, t, g) in enumerate(sfx):
-            ins += ['-i', f"{HERE}/sfx/{nm}.wav"]
+            fp = f"{HERE}/sfx/{nm}.wav"
+            ins += ['-i', fp if os.path.exists(fp) else f"{ASSETS}/sfx/{nm}.mp3"]
             extra = ''
             if nm == 'riser_hook' and self.FLASH:
                 extra = f"afade=t=out:st={self.FLASH - t - 0.02:.3f}:d=0.06,"
@@ -325,7 +363,7 @@ class Reel:
                 en = self.FLASH - 0.05
             txt = ' '.join((f"{{\\c{GOLD}}}{w[1]}{{\\c&HFFFFFF&}}" if w[2] else w[1]) for w in g)
             n = sum(len(w[1]) for w in g) + len(g) - 1
-            k = min(100, int(100 * 13 / max(1, n)))  # длинные слова ужимаем, чтобы влезли в ширину
+            k = min(100, int(100 * 12 / max(1, n)))  # длинные слова ужимаем, чтобы влезли в ширину
             self.D(5, st, en, 'Cap', f"{{\\pos(540,{y_of(st)})\\fad(40,0)\\fscx{k*88//100}\\fscy{k*88//100}"
                                      f"\\t(0,110,\\fscx{k}\\fscy{k})}}{txt}")
 
@@ -333,29 +371,29 @@ class Reel:
 
     def plate(self, a, b, small, big, y1=1140, y2=1370):
         an = self.POP + f"\\org(540,{(y1+y2)//2})"
-        self.S(1, a, b, f"\\1c&H101010&\\1a&H50&\\3c{GOLD}\\bord4{an}", box(150, y1, 930, y2))
-        self.D(2, a, b, 'Small', f"{{\\pos(540,{y1+62}){an}}}{small}")
-        self.D(2, a, b, 'Big', f"{{\\pos(540,{y1+155})\\c{GOLD}{an}}}{big}")
+        self.S(1, a, b, f"\\1c&H101010&\\1a&H50&\\3c{GOLD}\\bord3{an}", box(180, y1, 900, y2))
+        self.D(2, a, b, 'Small', f"{{\\pos(540,{y1+58}){an}}}{small}")
+        self.D(2, a, b, 'Big', f"{{\\pos(540,{y1+150})\\c{GOLD}{an}}}{big}")
 
     def checklist(self, a, b, items, title='ЧТО ВХОДИТ В КОМПЛЕКС', top=1080, row=62, per_col=5):
         rows = (len(items) + 1) // 2 if len(items) > per_col else len(items)
         rows = max(rows, min(per_col, len(items)))
-        self.S(1, a, b, f"\\1c{DARK}\\1a&H48&\\3c{GOLD}\\bord3\\fad(250,250)", box(70, top, 1010, top + 82 + row * rows))
+        self.S(1, a, b, f"\\1c{DARK}\\1a&H48&\\3c{GOLD}\\bord3\\fad(250,250)", box(180, top, 900, top + 82 + row * rows))
         self.D(2, a, b, 'Small', f"{{\\pos(540,{top+44})\\c{GOLD}\\fad(250,250)}}{title}")
         for k, (name, t0) in enumerate(items):
             col, r = k // rows, k % rows
-            x = 120 + col * 470; y = top + 82 + row * r + row / 2 - 4
-            self.S(2, t0, b, f"\\1c{GOLD}\\fad(150,250)", circle(x, y, 20))
-            self.S(3, t0, b, "\\1c&H101010&\\fad(150,250)", check(x - 13, y - 12, 0.74))
-            self.D(2, t0, b, 'Item', f"{{\\an4\\pos({x+36},{y})\\fad(150,250)}}{name}")
+            x = 220 + col * 345; y = top + 82 + row * r + row / 2 - 4
+            self.S(2, t0, b, f"\\1c{GOLD}\\fad(150,250)", circle(x, y, 17))
+            self.S(3, t0, b, "\\1c&H101010&\\fad(150,250)", check(x - 11, y - 10, 0.62))
+            self.D(2, t0, b, 'Item', f"{{\\an4\\pos({x+28},{y})\\fad(150,250)}}{name}")
 
     def endcard(self):
         a = self.VOICE_END; b = self.TOTAL
         self.S(3, a + 0.15, b, f"\\1a&HFF&\\3c{GOLD}\\bord5\\fad(400,0)", circle(540, 700, 268))
         self.D(4, a + 0.45, b, 'Cta', f"{{\\pos(540,1110)\\c{GOLD}\\fad(250,0)\\fscx90\\fscy90\\t(0,200,\\fscx100\\fscy100)}}ПИШИТЕ В DIRECT")
         self.D(4, a + 0.65, b, 'Small', f"{{\\pos(540,1200)\\fad(250,0)}}РАССЧИТАЕМ СТОИМОСТЬ")
-        self.D(4, a + 0.85, b, 'Shape', f"{{\\an7\\pos(205,1330)\\1c{GOLD}\\bord0\\shad0\\fad(250,0)}}{{\\p1}}{PIN}{{\\p0}}")
-        self.D(4, a + 0.85, b, 'Addr', f"{{\\an4\\pos(250,1335)\\fad(250,0)}}ПР-Т ДЗЕРЖИНСКОГО, 82А")
+        self.D(4, a + 0.85, b, 'Shape', f"{{\\an7\\pos(232,1330)\\1c{GOLD}\\bord0\\shad0\\fad(250,0)}}{{\\p1}}{PIN}{{\\p0}}")
+        self.D(4, a + 0.85, b, 'Addr', f"{{\\an4\\pos(275,1335)\\fad(250,0)}}ПР-Т ДЗЕРЖИНСКОГО, 82А")
         self.D(4, a + 0.95, b, 'Tiny', f"{{\\pos(540,1405)\\fad(250,0)}}МИНСК · 9:00–21:00 · БЕЗ ВЫХОДНЫХ")
 
     def write_ass(self):
