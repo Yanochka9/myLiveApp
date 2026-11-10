@@ -160,6 +160,19 @@ D.question = (e, t) => {  // subscriber question bubble (hook)
   g.restore();
 };
 
+// meme caption: big outlined text with a punch and a little shake
+D.meme = (e, t) => {
+  if (!inWin(t, e.t0, e.t1)) return;
+  const k = easeBack((t - e.t0) / 0.22), sh = t - e.t0 < 0.5 ? Math.sin(t * 90) * 7 * (1 - (t - e.t0) / 0.5) : 0;
+  g.save(); g.globalAlpha = clamp((e.t1 - t) / 0.08);
+  g.translate(W / 2 + sh, e.y || 330); g.rotate(-0.05); g.scale(k, k);
+  g.shadowColor = 'rgba(0,0,0,0.6)'; g.shadowBlur = 30;
+  text(e.text, 0, 0, e.size || 132, '#fff', 'UB', 'center', 22);
+  g.shadowBlur = 0;
+  if (e.sub) text(e.sub, 0, (e.size || 132) * 0.85, 54, '#FFD23A', 'UB', 'center', 12);
+  g.restore();
+};
+
 // ---------------- schemes ----------------
 function schemeBg(t, e, title) {
   const bg = g.createRadialGradient(W / 2, 700, 100, W / 2, 900, 1300);
@@ -343,7 +356,7 @@ function drawEnd(t) {
   }
 }
 
-const ORDER = ['garage', 'gears', 'leak', 'ellipse', 'brackets', 'counter', 'interval', 'checklist', 'question', 'header', 'label', 'address'];
+const ORDER = ['garage', 'gears', 'leak', 'ellipse', 'brackets', 'counter', 'interval', 'checklist', 'question', 'header', 'label', 'address', 'meme'];
 function drawFrame(t) {
   g.clearRect(0, 0, W, H);
   for (const ty of ORDER) for (const e of T.ev) if (e.type === ty) D[ty](e, t);

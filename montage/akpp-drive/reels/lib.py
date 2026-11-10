@@ -85,6 +85,16 @@ def cut_phrase(name, a, b, thr=-44, keep=()):
     return [(fr(x), fr(y)) for x, y in res if y - x > 0.06]
 
 
+def make_gap(name, dur):
+    w = f'{SP}/wav/IMG_{name}.wav'
+    if not os.path.exists(w):
+        subprocess.run(['ffmpeg', '-loglevel', 'error', '-y', '-f', 'lavfi', '-i', 'anullsrc=r=16000:cl=mono',
+                        '-t', f'{dur + 1:.2f}', w], check=True)
+    tx = f'{SP}/tx/IMG_{name}.json'
+    if not os.path.exists(tx):
+        json.dump([], open(tx, 'w'))
+
+
 # ---------------------------------------------------------------- reel timeline
 class Reel:
     def __init__(self, C):
@@ -99,6 +109,10 @@ class Reel:
         for i, p in enumerate(C.PHRASES):
             name, a, b = p[:3]
             opt = p[3] if len(p) > 3 else {}
+            if name.startswith('gap'):      # silent insert (meme etc.), covered by b-roll
+                make_gap(name, b)
+                self.segs.append((name, 0.0, fr(b), i))
+                continue
             for x, y in cut_phrase(name, a, b, opt.get('thr', -44), opt.get('keep', ())):
                 self.segs.append((name, x, y, i))
         self.outs, t = [], 0.0
@@ -205,7 +219,7 @@ class Reel:
                 if pi < 0:
                     shots.append(dict(o0=o, o1=fr(o + b - a), kind='hook', src=path(f), cin=a, opt=C.HOOK))
         for (f, a, b, pi), o in zip(self.segs, self.outs):
-            if pi < 0:
+            if pi < 0 or f.startswith('gap'):
                 continue
             o1 = fr(o + b - a)
             pieces = [(o, o1)]
@@ -484,10 +498,12 @@ def render_gfx(R, frames=()):
 # ---------------------------------------------------------------- audio
 SFXD = os.path.join(ASSETS, 'sfx')
 PEAK = {'riser': 4.0, 'click1': .11, 'click2': .13, 'click3': .10, 'click4': .16, 'click5': .13,
-        'scheme-glitch': .04, 'scheme-static': .38, 'chirp': 0.0, 'chirp2': 0.0}
+        'scheme-glitch': .04, 'boom': .25, 'scheme-static': .38, 'chirp': 0.0, 'chirp2': 0.0}
 
 
 def sfx_path(sid):
+    if sid == 'boom':
+        return f'{SP}/web/boom.wav'
     if sid.startswith('chirp'):
         return f'{SP}/web/bird/{"23" if sid == "chirp" else "21"}.mp3'
     ext = 'mp3' if sid.startswith('scheme') else 'flac'
