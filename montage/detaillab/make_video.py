@@ -33,12 +33,16 @@ CLIENT_GRADE = open(f"{A}/grade_client.txt").read().replace("ASSETS/", f"{A}/").
 
 def use_client(cfg):
     """Цвет клиента (утверждён 03.11.2026, снят с её правки в CapCut) — по умолчанию,
-    если в конфиге не задан свой `lut` (старые ролики) или `"grade": "legacy"`."""
+    если в конфиге не задан свой `lut` (старые ролики) или `"grade": "legacy"` / `"grade": "<файл в assets>"`."""
     return not cfg.get("lut") and cfg.get("grade", "client") == "client"
 
 
 def grade(cfg):
-    """Цвет клиента (assets/grade_client.txt) или LUT (`lut` в конфиге) с силой lut_mix."""
+    """Цвет клиента (assets/grade_client.txt), свой фильтр из файла (`"grade": "grade_xxx.txt"`)
+    или LUT (`lut` в конфиге) с силой lut_mix."""
+    g = cfg.get("grade", "client")
+    if g.endswith(".txt"):
+        return open(f"{A}/{g}").read().strip().replace("ASSETS/", f"{A}/") + ",unsharp=5:5:0.4"
     if use_client(cfg):
         return f"{CLIENT_GRADE[1].strip()},unsharp=5:5:0.4"
     mix = cfg.get("lut_mix", 1.0)
@@ -90,7 +94,7 @@ def pre_filter(cfg, src):
     """HDR→SDR (iPhone HLG) + подравнивание под эталон (autograde) — для исходника и каждого подсъёма."""
     hlg = "arib-std-b67" in subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries",
                                             "stream=color_transfer", "-of", "csv=p=0", src], capture_output=True, text=True).stdout
-    pre = f"{CLIENT_GRADE[0].strip()}," if (use_client(cfg) and hlg) else ""   # iPhone HDR → SDR до цвета
+    pre = f"{CLIENT_GRADE[0].strip()}," if hlg else ""   # iPhone HDR → SDR до цвета (для любого цвета)
     if use_client(cfg) and cfg.get("autograde", True):
         # подравнять свет/баланс/насыщенность исходника под эталон, чтобы стиль клиента лёг одинаково
         sys.path.insert(0, HERE)            # запуск с -I не добавляет папку скрипта
@@ -115,6 +119,11 @@ def prep_broll(cfg):
         if not os.path.exists(f"{d}/{name}.mov"):
             run(f"ffmpeg -v error -y -i '{src}' -map 0:v:0 -vf {pre_filter(cfg, src)}scale={W}:{H}:flags=lanczos,fps={FPS} "
                 f"-c:v libx264 -preset veryfast -crf 14 -pix_fmt yuv420p -an {d}/{name}.mov")
+            if name in cfg.get("broll_plates", {}):  # замазать гос-номер на подсъёме
+                sys.path.insert(0, HERE)
+                import plate_blur
+                os.replace(f"{d}/{name}.mov", f"{d}/{name}_orig.mov")
+                plate_blur.blur(f"{d}/{name}_orig.mov", f"{HERE}/{cfg['broll_plates'][name]}", f"{d}/{name}.mov")
     names = sorted(br)
     for i in range(0, len(names), 12):
         grp = names[i:i + 12]
@@ -133,6 +142,11 @@ def prep(cfg):
     pre = pre_filter(cfg, src)
     run(f"ffmpeg -v error -y -i '{src}' -map 0:v:0 -map 0:a:0 -vf {pre}scale={W}:{H}:flags=lanczos,fps={FPS} "
         f"-c:v libx264 -preset veryfast -crf 14 -pix_fmt yuv420p -c:a pcm_s16le {w}/proxy.mov")
+    if cfg.get("plate_boxes"):  # замазать гос-номер (боксы по кадрам proxy, см. plate_blur.py)
+        sys.path.insert(0, HERE)
+        import plate_blur
+        os.replace(f"{w}/proxy.mov", f"{w}/proxy_orig.mov")
+        plate_blur.blur(f"{w}/proxy_orig.mov", f"{HERE}/{cfg['plate_boxes']}", f"{w}/proxy.mov")
     run(f"ffmpeg -v error -y -i {w}/proxy.mov -vn -ac 1 -ar 16000 {w}/audio.wav")
     from faster_whisper import WhisperModel
     wf = wave.open(f"{w}/audio.wav")
@@ -155,7 +169,17 @@ def prep(cfg):
 
 # ---------------- build ----------------
 def words_all(cfg):
-    return [x for s in json.load(open(f"{cfg['work']}/words.json")) for x in s["words"]]
+    ws = [x for s in json.load(open(f"{cfg['work']}/words.json")) for x in s["words"]]
+    fa = cfg.get("fix_at", {})  # {"20.18": "что"} — правка одного слова по времени начала
+    out = []
+    for x in ws:
+        x = dict(x)
+        if f"{x['s']:.2f}" in fa:
+            x["w"] = " " + fa[f"{x['s']:.2f}"]
+        if out and x["w"].strip().startswith("-") and len(x["w"].strip()) > 1:  # «где» + «-то» → «где-то»
+            out[-1]["w"] += x["w"].strip(); out[-1]["e"] = x["e"]; continue
+        out.append(x)
+    return out
 
 
 def split_pauses(a, b, allw):
