@@ -15,3 +15,9 @@ dev-dist
 # Ключи сервисных аккаунтов — никогда не коммитить
 *firebase-adminsdk*.json
 service-account*.json
+
+# Шаблон монтажа: исходники, кэш 3D и готовые ролики не храним в git
+video-kit/work/
+video-kit/out/
+video-kit/cache3d/
+__pycache__/

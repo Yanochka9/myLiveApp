@@ -3,6 +3,13 @@
 - Все изменения коммитить и пушить сразу в `main` (`git push origin HEAD:main`).
 - Хостинг — Netlify (`netlify.toml`), данные — Firebase Firestore.
 - Оформление: светлые розовые тона, Apple-стиль, блёстки и блики; без резких анимаций.
-- Монтаж видео: следовать разбору в `montage/STYLE.md`. Ролики АКПП Драйв — строго по `montage/akpp-drive/BRIEF.md` (ассеты в `montage/akpp-drive/assets/`, эталонные скрипты в `montage/akpp-drive/variator/`).
-- Сторис Белавтоцентра («мини-обзор авто», «машина дня», исходники машин для Белавто) — строго по шаблону `.claude/skills/belavto-story/SKILL.md` (скрипты `prep.py`/`render.py` там же). Прочитай его перед монтажом. Шаблон лежит в скрытой папке `.claude`, обычный поиск его может не найти.
-- Ролики DetailLab (детейлинг, «смонтируй по шаблону DetailLab / как Leopard») — строго по `.claude/skills/detaillab-video/SKILL.md` (код и ассеты в `montage/detaillab/`, эталон `montage/detaillab/examples/leopard.json`). Рилс из нескольких дублей + подсъёмов — по `montage/detaillab/reels/README.md`.
+- Монтаж видео: общие правила — `montage/STYLE.md`. Шаблоны монтажа — скиллы в скрытой папке `.claude/skills/` (обычный поиск может их не найти). Определи тип ролика, прочитай SKILL.md и монтируй строго по нему:
+
+| Команда | Что монтируем | Фразы пользователя |
+|---|---|---|
+| `/belavto-reels` (раньше `/montazh`) | Рилсы Белавто с ведущей, 3D и текстом за ведущей. Эталон `video-kit/projects/top3.json`; Trailblazer, Палисад, Мерседес (`wed.json`) | «рилс Белавто», «как Топ-3», «как трейлблейзер», «как Палисад», «по шаблону video-kit» |
+| `/belavto-obzor` (раньше belavto-story) | Сторис Белавто «обзор авто» / «машина дня» + статичная сторис (`static.py`), если в задаче планера есть «Статичная сторис» | «машина дня», «мини-обзор авто», исходники машин для Белавто |
+| `/belavto-golova` (раньше belavto-talking) | Сторис Белавто «говорящая голова»: видео + статичная картинка, цвет `capcut_a`, свой трек на каждую | «Белавто истории говорящие», «говорящая голова» |
+| `/detaillab-stories` (раньше detaillab-video) | Сторис / ТикТок DetailLab из одного длинного видео, эталон `montage/detaillab/examples/leopard.json` | «сторис DetailLab», «как Leopard» |
+| `/detaillab-reels` | Рилс DetailLab из нескольких дублей + подсъёмов (`montage/detaillab/reels/README.md`) | «рилс DetailLab», «рилс как Leopard» |
+| `/akpp-reels` | Ролики АКПП Драйв строго по `montage/akpp-drive/BRIEF.md` (эталон `variator/`, ассеты `assets/`) | «АКПП Драйв», «как вариатор» |

@@ -1,0 +1,107 @@
+{
+  "name": "trailblazer",
+  "language": "ru",
+  "sources": {
+    "drive_folder": "https://drive.google.com/drive/folders/160OLv6UTTWdlHMyYtViljdtcL_rmjwpb",
+    "dir": "work/trailblazer/src"
+  },
+  "output": "out/trailblazer.mp4",
+
+  "theme": {
+    "accent": "#E20E2A",
+    "accent_light": "#FF3448",
+    "dark": "#280608",
+    "light": "#FFFFFF",
+    "link": "#FF4658",
+    "flash": "#FF4050",
+    "glow": 10,
+    "vignette": 0.22,
+    "3d": { "front": "#ED2030", "side": "#700012", "metallic": 0.35, "roughness": 0.16, "white": "#F9F7F7", "dark": "#300006" }
+  },
+
+  "grade": { "gamma": 1.08, "contrast": 1.05, "saturation": 1.06, "warmth": 0.015, "cool_shadows": 0.02 },
+
+  "subtitles": {
+    "enabled": true, "size": 64, "y": 1330, "color": "#FFFFFF",
+    "highlight": "accent", "highlight_text": "#FFFFFF", "mode": "karaoke",
+    "max_words": 3, "max_chars": 17, "uppercase": false,
+    "replace": { "Рыбалка": "Рыбалко", "1200": "1 200" },
+    "merge": [["не", "крашеный"]]
+  },
+
+  "music": { "file": "work/trailblazer/music.m4a", "search": "Million Dolla Hip Hop Brentin Davis", "start": 41.98, "volume": 0.14, "end_volume": 0.42 },
+  "voice": { "target_lufs": -17.5 },
+
+  "aroll": [
+    { "clip": "IMG_0417.MOV", "in": 1.75, "out": 7.95, "zoom": [1.0, 1.06] },
+    { "clip": "IMG_0422.MOV", "in": 1.22, "out": 7.72, "zoom": [1.02, 1.07], "tin": "zoom" },
+    { "clip": "IMG_0423.MOV", "in": 0.50, "out": 7.62, "zoom": [1.0, 1.10], "tin": "flash" },
+    { "clip": "IMG_0427.MOV", "in": 0.18, "out": 7.12, "zoom": [1.0, 1.06], "tin": "flash" },
+    { "clip": "IMG_0429.MOV", "in": 0.25, "out": 10.55, "zoom": [1.0, 1.08] }
+  ],
+
+  "cutaways": [
+    { "clip": "IMG_0430.MOV", "src": 0.00, "at": 3.95, "until": 5.15, "zoom": [1.16, 1.04], "tin": "zoom" },
+    { "clip": "IMG_0432.MOV", "src": 0.30, "at": 5.15, "until": 6.20, "zoom": [1.04, 1.14], "drift": [-30, 30] },
+    { "clip": "IMG_0437.MOV", "src": 0.20, "at": 7.30, "until": 8.70, "zoom": [1.12, 1.02] },
+    { "clip": "IMG_0438.MOV", "src": 0.20, "at": 8.70, "until": 10.60, "zoom": [1.02, 1.12], "drift": [20, -20], "tout": "zoom" },
+    { "clip": "IMG_0436.MOV", "src": 0.00, "at": 15.45, "until": 17.45, "zoom": [1.04, 1.14], "drift": [-25, 25] },
+    { "clip": "IMG_0433.MOV", "src": 0.00, "at": 17.45, "until": 18.60, "zoom": [1.14, 1.04] },
+    { "clip": "IMG_0442.MOV", "src": 0.20, "at": 21.80, "until": 23.90, "zoom": [1.04, 1.13], "tin": "zoom" },
+    { "clip": "IMG_0445.MOV", "src": 0.00, "at": 23.90, "until": 25.40, "zoom": [1.12, 1.03] },
+    { "clip": "IMG_0448.MOV", "src": 0.00, "at": 25.40, "until": 26.76, "zoom": [1.03, 1.11] },
+    { "clip": "IMG_0440.MOV", "src": 0.00, "at": 26.76, "until": 28.30, "zoom": [1.04, 1.12], "tin": "flash" },
+    { "clip": "IMG_0443.MOV", "src": 0.50, "at": 28.30, "until": 29.55, "zoom": [1.12, 1.04], "tout": "zoom" }
+  ],
+
+  "endcard": { "clip": "IMG_0430.MOV", "src": 0.0, "duration": 2.54, "speed": 0.55, "zoom": [1.06, 1.14], "blur": 14, "tint": "accent", "darken": 0.38, "tin": "flash" },
+
+  "punch": [ { "at": "w:года", "amount": 0.05 }, { "at": "w:1200", "amount": 0.06 } ],
+
+  "mask_cleanup": { "IMG_0417.MOV": [[880, 0, 1080, 905]] },
+
+  "elements": [
+    { "type": "3d", "kind": "rise", "text": "TRAILBLAZER", "layer": "behind", "at": 0.60, "until": 3.95, "x": 540, "y": 850, "scale": 0.85 },
+    { "type": "label", "text": "CHEVROLET", "size": 46, "font": "xbold", "at": "w:chevrolet-0.05", "until": 3.95, "x": 540, "y": 650 },
+    { "type": "pill", "text": "2022", "size": 46, "style": "accent", "at": "w:22", "until": 3.95, "x": 540, "y": 1005 },
+
+    { "type": "3d", "kind": "rise", "text": "ФИШКИ", "layer": "behind", "canvas": [1080, 640], "frac": 0.86, "fade_bottom": 0.3,
+      "at": 6.20, "until": 7.30, "x": 540, "y": 905, "scale": 0.95 },
+    { "type": "3d", "kind": "badge", "text": "RS", "at": 7.30, "until": 8.70, "x": 540, "y": 520 },
+    { "type": "pill", "text": "КОМПЛЕКТАЦИЯ RS", "size": 46, "style": "light", "at": 7.40, "until": 8.70, "x": 540, "y": 1085 },
+    { "type": "callout", "text": "ЧЁРНАЯ КРЫША", "size": 48, "at": 8.85, "until": 10.60, "x": 540, "y": 640, "point": [600, 1060] },
+    { "type": "pill", "text": "ЧЁРНАЯ КРЫША", "size": 40, "style": "dark", "at": 10.70, "until": 12.70, "x": 300, "y": 600 },
+    { "type": "pill", "text": "СЕРЫЙ КУЗОВ", "size": 40, "style": "light", "at": "w:серым", "until": 12.70, "x": 300, "y": 690 },
+
+    { "type": "callout", "text": "ТЁМНАЯ РЕШЁТКА", "size": 44, "at": "w:решетка-0.1", "until": 15.45, "x": 360, "y": 640, "point": [230, 1120] },
+    { "type": "callout", "text": "НЕКРАШЕНЫЙ ПЛАСТИК", "size": 44, "at": 15.60, "until": 17.45, "x": 540, "y": 600, "point": [470, 990] },
+    { "type": "pill", "text": "БОРДЮРЫ НЕ СТРАШНЫ", "size": 44, "style": "light", "icon": "check", "at": 17.60, "until": 18.60, "x": 540, "y": 640 },
+
+    { "type": "pill", "text": "ВСЁ САМОЕ НУЖНОЕ", "size": 44, "style": "light", "at": 20.10, "until": 21.80, "x": 540, "y": 560 },
+    { "type": "pill", "text": "МУЛЬТИРУЛЬ", "size": 42, "style": "accent", "at": "w:мультируль", "until": 23.90, "x": 330, "y": 470 },
+    { "type": "pill", "text": "КРУИЗ-КОНТРОЛЬ", "size": 42, "style": "light", "icon": "check", "at": "w:круиз", "until": 23.90, "x": 380, "y": 560 },
+    { "type": "pill", "text": "ПОДОГРЕВ РУЛЯ", "size": 42, "style": "light", "icon": "check", "at": "w:подогревом", "until": 23.90, "x": 360, "y": 650 },
+    { "type": "pill", "text": "ПОДОГРЕВ СИДЕНИЙ", "size": 44, "style": "accent", "icon": "check", "at": "w:подогрев#2", "until": 26.76, "x": 540, "y": 520 },
+    { "type": "pill", "text": "ЭЛЕКТРОРЕГУЛИРОВКА", "size": 44, "style": "light", "icon": "check", "at": "w:электрорегулировка", "until": 26.76, "x": 540, "y": 610 },
+
+    { "type": "pill", "text": "НА ГАРАНТИИ", "size": 48, "style": "accent", "icon": "check", "at": "w:гарантии-0.1", "until": 29.55, "x": 540, "y": 560 },
+    { "type": "pill", "text": "БЕЗ ПРОБЕГА ПО РБ", "size": 48, "style": "light", "icon": "check", "at": "w:пробега-0.1", "until": 29.55, "x": 540, "y": 655 },
+    { "type": "pill", "text": "ЦЕНА", "size": 38, "style": "dark", "at": 29.70, "until": 31.00, "x": 540, "y": 430 },
+    { "type": "3d", "kind": "slab", "text": "68 000 BYN", "at": 29.55, "until": 31.05, "x": 540, "y": 610, "scale": 0.95 },
+    { "type": "3d", "kind": "rise", "text": "1 200", "layer": "behind", "extrude": 0.22, "stagger": 3, "canvas": [1080, 820], "frac": 0.9,
+      "fade_bottom": 0.3, "at": 31.00, "until": 33.30, "x": 540, "y": 770, "scale": 0.76 },
+    { "type": "pill", "text": "В КРЕДИТ ОТ", "size": 40, "style": "dark", "at": 31.05, "until": 33.30, "x": 540, "y": 590 },
+    { "type": "pill", "text": "BYN / мес", "size": 44, "style": "accent", "at": 31.45, "until": 33.30, "x": 250, "y": 935 },
+    { "type": "3d", "kind": "pin", "at": 33.25, "until": 36.05, "x": 200, "y": 610, "scale": 0.62 },
+    { "type": "pill", "text": "Минск, ул. Рыбалко, 13А", "size": 44, "style": "light", "at": 33.45, "until": 36.05, "x": 610, "y": 650 },
+    { "type": "pill", "text": "ПРИЕЗЖАЙ НА ТЕСТ-ДРАЙВ", "size": 50, "style": "accent", "at": "w:приезжай-0.05", "until": "speech_end", "x": 540, "y": 640 },
+
+    { "type": "logo", "file": "assets/belavto_logo.png", "at": 37.12, "until": "end", "x": 540, "y": 380, "scale": 0.82 },
+    { "type": "label", "text": "CHEVROLET  ·  2022  ·  RS", "size": 34, "font": "semibold", "at": 37.30, "until": "end", "x": 540, "y": 600 },
+    { "type": "3d", "kind": "spin", "text": "TRAILBLAZER", "at": "speech_end", "until": "end", "x": 540, "y": 760 },
+    { "type": "pill", "text": "от 1 200 BYN/мес", "size": 50, "style": "accent", "at": 37.55, "until": "end", "x": 540, "y": 975 },
+    { "type": "pill", "text": "без пробега по РБ  ·  гарантия", "size": 34, "style": "dark", "font": "bold", "at": 37.75, "until": "end", "x": 540, "y": 1075 },
+    { "type": "label", "text": "Минск, ул. Рыбалко, 13А", "size": 40, "at": 37.95, "until": "end", "x": 540, "y": 1175 },
+    { "type": "label", "text": "belautocenter.by", "size": 50, "font": "black", "color": "link", "at": 38.10, "until": "end", "x": 540, "y": 1250 }
+  ]
+}

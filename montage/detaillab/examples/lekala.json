@@ -1,0 +1,34 @@
+{
+ "name": "Lekala",
+ "source_drive_id": "1H4dcPseUjPo8aGsKyCMczbE8Zlme3DGe",
+ "minimal": true,
+ "music_drive_id": "1qbZIIjZFgVdDkU7WbI64Y0ZTHzE32ibK",
+ "music_start": 8,
+ "music_vol": 0.0,
+ "lut": "r5_light.cube",
+ "lut_mix": 1.0,
+ "sub_words": 1,
+ "hook_text": ["Детейлеры, хватит кроить плёнку", "на столе — есть решение"],
+ "end_text": ["Осталось 2 штуки", "Пиши «+» в Директ"],
+ "fix_words": {
+  "детейлер": "детейлеры",
+  "караите": "кроите",
+  "караиня": "кроя",
+  "куча": "кучу",
+  "палочко": "палочка",
+  "такую": "такой",
+  "добыт": "того чтобы",
+  "краить": "кроить",
+  "пленку": "плёнку",
+  "пленок": "плёнок"
+ },
+ "plates": {},
+ "edl": [
+  [0.0, 15.64, null, 1.0, 1, null],
+  [15.68, 30.3, null, 1.0, 2, null],
+  [31.24, 37.58, null, 1.0, 2, null],
+  [37.96, 60.36, null, 1.0, 3, null]
+ ],
+ "hook_text_dur": 5.0,
+ "end_text_dur": 3.5
+}

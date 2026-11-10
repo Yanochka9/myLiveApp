@@ -1,0 +1,1039 @@
+{
+ "name": "zima3",
+ "language": "ru",
+ "sources": {
+  "drive_folder": "https://drive.google.com/drive/folders/1jrD-GOcwiELqMhSlkWbGIUw8UQvCledG",
+  "dir": "work/zima3/src"
+ },
+ "output": "out/zima3.mp4",
+ "theme": {
+  "accent": "#5DB8F2",
+  "accent_light": "#BDE6FF",
+  "dark": "#0A1828",
+  "light": "#FFFFFF",
+  "on_accent": "#0A1828",
+  "on_light": "#0A1828",
+  "link": "#9AD8FF",
+  "flash": "#DDF2FF",
+  "paper": "#F4FAFF",
+  "glow": 6,
+  "vignette": 0.24,
+  "3d": {
+   "front": "#D6EEFF",
+   "side": "#2B5C8E",
+   "metallic": 0.75,
+   "roughness": 0.16,
+   "white": "#FFFFFF",
+   "dark": "#0A1828"
+  },
+  "fonts": {
+   "black": "assets/fonts/Manrope-ExtraBold.ttf",
+   "xbold": "assets/fonts/Manrope-ExtraBold.ttf",
+   "bold": "assets/fonts/Manrope-Bold.ttf",
+   "semibold": "assets/fonts/Manrope-SemiBold.ttf",
+   "black_italic": "assets/fonts/Manrope-ExtraBold.ttf"
+  }
+ },
+ "grade": {
+  "lut": "assets/luts/refive_light.cube",
+  "lut_mix": 0.55,
+  "gamma": 0.98,
+  "contrast": 1.1,
+  "saturation": 1.0,
+  "warmth": -0.025,
+  "cool_shadows": 0.06
+ },
+ "subtitles": {
+  "enabled": true,
+  "size": 64,
+  "y": 1330,
+  "color": "#FFFFFF",
+  "highlight": "accent",
+  "highlight_text": "#0A1828",
+  "mode": "karaoke",
+  "max_words": 3,
+  "max_chars": 17,
+  "uppercase": false,
+  "replace": {
+   "1100": "1 100",
+   "1700": "1 700",
+   "вMotion": "4MOTION.",
+   "X-Drive": "xDrive"
+  },
+  "merge": [
+   [
+    "1",
+    "5"
+   ],
+   [
+    "5",
+    "8"
+   ],
+   [
+    "в",
+    "motion"
+   ]
+  ]
+ },
+ "music": {
+  "file": "work/zima3/music.m4a",
+  "start": 41.0,
+  "volume": 0.14,
+  "end_volume": 0.42
+ },
+ "voice": {
+  "target_lufs": -17.5
+ },
+ "aroll": [
+  {
+   "clip": "IMG_3572.MOV",
+   "in": 0.0,
+   "out": 4.75,
+   "zoom": [
+    1.0,
+    1.06
+   ]
+  },
+  {
+   "clip": "IMG_3574.MOV",
+   "in": 0.0,
+   "out": 9.05,
+   "zoom": [
+    1.0,
+    1.08
+   ]
+  },
+  {
+   "clip": "IMG_3581.MOV",
+   "in": 0.0,
+   "out": 10.95,
+   "zoom": [
+    1.0,
+    1.08
+   ]
+  },
+  {
+   "clip": "IMG_3588.MOV",
+   "in": 0.0,
+   "out": 12.45,
+   "zoom": [
+    1.02,
+    1.08
+   ]
+  },
+  {
+   "clip": "IMG_3596.MOV",
+   "in": 0.0,
+   "out": 3.0,
+   "zoom": [
+    1.0,
+    1.06
+   ]
+  }
+ ],
+ "cutaways": [
+  {
+   "clip": "IMG_3578.MOV",
+   "src": 0.0,
+   "at": 6.65,
+   "until": 8.35,
+   "zoom": [
+    1.14,
+    1.04
+   ],
+   "tin": "zoom"
+  },
+  {
+   "clip": "IMG_3580.MOV",
+   "src": 0.5,
+   "at": 8.35,
+   "until": 9.5,
+   "zoom": [
+    1.04,
+    1.12
+   ],
+   "drift": [
+    -20,
+    20
+   ]
+  },
+  {
+   "clip": "IMG_3575.MOV",
+   "src": 0.2,
+   "at": 9.5,
+   "until": 10.95,
+   "zoom": [
+    1.12,
+    1.03
+   ],
+   "tout": "zoom"
+  },
+  {
+   "clip": "IMG_3582.MOV",
+   "src": 0.0,
+   "at": 17.45,
+   "until": 19.05,
+   "zoom": [
+    1.14,
+    1.04
+   ],
+   "tin": "zoom"
+  },
+  {
+   "clip": "IMG_3583.MOV",
+   "src": 0.1,
+   "at": 19.05,
+   "until": 20.2,
+   "zoom": [
+    1.04,
+    1.12
+   ],
+   "drift": [
+    -20,
+    20
+   ]
+  },
+  {
+   "clip": "IMG_3586.MOV",
+   "src": 0.0,
+   "at": 20.2,
+   "until": 21.24,
+   "zoom": [
+    1.12,
+    1.03
+   ],
+   "tout": "zoom"
+  },
+  {
+   "clip": "IMG_3590.MOV",
+   "src": 0.0,
+   "at": 27.95,
+   "until": 29.95,
+   "zoom": [
+    1.14,
+    1.04
+   ],
+   "tin": "zoom"
+  },
+  {
+   "clip": "IMG_3589.MOV",
+   "src": 0.0,
+   "at": 29.95,
+   "until": 31.85,
+   "zoom": [
+    1.04,
+    1.12
+   ],
+   "drift": [
+    -20,
+    20
+   ]
+  },
+  {
+   "clip": "IMG_3595.MOV",
+   "src": 0.0,
+   "at": 31.85,
+   "until": 32.95,
+   "zoom": [
+    1.12,
+    1.04
+   ]
+  },
+  {
+   "clip": "IMG_3591.MOV",
+   "src": 0.15,
+   "at": 32.95,
+   "until": 34.65,
+   "zoom": [
+    1.04,
+    1.12
+   ],
+   "tout": "zoom"
+  }
+ ],
+ "endcard": {
+  "clip": "IMG_3589.MOV",
+  "src": 0.0,
+  "duration": 2.6,
+  "speed": 0.55,
+  "zoom": [
+   1.06,
+   1.14
+  ],
+  "blur": 14,
+  "tint": "accent",
+  "darken": 0.4,
+  "tin": "flash"
+ },
+ "punch": [
+  {
+   "at": "w:500",
+   "amount": 0.06
+  },
+  {
+   "at": "w:1100",
+   "amount": 0.06
+  },
+  {
+   "at": "w:1700",
+   "amount": 0.06
+  }
+ ],
+ "mask_cleanup": {},
+ "elements": [
+  {
+   "type": "3d",
+   "kind": "rise",
+   "text": "ТОП-3",
+   "layer": "behind",
+   "at": 0.2,
+   "until": 4.24,
+   "x": 540,
+   "y": 680,
+   "scale": 0.78
+  },
+  {
+   "type": "pill",
+   "text": "ПОЛНЫЙ ПРИВОД",
+   "size": 54,
+   "style": "accent",
+   "at": "w:полным-0.05",
+   "until": 4.24,
+   "x": 540,
+   "y": 330
+  },
+  {
+   "type": "pill",
+   "text": "3 РАЗНЫХ БЮДЖЕТА",
+   "size": 44,
+   "style": "dark",
+   "at": "w:разных-0.05",
+   "until": 4.24,
+   "x": 540,
+   "y": 440
+  },
+  {
+   "type": "wipe",
+   "at": 4.24,
+   "until": 5.14,
+   "text": "3 МЕСТО",
+   "size": 150
+  },
+  {
+   "type": "rank",
+   "n": 3,
+   "size": 120,
+   "at": "w:место-0.3",
+   "until": 6.65,
+   "x": 540,
+   "y": 330
+  },
+  {
+   "type": "3d",
+   "kind": "rise",
+   "text": "NISSAN",
+   "layer": "behind",
+   "at": "w:nissan-0.05",
+   "until": 6.65,
+   "x": 540,
+   "y": 565,
+   "scale": 0.85,
+   "canvas": [
+    1080,
+    400
+   ],
+   "frac": 0.46,
+   "fade_bottom": 0.0
+  },
+  {
+   "type": "3d",
+   "kind": "rise",
+   "text": "QASHQAI",
+   "layer": "behind",
+   "at": "w:nissan-0.05",
+   "until": 6.65,
+   "x": 540,
+   "y": 720,
+   "scale": 0.78,
+   "frac": 0.74,
+   "canvas": [
+    1080,
+    640
+   ]
+  },
+  {
+   "type": "pill",
+   "text": "2.0 БЕНЗИН",
+   "size": 64,
+   "style": "accent",
+   "at": 6.65,
+   "until": 7.6,
+   "x": 540,
+   "y": 330
+  },
+  {
+   "type": "counter",
+   "to": 141,
+   "suffix": " Л.С.",
+   "style": "gold",
+   "size": 150,
+   "dur": 0.8,
+   "at": "w:141-0.05",
+   "until": 8.35,
+   "x": 540,
+   "y": 470
+  },
+  {
+   "type": "pill",
+   "text": "ПОЛНЫЙ ПРИВОД",
+   "size": 60,
+   "style": "light",
+   "at": "w:полный-0.05",
+   "until": 9.5,
+   "x": 540,
+   "y": 330
+  },
+  {
+   "type": "gold",
+   "text": "САМЫЙ ДОСТУПНЫЙ",
+   "size": 86,
+   "at": "w:самый-0.05",
+   "until": 10.95,
+   "x": 540,
+   "y": 340
+  },
+  {
+   "type": "pill",
+   "text": "НЕ ЗАСТРЯТЬ ВО ДВОРЕ",
+   "size": 50,
+   "style": "accent",
+   "at": "w:застрять-0.05",
+   "until": "w:500-0.1",
+   "x": 540,
+   "y": 330
+  },
+  {
+   "type": "3d",
+   "kind": "rise",
+   "text": "500",
+   "layer": "behind",
+   "extrude": 0.22,
+   "stagger": 3,
+   "canvas": [
+    1080,
+    820
+   ],
+   "frac": 0.9,
+   "fade_bottom": 0.3,
+   "at": "w:500-0.05",
+   "until": 13.29,
+   "x": 540,
+   "y": 770,
+   "scale": 0.76
+  },
+  {
+   "type": "pill",
+   "text": "В КРЕДИТ",
+   "size": 40,
+   "style": "dark",
+   "at": "w:500-0.05",
+   "until": 13.29,
+   "x": 300,
+   "y": 470
+  },
+  {
+   "type": "pill",
+   "text": "ПОЛНЫЙ ПРИВОД",
+   "size": 40,
+   "style": "accent",
+   "at": "w:500+0.10",
+   "until": 13.29,
+   "x": 700,
+   "y": 470
+  },
+  {
+   "type": "pill",
+   "text": "BYN / мес",
+   "size": 48,
+   "style": "accent",
+   "at": "w:500+0.35",
+   "until": 13.29,
+   "x": 760,
+   "y": 900
+  },
+  {
+   "type": "wipe",
+   "at": 13.29,
+   "until": 14.19,
+   "text": "2 МЕСТО",
+   "size": 150
+  },
+  {
+   "type": "rank",
+   "n": 2,
+   "size": 120,
+   "at": "w:место#2-0.3",
+   "until": 17.45,
+   "x": 540,
+   "y": 330
+  },
+  {
+   "type": "3d",
+   "kind": "rise",
+   "text": "VOLKSWAGEN",
+   "layer": "behind",
+   "at": "w:volkswagen-0.05",
+   "until": 17.45,
+   "x": 540,
+   "y": 565,
+   "scale": 0.85,
+   "canvas": [
+    1080,
+    400
+   ],
+   "frac": 0.66,
+   "fade_bottom": 0.0
+  },
+  {
+   "type": "3d",
+   "kind": "rise",
+   "text": "TAOS",
+   "layer": "behind",
+   "at": "w:volkswagen-0.05",
+   "until": 17.45,
+   "x": 540,
+   "y": 720,
+   "scale": 0.78,
+   "frac": 0.52,
+   "canvas": [
+    1080,
+    640
+   ]
+  },
+  {
+   "type": "pill",
+   "text": "1.5 БЕНЗИН",
+   "size": 64,
+   "style": "accent",
+   "at": "w:бензиновым-0.05",
+   "until": 19.05,
+   "x": 540,
+   "y": 330
+  },
+  {
+   "type": "counter",
+   "to": 176,
+   "suffix": " Л.С.",
+   "style": "gold",
+   "size": 150,
+   "dur": 0.8,
+   "at": "w:176-0.05",
+   "until": 20.2,
+   "x": 540,
+   "y": 470
+  },
+  {
+   "type": "pill",
+   "text": "ПОЛНЫЙ ПРИВОД",
+   "size": 56,
+   "style": "light",
+   "at": "w:полный#2-0.05",
+   "until": 21.24,
+   "x": 540,
+   "y": 300
+  },
+  {
+   "type": "3d",
+   "kind": "badge",
+   "text": "4MOTION",
+   "at": "w:полный#2",
+   "until": 21.24,
+   "x": 540,
+   "y": 520,
+   "scale": 0.62
+  },
+  {
+   "type": "3d",
+   "kind": "rise",
+   "text": "1 100",
+   "layer": "behind",
+   "extrude": 0.22,
+   "stagger": 3,
+   "canvas": [
+    1080,
+    820
+   ],
+   "frac": 0.9,
+   "fade_bottom": 0.3,
+   "at": "w:1100-0.05",
+   "until": 24.24,
+   "x": 540,
+   "y": 770,
+   "scale": 0.76
+  },
+  {
+   "type": "pill",
+   "text": "В КРЕДИТ",
+   "size": 40,
+   "style": "dark",
+   "at": "w:1100-0.05",
+   "until": 24.24,
+   "x": 300,
+   "y": 470
+  },
+  {
+   "type": "pill",
+   "text": "ПОЛНЫЙ ПРИВОД",
+   "size": 40,
+   "style": "accent",
+   "at": "w:1100+0.10",
+   "until": 24.24,
+   "x": 700,
+   "y": 470
+  },
+  {
+   "type": "pill",
+   "text": "BYN / мес",
+   "size": 48,
+   "style": "accent",
+   "at": "w:1100+0.35",
+   "until": 24.24,
+   "x": 760,
+   "y": 900
+  },
+  {
+   "type": "wipe",
+   "at": 24.24,
+   "until": 25.14,
+   "text": "1 МЕСТО",
+   "size": 150
+  },
+  {
+   "type": "rank",
+   "n": 1,
+   "size": 120,
+   "at": "w:первое-0.05",
+   "until": 27.95,
+   "x": 540,
+   "y": 330
+  },
+  {
+   "type": "3d",
+   "kind": "rise",
+   "text": "BMW",
+   "layer": "behind",
+   "at": "w:bmw-0.05",
+   "until": 27.95,
+   "x": 540,
+   "y": 565,
+   "scale": 0.85,
+   "canvas": [
+    1080,
+    400
+   ],
+   "frac": 0.3,
+   "fade_bottom": 0.0
+  },
+  {
+   "type": "3d",
+   "kind": "rise",
+   "text": "330i",
+   "layer": "behind",
+   "at": "w:bmw-0.05",
+   "until": 27.95,
+   "x": 540,
+   "y": 720,
+   "scale": 0.78,
+   "frac": 0.5,
+   "canvas": [
+    1080,
+    640
+   ]
+  },
+  {
+   "type": "pill",
+   "text": "2.0 БЕНЗИН",
+   "size": 64,
+   "style": "accent",
+   "at": 27.95,
+   "until": "w:258-0.05",
+   "x": 540,
+   "y": 330
+  },
+  {
+   "type": "counter",
+   "to": 258,
+   "suffix": " Л.С.",
+   "style": "gold",
+   "size": 150,
+   "dur": 0.9,
+   "at": "w:258-0.05",
+   "until": 29.95,
+   "x": 540,
+   "y": 400
+  },
+  {
+   "type": "gold",
+   "text": "5,8 С",
+   "size": 170,
+   "at": 29.95,
+   "until": 31.85,
+   "x": 540,
+   "y": 380
+  },
+  {
+   "type": "pill",
+   "text": "0–100 КМ/Ч",
+   "size": 48,
+   "style": "dark",
+   "at": 30.05,
+   "until": 31.85,
+   "x": 540,
+   "y": 520
+  },
+  {
+   "type": "3d",
+   "kind": "badge",
+   "text": "xDRIVE",
+   "at": "w:x-0.05",
+   "until": 32.95,
+   "x": 540,
+   "y": 430,
+   "scale": 0.62
+  },
+  {
+   "type": "pill",
+   "text": "ПОДОГРЕВ РУЛЯ",
+   "size": 54,
+   "style": "accent",
+   "at": "w:подогрев-0.05",
+   "until": 34.65,
+   "x": 540,
+   "y": 300
+  },
+  {
+   "type": "pill",
+   "text": "АВТОЗАПУСК",
+   "size": 54,
+   "style": "light",
+   "at": "w:автозапуск-0.05",
+   "until": 34.65,
+   "x": 540,
+   "y": 410
+  },
+  {
+   "type": "3d",
+   "kind": "rise",
+   "text": "1 700",
+   "layer": "behind",
+   "extrude": 0.22,
+   "stagger": 3,
+   "canvas": [
+    1080,
+    820
+   ],
+   "frac": 0.9,
+   "fade_bottom": 0.3,
+   "at": "w:1700-0.05",
+   "until": 37.2,
+   "x": 540,
+   "y": 770,
+   "scale": 0.76
+  },
+  {
+   "type": "pill",
+   "text": "В КРЕДИТ",
+   "size": 40,
+   "style": "dark",
+   "at": "w:1700-0.05",
+   "until": 37.2,
+   "x": 300,
+   "y": 470
+  },
+  {
+   "type": "pill",
+   "text": "ПОЛНЫЙ ПРИВОД",
+   "size": 40,
+   "style": "accent",
+   "at": "w:1700+0.10",
+   "until": 37.2,
+   "x": 700,
+   "y": 470
+  },
+  {
+   "type": "pill",
+   "text": "BYN / мес",
+   "size": 48,
+   "style": "accent",
+   "at": "w:1700+0.35",
+   "until": 37.2,
+   "x": 760,
+   "y": 900
+  },
+  {
+   "type": "pill",
+   "text": "КАКУЮ ВЫБЕРЕТЕ?",
+   "size": 58,
+   "style": "accent",
+   "at": "w:какую-0.05",
+   "until": "speech_end",
+   "x": 540,
+   "y": 330
+  },
+  {
+   "type": "pill",
+   "text": "ПИШИТЕ В КОММЕНТАРИЯХ  3 · 2 · 1",
+   "size": 38,
+   "style": "dark",
+   "at": "w:выберете",
+   "until": "speech_end",
+   "x": 540,
+   "y": 440
+  },
+  {
+   "type": "logo",
+   "file": "assets/belavto_logo.png",
+   "at": 40.45,
+   "until": "end",
+   "x": 540,
+   "y": 380,
+   "scale": 0.82
+  },
+  {
+   "type": "gold",
+   "text": "NISSAN  ·  VOLKSWAGEN  ·  BMW",
+   "size": 46,
+   "at": 40.6,
+   "until": "end",
+   "x": 540,
+   "y": 600
+  },
+  {
+   "type": "3d",
+   "kind": "spin",
+   "text": "ТОП-3",
+   "at": "speech_end",
+   "until": "end",
+   "x": 540,
+   "y": 760,
+   "scale": 0.8
+  },
+  {
+   "type": "pill",
+   "text": "от 500 BYN/мес",
+   "size": 50,
+   "style": "accent",
+   "at": 40.8,
+   "until": "end",
+   "x": 540,
+   "y": 975
+  },
+  {
+   "type": "pill",
+   "text": "полный привод  ·  в кредит",
+   "size": 34,
+   "style": "dark",
+   "at": 41.0,
+   "until": "end",
+   "x": 540,
+   "y": 1075,
+   "font": "bold"
+  },
+  {
+   "type": "label",
+   "text": "Минск, ул. Рыбалко, 13А",
+   "size": 40,
+   "at": 41.2,
+   "until": "end",
+   "x": 540,
+   "y": 1175
+  },
+  {
+   "type": "label",
+   "text": "belautocenter.by",
+   "size": 50,
+   "font": "black",
+   "color": "link",
+   "at": 41.35,
+   "until": "end",
+   "x": 540,
+   "y": 1250
+  }
+ ],
+ "sfx": [
+  {
+   "file": "assets/sfx/swish_soft.wav",
+   "at": 4.75,
+   "peak": 0.2,
+   "gain": 0.05
+  },
+  {
+   "file": "assets/sfx/swish_soft.wav",
+   "at": 13.8,
+   "peak": 0.2,
+   "gain": 0.05
+  },
+  {
+   "file": "assets/sfx/swish_soft.wav",
+   "at": 24.75,
+   "peak": 0.2,
+   "gain": 0.05
+  },
+  {
+   "file": "assets/sfx/swish_soft.wav",
+   "at": "speech_end",
+   "peak": 0.2,
+   "gain": 0.05
+  },
+  {
+   "file": "assets/sfx/belavto_click5.wav",
+   "at": "w:141+-0.016",
+   "gain": 0.043
+  },
+  {
+   "file": "assets/sfx/belavto_click5.wav",
+   "at": "w:141+0.021",
+   "gain": 0.042
+  },
+  {
+   "file": "assets/sfx/belavto_click5.wav",
+   "at": "w:141+0.060",
+   "gain": 0.04
+  },
+  {
+   "file": "assets/sfx/belavto_click5.wav",
+   "at": "w:141+0.102",
+   "gain": 0.039
+  },
+  {
+   "file": "assets/sfx/belavto_click5.wav",
+   "at": "w:141+0.147",
+   "gain": 0.038
+  },
+  {
+   "file": "assets/sfx/belavto_click5.wav",
+   "at": "w:141+0.198",
+   "gain": 0.036
+  },
+  {
+   "file": "assets/sfx/belavto_click5.wav",
+   "at": "w:141+0.254",
+   "gain": 0.035
+  },
+  {
+   "file": "assets/sfx/belavto_click5.wav",
+   "at": "w:141+0.318",
+   "gain": 0.034
+  },
+  {
+   "file": "assets/sfx/belavto_click5.wav",
+   "at": "w:141+0.394",
+   "gain": 0.033
+  },
+  {
+   "file": "assets/sfx/belavto_click5.wav",
+   "at": "w:141+0.490",
+   "gain": 0.031
+  },
+  {
+   "file": "assets/sfx/belavto_click5.wav",
+   "at": "w:176+-0.016",
+   "gain": 0.043
+  },
+  {
+   "file": "assets/sfx/belavto_click5.wav",
+   "at": "w:176+0.021",
+   "gain": 0.042
+  },
+  {
+   "file": "assets/sfx/belavto_click5.wav",
+   "at": "w:176+0.060",
+   "gain": 0.04
+  },
+  {
+   "file": "assets/sfx/belavto_click5.wav",
+   "at": "w:176+0.102",
+   "gain": 0.039
+  },
+  {
+   "file": "assets/sfx/belavto_click5.wav",
+   "at": "w:176+0.147",
+   "gain": 0.038
+  },
+  {
+   "file": "assets/sfx/belavto_click5.wav",
+   "at": "w:176+0.198",
+   "gain": 0.036
+  },
+  {
+   "file": "assets/sfx/belavto_click5.wav",
+   "at": "w:176+0.254",
+   "gain": 0.035
+  },
+  {
+   "file": "assets/sfx/belavto_click5.wav",
+   "at": "w:176+0.318",
+   "gain": 0.034
+  },
+  {
+   "file": "assets/sfx/belavto_click5.wav",
+   "at": "w:176+0.394",
+   "gain": 0.033
+  },
+  {
+   "file": "assets/sfx/belavto_click5.wav",
+   "at": "w:176+0.490",
+   "gain": 0.031
+  },
+  {
+   "file": "assets/sfx/belavto_click5.wav",
+   "at": "w:258+-0.016",
+   "gain": 0.043
+  },
+  {
+   "file": "assets/sfx/belavto_click5.wav",
+   "at": "w:258+0.021",
+   "gain": 0.042
+  },
+  {
+   "file": "assets/sfx/belavto_click5.wav",
+   "at": "w:258+0.060",
+   "gain": 0.04
+  },
+  {
+   "file": "assets/sfx/belavto_click5.wav",
+   "at": "w:258+0.102",
+   "gain": 0.039
+  },
+  {
+   "file": "assets/sfx/belavto_click5.wav",
+   "at": "w:258+0.147",
+   "gain": 0.038
+  },
+  {
+   "file": "assets/sfx/belavto_click5.wav",
+   "at": "w:258+0.198",
+   "gain": 0.036
+  },
+  {
+   "file": "assets/sfx/belavto_click5.wav",
+   "at": "w:258+0.254",
+   "gain": 0.035
+  },
+  {
+   "file": "assets/sfx/belavto_click5.wav",
+   "at": "w:258+0.318",
+   "gain": 0.034
+  },
+  {
+   "file": "assets/sfx/belavto_click5.wav",
+   "at": "w:258+0.394",
+   "gain": 0.033
+  },
+  {
+   "file": "assets/sfx/belavto_click5.wav",
+   "at": "w:258+0.490",
+   "gain": 0.031
+  }
+ ]
+}

@@ -1,0 +1,9 @@
+{
+ "bg": "WORKDIR/clip_3.mov",
+ "bg_time": 1.0,
+ "badge": null,
+ "title": "Продавали машину\nсами?",
+ "sub": "Как прошло — *честно*",
+ "sticker": "poll",
+ "out": "WORKDIR/Belavto_prodat_avto_static.png"
+}

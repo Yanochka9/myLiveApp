@@ -1,0 +1,1 @@
+curves=all='0/0 0.5/0.44 1/0.93',lut3d=ASSETS/look.cube,eq=contrast=1.06:saturation=1.04,curves=all='0/0.045 0.12/0.175 0.3/0.325 0.6/0.6 1/0.99',colortemperature=temperature=6900,colorbalance=gs=0.02:gm=0.025:gh=0.01

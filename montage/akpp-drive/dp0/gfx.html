@@ -1,0 +1,420 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+@font-face{font-family:UB;src:url(file:///root/.fonts/Unbounded-Black.ttf);font-weight:900}
+@font-face{font-family:UE;src:url(file:///root/.fonts/Unbounded-ExtraBold.ttf);font-weight:800}
+html,body{margin:0;background:transparent}
+</style></head>
+<body><canvas id="c" width="1080" height="1920"></canvas>
+<script>
+const W = 1080, H = 1920;
+const c = document.getElementById('c'), g = c.getContext('2d');
+const RED = '#F0292F', DRED = '#B3141C';
+const logo = new Image(); logo.src = '../assets/logo.png';
+let T = null; // timeline, injected
+
+const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
+const easeOut = x => 1 - Math.pow(1 - clamp(x), 3);
+const easeBack = x => { x = clamp(x); const s = 1.7; return 1 + (s + 1) * Math.pow(x - 1, 3) + s * Math.pow(x - 1, 2); };
+const inWin = (t, a, b) => t >= a && t < b;
+// fade envelope: in over fi, out over fo
+const env = (t, a, b, fi = 0.2, fo = 0.2) => clamp((t - a) / fi) * clamp((b - t) / fo);
+
+function rrect(x, y, w, h, r) {
+  g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r);
+  g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath();
+}
+function text(s, x, y, size, color, font = 'UB', align = 'center', stroke = 0) {
+  g.font = `${font === 'UB' ? 900 : 800} ${size}px ${font}`; g.textAlign = align; g.textBaseline = 'middle';
+  if (stroke) { g.lineJoin = 'round'; g.lineWidth = stroke; g.strokeStyle = 'rgba(0,0,0,0.85)'; g.strokeText(s, x, y); }
+  g.fillStyle = color; g.fillText(s, x, y);
+}
+function pop(s, x, y, size, color, t0, t, font = 'UB', stroke = 0) {
+  const k = easeBack((t - t0) / 0.25); if (t < t0) return;
+  g.save(); g.translate(x, y); g.scale(k, k); g.globalAlpha *= clamp((t - t0) / 0.08);
+  text(s, 0, 0, size, color, font, 'center', stroke); g.restore();
+}
+function labelBox(s, x, y, t0, t, size = 46) {
+  if (t < t0) return;
+  const k = easeBack((t - t0) / 0.28);
+  g.save(); g.translate(x, y); g.scale(k, k);
+  g.font = `900 ${size}px UB`; let w = g.measureText(s).width + 56; const fit = Math.min(1, 740 / w); g.scale(fit, fit); const h = size + 38;
+  g.shadowColor = 'rgba(0,0,0,0.5)'; g.shadowBlur = 24; g.fillStyle = RED; rrect(-w / 2, -h / 2, w, h, 18); g.fill();
+  g.shadowBlur = 0; text(s, 0, 2, size, '#fff'); g.restore();
+}
+
+// SAFE ZONE (TikTok + Reels): every label, card and animation stays centred inside
+// x 150..930 (780 px, equal side margins), y 280..1420. Only full-screen backgrounds and the flash go edge to edge.
+const SAFE = { l: 150, r: 930, t: 280, b: 1420 };
+// ---------- light-leak flash ----------
+function drawFlash(t) {
+  if (window.QA) return;
+  for (const tc of T.flashes) {
+    const d = (t - tc) / 0.24; if (Math.abs(d) >= 1) continue;
+    const a = 1 - Math.abs(d);
+    g.save();
+    const gr = g.createLinearGradient(0, H, W, 0);
+    gr.addColorStop(0, 'rgba(255,58,26,1)'); gr.addColorStop(0.55, 'rgba(255,140,40,1)'); gr.addColorStop(1, 'rgba(255,214,70,1)');
+    g.globalAlpha = Math.min(1, a * 1.1) * 0.85; g.fillStyle = gr; g.fillRect(0, 0, W, H);
+    g.globalAlpha = clamp((a - 0.45) * 2.2); g.fillStyle = '#fff8ee'; g.fillRect(0, 0, W, H);
+    g.restore();
+  }
+}
+
+// ---------- question: subscriber's message card, read along word by word ----------
+// Like a screenshot of the client's message (clean frosted card, system font), but alive:
+// it rises in like a notification, words turn from grey to black as the master reads them,
+// key facts get a red marker, and the card flies off on the flash into the answer.
+let CARD = null, CARD_SC = 1, CARD_Y = 0; // layout cache
+function layoutCard() {
+  const x = 50, w = 980, pad = 38, size = 32, lh = 44, maxW = w - pad * 2;   // v3 layout, scaled by CARD_SC
+  g.font = `500 ${size}px Inter`;
+  const sp = g.measureText(' ').width;
+  let cx = 0, line = 0; const items = [];
+  for (const [t, wd, key] of T.card.words) {
+    const ww = g.measureText(wd).width;
+    if (cx > 0 && cx + ww > maxW) { cx = 0; line++; }
+    items.push({ t, wd, key, x: cx, line, w: ww }); cx += ww + sp;
+  }
+  const lines = line + 1, head = 82, foot = 30;
+  const h = head + lines * lh + foot;
+  const y = 1680 - h;
+  CARD = { x, y, w, h, pad, size, lh, head, items };
+  CARD_SC = (SAFE.r - SAFE.l - 40) / w;             // whole card shrunk uniformly
+  CARD_Y = SAFE.b - 20 - h * CARD_SC;               // as low as the safe zone allows
+}
+function drawCard(t) {
+  const { a, b } = T.card; if (t < a || t >= b + 0.35) return;
+  if (!CARD) layoutCard();
+  const { x, y, w, h, pad, size, lh, head, items } = CARD;
+  const kin = easeOut((t - a) / 0.5);
+  const kout = easeOut((t - b + 0.05) / 0.3);         // flies up and fades on the flash
+  g.save();
+  g.globalAlpha = clamp((t - a) / 0.25) * (1 - kout);
+  g.translate(0, (1 - kin) * 100 - kout * 200);
+  g.translate(W / 2, CARD_Y); g.scale(CARD_SC, CARD_SC); g.translate(-W / 2, -y);
+  const sc = 0.94 + 0.06 * kin; g.translate(W / 2, y + h / 2); g.scale(sc, sc); g.translate(-W / 2, -(y + h / 2));
+  // frosted card
+  g.shadowColor = 'rgba(0,0,0,0.28)'; g.shadowBlur = 22; g.shadowOffsetY = 6;
+  g.fillStyle = 'rgba(246,246,248,0.94)'; rrect(x, y, w, h, 36); g.fill();
+  g.shadowBlur = 0; g.shadowOffsetY = 0;
+  g.strokeStyle = 'rgba(255,255,255,0.9)'; g.lineWidth = 2; rrect(x + 1, y + 1, w - 2, h - 2, 35); g.stroke();
+  // header: avatar + name
+  const av = g.createLinearGradient(x + pad, y + 18, x + pad + 46, y + 64); av.addColorStop(0, '#c9ccd3'); av.addColorStop(1, '#9ea3ad');
+  g.fillStyle = av; g.beginPath(); g.arc(x + pad + 23, y + 44, 23, 0, 7); g.fill();
+  g.fillStyle = '#fff'; g.beginPath(); g.arc(x + pad + 23, y + 37, 8, 0, 7); g.fill();
+  g.beginPath(); g.ellipse(x + pad + 23, y + 58, 14, 9, 0, Math.PI, 0); g.fill();
+  g.font = '600 28px Inter'; g.textAlign = 'left'; g.textBaseline = 'middle'; g.fillStyle = '#1c1c1e';
+  g.fillText('Вопрос подписчика', x + pad + 60, y + 45);
+  // body: read-along
+  g.font = `500 ${size}px Inter`;
+  for (const it of items) {
+    const px = x + pad + it.x, py = y + head + it.line * lh + lh / 2;
+    const r = clamp((t - it.t + 0.04) / 0.16);
+    if (it.key && r > 0) {             // red marker sweeps under key words
+      const mk = easeOut((t - it.t) / 0.25);
+      g.fillStyle = 'rgba(240,41,47,0.18)'; rrect(px - 5, py - 21, (it.w + 10) * mk, 42, 8); g.fill();
+    }
+    const grey = 168 - 140 * r;
+    g.fillStyle = it.key && r > 0 ? `rgb(${Math.round(150 + 90 * r)},${Math.round(grey * (1 - r) + 30 * r)},${Math.round(grey * (1 - r) + 36 * r)})`
+                                  : `rgb(${grey},${grey},${grey + 4})`;
+    g.fillText(it.wd, px, py + 2);
+  }
+  g.restore();
+}
+
+// ---------- hydraulic block (pseudo-3D), reused by the leak scheme and the clogged block ----------
+const CH = [
+  [[180, 520], [420, 520], [420, 640], [900, 640]],
+  [[180, 760], [560, 760], [560, 880], [900, 880]],
+  [[300, 520], [300, 940]],
+  [[700, 640], [700, 880]],
+];
+function polyline(pts) { g.beginPath(); g.moveTo(...pts[0]); for (const p of pts.slice(1)) g.lineTo(...p); }
+function ptOn(pts, u) { // point at fraction u along a polyline
+  let L = 0; const seg = []; for (let i = 1; i < pts.length; i++) { const d = Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]); seg.push(d); L += d; }
+  let s = u * L; for (let i = 1; i < pts.length; i++) { if (s <= seg[i - 1]) { const f = s / seg[i - 1]; return [pts[i - 1][0] + (pts[i][0] - pts[i - 1][0]) * f, pts[i - 1][1] + (pts[i][1] - pts[i - 1][1]) * f]; } s -= seg[i - 1]; }
+  return pts[pts.length - 1];
+}
+const rnd = n => { const x = Math.sin(n * 12.9898) * 43758.5453; return x - Math.floor(x); };
+function block(t, lt, leak, clog) {
+  const bx = 120, by = 420, bw = 840, bh = 600, dep = 30;
+  g.fillStyle = '#3a3f47'; g.beginPath(); g.moveTo(bx + bw, by + 20); g.lineTo(bx + bw + dep, by + 20 + dep); g.lineTo(bx + bw + dep, by + bh + dep); g.lineTo(bx + 20 + dep, by + bh + dep); g.lineTo(bx + 20, by + bh); g.lineTo(bx + bw, by + bh); g.closePath(); g.fill();
+  g.shadowColor = 'rgba(0,0,0,0.7)'; g.shadowBlur = 50;
+  const mg = g.createLinearGradient(bx, by, bx + bw, by + bh); mg.addColorStop(0, '#e9ecf0'); mg.addColorStop(0.45, '#a4abb4'); mg.addColorStop(1, '#5d646d');
+  g.fillStyle = mg; rrect(bx, by, bw, bh, 22); g.fill(); g.shadowBlur = 0;
+  g.strokeStyle = 'rgba(255,255,255,0.6)'; g.lineWidth = 3; g.beginPath(); g.moveTo(bx + 22, by + 2); g.lineTo(bx + bw - 22, by + 2); g.stroke();
+  for (const [hx, hy] of [[160, 460], [920, 460], [160, 980], [920, 980], [540, 980]]) {
+    const hg = g.createRadialGradient(hx - 4, hy - 4, 2, hx, hy, 18); hg.addColorStop(0, '#20232a'); hg.addColorStop(1, '#6b727c');
+    g.fillStyle = hg; g.beginPath(); g.arc(hx, hy, 16, 0, 7); g.fill();
+  }
+  const flow = (1 - 0.8 * leak) * (1 - 0.9 * clog);
+  for (const ch of CH) { polyline(ch); g.lineCap = 'round'; g.lineJoin = 'round'; g.lineWidth = 40; g.strokeStyle = '#2b2f36'; g.stroke(); }
+  for (const ch of CH) {
+    polyline(ch); g.lineWidth = 22; g.strokeStyle = `rgba(255,${150 - 60 * leak - 60 * clog},40,${0.95 - 0.35 * leak - 0.3 * clog})`; g.stroke();
+    polyline(ch); g.setLineDash([22, 26]); g.lineDashOffset = -lt * 260 * flow; g.lineWidth = 10; g.strokeStyle = `rgba(255,236,170,${0.9 - 0.6 * clog})`; g.stroke(); g.setLineDash([]);
+  }
+  if (clog > 0) { // wear particles pile up in the channels
+    CH.forEach((ch, ci) => { for (let i = 0; i < 26; i++) {
+      const u = rnd(ci * 50 + i); if (rnd(ci * 50 + i + 7) > clog) continue;
+      const [px, py] = ptOn(ch, u), jx = (rnd(i + 3) - 0.5) * 16, jy = (rnd(i + 9) - 0.5) * 16;
+      g.fillStyle = `rgba(${30 + rnd(i) * 40},${28 + rnd(i) * 30},${26},0.95)`; g.beginPath(); g.arc(px + jx, py + jy, 5 + rnd(i + 1) * 7, 0, 7); g.fill();
+      g.fillStyle = 'rgba(200,200,200,0.35)'; g.beginPath(); g.arc(px + jx - 2, py + jy - 2, 2, 0, 7); g.fill();
+    } });
+  }
+  [[230, 640], [640, 520], [820, 760]].forEach(([vx, vy], i) => {
+    const off = Math.sin(lt * 3 + i) * 10 * (1 - leak) * (1 - clog) + (clog > 0.5 ? Math.sin(t * 60 + i) * 2 : 0);
+    const vg = g.createLinearGradient(0, vy - 26, 0, vy + 26); vg.addColorStop(0, '#f4f6f8'); vg.addColorStop(0.5, '#9aa1aa'); vg.addColorStop(1, '#474d55');
+    g.fillStyle = '#1d2026'; rrect(vx - 90, vy - 34, 180, 68, 30); g.fill();
+    g.fillStyle = vg; rrect(vx - 70 + off, vy - 24, 140, 48, 22); g.fill();
+    g.fillStyle = 'rgba(40,44,50,0.6)'; g.fillRect(vx - 20 + off, vy - 24, 10, 48); g.fillRect(vx + 22 + off, vy - 24, 10, 48);
+    if (clog > 0.6) { g.strokeStyle = `rgba(240,41,47,${(clog - 0.6) * 2.5 * (0.6 + 0.4 * Math.sin(t * 20))})`; g.lineWidth = 6; rrect(vx - 96, vy - 40, 192, 80, 34); g.stroke(); }
+  });
+  const lx = 700, ly = 760;
+  g.lineWidth = 10; g.strokeStyle = '#e8e2d0'; g.beginPath(); g.arc(lx, ly, 34, 0, 7); g.stroke();
+  if (leak > 0) {
+    g.strokeStyle = `rgba(240,41,47,${0.6 + 0.4 * Math.sin(t * 30)})`; g.lineWidth = 12; g.shadowColor = RED; g.shadowBlur = 30;
+    g.beginPath(); g.arc(lx, ly, 52 + 6 * Math.sin(t * 20), 0, 7); g.stroke(); g.shadowBlur = 0;
+    for (let i = 0; i < 22; i++) {
+      const life = ((t - T.scheme[2]) * 1.6 + rnd(i)) % 1, ang = -0.5 + rnd(i + 7) * 1.0;
+      const dx = Math.cos(ang) * 260 * life, dy = Math.sin(ang) * 120 * life + 380 * life * life;
+      g.fillStyle = `rgba(255,${150 + rnd(i) * 60},40,${(1 - life) * leak})`;
+      g.beginPath(); g.ellipse(lx + 40 + dx, ly + dy, 9, 13, 0, 0, 7); g.fill();
+    }
+  }
+}
+function darkBg() {
+  if (window.QA) return;            // safe-zone check: backgrounds are allowed edge to edge
+  const bg = g.createRadialGradient(W / 2, 700, 100, W / 2, 900, 1300);
+  bg.addColorStop(0, '#24262c'); bg.addColorStop(1, '#0a0a0c'); g.fillStyle = bg; g.fillRect(0, 0, W, H);
+  g.strokeStyle = 'rgba(255,255,255,0.04)'; g.lineWidth = 2;
+  for (let x = 0; x < W; x += 60) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x, H); g.stroke(); }
+  for (let y = 0; y < H; y += 60) { g.beginPath(); g.moveTo(0, y); g.lineTo(W, y); g.stroke(); }
+}
+// block is drawn in its own 1080x(420..1050) space; place(cx, cy, s) maps its centre (540,735)
+function place(cx, cy, s) { g.translate(cx, cy); g.scale(s, s); g.translate(-540, -735); }
+
+// ---------- leak scheme: everything compact in the upper part, gauge + ECU in one row ----------
+function drawScheme(t) {
+  const [a, b, leakT, ecuT] = T.scheme; if (!inWin(t, a, b)) return;
+  const lt = t - a, e = clamp((b - t) / 0.15), k = easeOut(lt / 0.4);
+  const leak = clamp((t - leakT) / 0.6);
+  g.save(); darkBg(); g.globalAlpha = e;
+  text('ГИДРОБЛОК', W / 2, 330, 36, 'rgba(255,255,255,0.55)', 'UE');
+  const shake = leak > 0 ? Math.sin(t * 80) * 3 * leak : 0;
+  g.save(); g.globalAlpha = e * k; g.translate(shake, (1 - k) * 80); place(540, 645, 0.72); block(t, lt, leak, 0); g.restore();
+  if (leak > 0) { g.save(); g.globalAlpha = e; labelBox('УТЕЧКА ДАВЛЕНИЯ', W / 2, 980, leakT, t, 44); g.restore(); }
+  const rowY = 1200;
+  const gx = 350, gy = rowY, gr = 110;
+  g.save(); g.globalAlpha = e * k;
+  g.lineWidth = 22; g.lineCap = 'butt';
+  const a0 = Math.PI * 0.8, a1 = Math.PI * 2.2;
+  g.strokeStyle = '#2e3138'; g.beginPath(); g.arc(gx, gy, gr, a0, a1); g.stroke();
+  g.strokeStyle = RED; g.beginPath(); g.arc(gx, gy, gr, a0, a0 + (a1 - a0) * 0.25); g.stroke();
+  g.strokeStyle = '#3ecf6e'; g.beginPath(); g.arc(gx, gy, gr, a0 + (a1 - a0) * 0.55, a1); g.stroke();
+  const val = 0.85 - 0.72 * easeOut((t - leakT) / 1.2) + (t > leakT ? Math.sin(t * 50) * 0.02 : 0);
+  const na = a0 + (a1 - a0) * val;
+  g.strokeStyle = '#fff'; g.lineWidth = 8; g.lineCap = 'round';
+  g.beginPath(); g.moveTo(gx, gy); g.lineTo(gx + Math.cos(na) * (gr - 26), gy + Math.sin(na) * (gr - 26)); g.stroke();
+  g.fillStyle = '#fff'; g.beginPath(); g.arc(gx, gy, 13, 0, 7); g.fill();
+  text('ДАВЛЕНИЕ', gx, gy + 148, 28, 'rgba(255,255,255,0.8)', 'UE');
+  const cx = 730, cy = rowY, cs = 140;
+  g.strokeStyle = '#9aa1aa'; g.lineWidth = 8; g.lineCap = 'butt';
+  for (let i = 0; i < 5; i++) { const o = -cs / 2 + 22 + i * (cs - 44) / 4;
+    g.beginPath(); g.moveTo(cx - cs / 2 - 24, cy + o); g.lineTo(cx - cs / 2, cy + o); g.moveTo(cx + cs / 2, cy + o); g.lineTo(cx + cs / 2 + 24, cy + o);
+    g.moveTo(cx + o, cy - cs / 2 - 24); g.lineTo(cx + o, cy - cs / 2); g.moveTo(cx + o, cy + cs / 2); g.lineTo(cx + o, cy + cs / 2 + 24); g.stroke(); }
+  const cg = g.createLinearGradient(cx - cs / 2, cy - cs / 2, cx + cs / 2, cy + cs / 2); cg.addColorStop(0, '#3a3f47'); cg.addColorStop(1, '#16181c');
+  g.fillStyle = cg; rrect(cx - cs / 2, cy - cs / 2, cs, cs, 18); g.fill();
+  const alarm = t >= ecuT && Math.floor((t - ecuT) * 5) % 2 === 0;
+  g.strokeStyle = alarm ? RED : 'rgba(255,255,255,0.25)'; g.lineWidth = 6; rrect(cx - cs / 2 + 14, cy - cs / 2 + 14, cs - 28, cs - 28, 12); g.stroke();
+  if (t >= ecuT) { g.shadowColor = RED; g.shadowBlur = alarm ? 40 : 10; text('!', cx, cy + 4, 100, alarm ? RED : '#ff8a8d'); g.shadowBlur = 0; }
+  else text('ЭБУ', cx, cy + 2, 38, 'rgba(255,255,255,0.7)', 'UE');
+  if (t >= ecuT) { if (Math.floor((t - ecuT) * 4) % 2 === 0 || t - ecuT > 1.2) text('АВАРИЙНЫЙ РЕЖИМ', cx, gy + 148, 26, RED, 'UB'); }
+  else text('БЛОК УПРАВЛЕНИЯ', cx, gy + 148, 26, 'rgba(255,255,255,0.8)', 'UE');
+  g.restore();
+  g.restore();
+}
+
+// ---------- cause 1: teflon sealing ring pinched in its groove ----------
+function drawRing(t) {
+  const [a, b, pinchT] = T.ring; if (!inWin(t, a, b)) return;
+  const lt = t - a, e = clamp((b - t) / 0.15), k = easeOut(lt / 0.4);
+  g.save(); darkBg(); g.globalAlpha = e * k; g.translate(0, (1 - k) * 60);
+  const cy = 860, r = 105, gx = 540;               // shaft axis y, radius, groove x
+  // shaft (cylinder seen from the side)
+  const sg = g.createLinearGradient(0, cy - r, 0, cy + r);
+  sg.addColorStop(0, '#5d646d'); sg.addColorStop(0.18, '#eef1f4'); sg.addColorStop(0.45, '#a9b0b9'); sg.addColorStop(1, '#3c4148');
+  const sx0 = SAFE.l + 60, sx1 = SAFE.r - 60;
+  g.fillStyle = sg; g.fillRect(sx0, cy - r, sx1 - sx0, 2 * r);
+  const capg = g.createRadialGradient(sx1 - 10, cy - 30, 10, sx1, cy, r); capg.addColorStop(0, '#e9ecf0'); capg.addColorStop(1, '#5d646d');
+  g.fillStyle = capg; g.beginPath(); g.ellipse(sx1, cy, 34, r, 0, 0, 7); g.fill();
+  g.fillStyle = '#3c4148'; g.beginPath(); g.ellipse(sx0, cy, 34, r, 0, Math.PI / 2, Math.PI * 1.5); g.fill();
+  // groove
+  const gw = 64; const gg = g.createLinearGradient(0, cy - r, 0, cy + r); gg.addColorStop(0, '#2a2e34'); gg.addColorStop(0.3, '#6d747d'); gg.addColorStop(1, '#1d2025');
+  g.fillStyle = gg; g.fillRect(gx - gw / 2, cy - r + 14, gw, 2 * r - 28);
+  // teflon ring slides into the groove
+  const slide = easeOut(lt / 0.6), rx = gx - (1 - slide) * 300;
+  const rg = g.createLinearGradient(0, cy - r - 10, 0, cy + r + 10); rg.addColorStop(0, '#bfb6a0'); rg.addColorStop(0.2, '#fbf6ea'); rg.addColorStop(0.5, '#e4dccb'); rg.addColorStop(1, '#8e8674');
+  g.fillStyle = rg; rrect(rx - 26, cy - r - 10, 52, 2 * r + 20, 12); g.fill();
+  g.fillStyle = 'rgba(255,255,255,0.5)'; g.fillRect(rx - 18, cy - r - 6, 6, 2 * r + 12);
+  text('ТЕФЛОНОВОЕ КОЛЬЦО', W / 2, 1050, 38, 'rgba(255,255,255,0.75)', 'UE');
+  // pinch: the ring is bitten at the edge of the groove, oil escapes
+  const p = clamp((t - pinchT) / 0.3);
+  if (p > 0) {
+    g.fillStyle = '#7a7364'; g.beginPath(); g.moveTo(rx + 26, cy - r - 10); g.lineTo(rx + 52 * p, cy - r + 30); g.lineTo(rx + 26, cy - r + 60); g.closePath(); g.fill();
+    for (let i = 0; i < 14; i++) {
+      const life = ((t - pinchT) * 1.5 + rnd(i)) % 1;
+      g.fillStyle = `rgba(255,${150 + rnd(i) * 60},40,${(1 - life) * p})`;
+      g.beginPath(); g.ellipse(rx + 60 + life * (120 + rnd(i + 2) * 120), cy - r + 20 - life * 140 + life * life * 260, 8, 11, 0, 0, 7); g.fill();
+    }
+    const q = easeOut((t - pinchT) / 0.45);
+    g.save(); g.strokeStyle = RED; g.lineWidth = 12; g.lineCap = 'round'; g.shadowColor = 'rgba(240,41,47,0.9)'; g.shadowBlur = 26;
+    g.beginPath(); g.ellipse(rx + 20, cy - r + 20, 120, 90, -0.2, -Math.PI / 2, -Math.PI / 2 + q * Math.PI * 2.05); g.stroke(); g.restore();
+    labelBox('ЗАКУСИЛИ', rx + 20, cy - r - 110, pinchT + 0.15, t, 48);
+  }
+  g.restore();
+}
+
+// ---------- cause 2: external oil cooler installed wrong ----------
+function drawCooler(t) {
+  const [a, b, badT] = T.cooler; if (!inWin(t, a, b)) return;
+  const lt = t - a, e = clamp((b - t) / 0.15), k = easeOut(lt / 0.4);
+  const bad = clamp((t - badT) / 0.3);
+  g.save(); darkBg(); g.globalAlpha = e * k; g.translate(0, (1 - k) * 60);
+  // radiator core with fins (pseudo-3D)
+  const rx = 290, ry = 620, rw = 480, rh = 250, d = 22;
+  g.fillStyle = '#2f343b'; g.beginPath(); g.moveTo(rx + rw, ry); g.lineTo(rx + rw + d, ry + d); g.lineTo(rx + rw + d, ry + rh + d); g.lineTo(rx + d, ry + rh + d); g.lineTo(rx, ry + rh); g.lineTo(rx + rw, ry + rh); g.closePath(); g.fill();
+  const cg = g.createLinearGradient(rx, ry, rx + rw, ry + rh); cg.addColorStop(0, '#d5d9de'); cg.addColorStop(0.5, '#8d949d'); cg.addColorStop(1, '#4e555e');
+  g.fillStyle = cg; rrect(rx, ry, rw, rh, 14); g.fill();
+  g.strokeStyle = 'rgba(30,34,40,0.55)'; g.lineWidth = 3;
+  for (let x = rx + 40; x < rx + rw - 30; x += 14) { g.beginPath(); g.moveTo(x, ry + 26); g.lineTo(x, ry + rh - 26); g.stroke(); }
+  g.fillStyle = '#5b626b'; g.fillRect(rx - 30, ry + 20, 30, rh - 40); g.fillRect(rx + rw, ry + 20, 30, rh - 40);
+  // gearbox housing below
+  const bx = 360, by = 990, bw = 360, bh = 120;
+  const hg = g.createLinearGradient(bx, by, bx, by + bh); hg.addColorStop(0, '#9aa1aa'); hg.addColorStop(1, '#3d434b');
+  g.fillStyle = hg; rrect(bx, by, bw, bh, 26); g.fill();
+  text('АКПП', bx + bw / 2, by + bh / 2 + 2, 46, 'rgba(255,255,255,0.85)', 'UB');
+  // hoses with flowing oil: in on the left, out on the right
+  const hoses = [[[rx - 15, ry + rh - 40], [rx - 90, ry + rh + 40], [bx + 60, by - 60], [bx + 80, by]],
+                 [[rx + rw + 15, ry + rh - 40], [rx + rw + 90, ry + rh + 40], [bx + bw - 60, by - 60], [bx + bw - 80, by]]];
+  hoses.forEach((h, i) => {
+    g.beginPath(); g.moveTo(...h[0]); g.bezierCurveTo(...h[1], ...h[2], ...h[3]);
+    g.lineCap = 'round'; g.lineWidth = 34; g.strokeStyle = '#16181c'; g.stroke();
+    g.setLineDash([20, 24]); g.lineDashOffset = (i ? 1 : -1) * lt * 240 * (1 - 0.7 * bad); g.lineWidth = 12;
+    g.strokeStyle = `rgba(255,${170 - 70 * bad},50,0.9)`; g.stroke(); g.setLineDash([]);
+  });
+  // wrong fitting: right connection, pulsing, oil drips
+  if (bad > 0) {
+    const fx = rx + rw + 15, fy = ry + rh - 40;
+    g.strokeStyle = `rgba(240,41,47,${0.6 + 0.4 * Math.sin(t * 25)})`; g.lineWidth = 12; g.shadowColor = RED; g.shadowBlur = 30;
+    const q = easeOut((t - badT) / 0.45);
+    g.beginPath(); g.ellipse(fx + 10, fy + 10, 85, 70, 0, -Math.PI / 2, -Math.PI / 2 + q * Math.PI * 2.05); g.stroke(); g.shadowBlur = 0;
+    for (let i = 0; i < 10; i++) { const life = ((t - badT) * 1.3 + rnd(i)) % 1;
+      g.fillStyle = `rgba(255,${150 + rnd(i) * 60},40,${(1 - life) * bad})`;
+      g.beginPath(); g.ellipse(fx + 20 + rnd(i + 4) * 40, fy + 30 + life * 160, 8, 12, 0, 0, 7); g.fill(); }
+    pop('!', fx + 40, fy - 150, 100, RED, badT + 0.1, t, 'UB', 10);
+  }
+  text('ВЫНОСНОЙ РАДИАТОР', W / 2, 570, 32, 'rgba(255,255,255,0.75)', 'UE');
+  g.restore();
+}
+
+// ---------- cause 3: valve body clogged with wear particles ----------
+function drawClog(t) {
+  const [a, b] = T.clog; if (!inWin(t, a, b)) return;
+  const lt = t - a, e = clamp((b - t) / 0.15), k = easeOut(lt / 0.4);
+  g.save(); darkBg(); g.globalAlpha = e * k; g.translate(0, (1 - k) * 60);
+  place(540, 900, 0.78); block(t, lt, 0, clamp(lt / (b - a - 0.2)));
+  g.restore();
+}
+
+// ---------- three possible causes: list on top + corner brackets on the b-roll ----------
+const REASONS = ['КОЛЬЦО / УПЛОТНЕНИЕ', 'РАДИАТОР', 'ГИДРОБЛОК'];
+function brackets(t, a, b) {
+  if (!inWin(t, a, b)) return;
+  const k = easeOut((t - a) / 0.35), e = clamp((b - t) / 0.12);
+  const x0 = SAFE.l + 20, y0 = 640, x1 = SAFE.r - 20, y1 = 1400, L = 90, grow = (1 - k) * 80;
+  g.save(); g.globalAlpha = e * clamp((t - a) / 0.1); g.strokeStyle = RED; g.lineWidth = 12; g.lineCap = 'square';
+  g.shadowColor = 'rgba(240,41,47,0.8)'; g.shadowBlur = 20;
+  [[x0 - grow, y0 - grow, 1, 1], [x1 + grow, y0 - grow, -1, 1], [x0 - grow, y1 + grow, 1, -1], [x1 + grow, y1 + grow, -1, -1]].forEach(([x, y, sx, sy]) => {
+    g.beginPath(); g.moveTo(x, y + sy * L); g.lineTo(x, y); g.lineTo(x + sx * L, y); g.stroke();
+  });
+  g.restore();
+}
+function drawReasons(t) {
+  const R = T.reasons, end = R[3]; if (t < R[0][0] || t >= end) return;
+  if (!T.reasons_vis.some(([a, b]) => t >= a && t < b)) return;   // never over the presenter's face
+  const fo = clamp((end - t) / 0.2);
+  R.slice(0, 3).forEach(([lt, sa, sb], i) => {
+    if (sa != null) brackets(t, sa, sb);
+    if (t < lt) return;
+    const k = easeBack((t - lt) / 0.3), cur = (i === 2 || t < R[i + 1][0]);
+    const y = 350 + i * 100, x = SAFE.l + 30;
+    g.save(); g.globalAlpha = fo * clamp((t - lt) / 0.1) * (cur ? 1 : 0.8); g.translate(x + 40, y); g.scale(k, k); g.translate(-(x + 40), -y);
+    g.font = '900 32px UB'; const w = g.measureText(REASONS[i]).width + 130;
+    g.shadowColor = 'rgba(0,0,0,0.5)'; g.shadowBlur = 24; g.fillStyle = 'rgba(14,14,16,0.86)'; rrect(x, y - 40, w, 80, 40); g.fill(); g.shadowBlur = 0;
+    g.fillStyle = cur ? RED : '#5a5e66'; g.beginPath(); g.arc(x + 40, y, 29, 0, 7); g.fill();
+    text(String(i + 1), x + 40, y + 2, 34, '#fff'); text(REASONS[i], x + 86, y + 2, 32, '#fff', 'UB', 'left');
+    g.restore();
+  });
+}
+
+// ---------- wear particles label on the dipstick shot ----------
+function drawOil(t) {
+  const [a, b, lt] = T.oil; if (!inWin(t, a, b)) return;
+  g.save(); g.globalAlpha = clamp((b - t) / 0.12); labelBox('ПРОДУКТЫ ИЗНОСА', W / 2, 1340, lt, t, 44); g.restore();
+}
+
+// ---------- free diagnostics ----------
+function drawFree(t) {
+  const [a, b] = T.free; if (!inWin(t, a, b)) return;
+  g.save(); g.globalAlpha = clamp((b - t) / 0.15);
+  pop('ДИАГНОСТИКА', W / 2, 1250, 64, '#fff', a, t, 'UB', 10);
+  labelBox('БЕСПЛАТНО', W / 2, 1355, a + 0.25, t, 68);
+  g.restore();
+}
+// ---------- address card ----------
+function drawAddress(t) {
+  const [a, b] = T.address; if (!inWin(t, a, b + 0.01)) return;
+  const k = easeOut((t - a) / 0.4);
+  g.save(); g.globalAlpha = clamp((t - a) / 0.2); g.translate(0, (1 - k) * 40);
+  const x = SAFE.l + 30, y = 1190, w = SAFE.r - SAFE.l - 60, h = 210;
+  g.shadowColor = 'rgba(0,0,0,0.5)'; g.shadowBlur = 40; g.fillStyle = 'rgba(14,14,16,0.86)'; rrect(x, y, w, h, 36); g.fill();
+  g.shadowBlur = 0; g.fillStyle = RED; rrect(x, y, 16, h, 8); g.fill();
+  g.drawImage(logo, x + 32, y + 30, 150, 150);
+  text('АКПП ДРАЙВ', x + 206, y + 66, 50, '#fff', 'UB', 'left');
+  // pin
+  const px = x + 218, py = y + 128; g.fillStyle = RED; g.beginPath(); g.arc(px, py - 8, 15, Math.PI, 0); g.lineTo(px, py + 20); g.closePath(); g.fill();
+  g.fillStyle = '#0e0e10'; g.beginPath(); g.arc(px, py - 8, 6, 0, 7); g.fill();
+  text('пр. Дзержинского, 82А', x + 244, py, 29, 'rgba(255,255,255,0.9)', 'UE', 'left');
+  text('подземный автокомплекс', x + 244, py + 46, 24, 'rgba(255,255,255,0.6)', 'UE', 'left');
+  g.restore();
+}
+
+// ---------- end plate ----------
+function drawEnd(t) {
+  const [a, b] = T.endplate; if (t < a) return;
+  const lt = t - a;
+  g.save();
+  const k = easeBack(lt / 0.45);
+  g.translate(W / 2, 520); g.scale(k, k);
+  g.shadowColor = 'rgba(240,41,47,0.45)'; g.shadowBlur = 40; g.drawImage(logo, -160, -160, 320, 320);
+  g.restore();
+  const lines = [['А У ВАС', '#fff'], ['БЫЛА ТАКАЯ', '#fff'], ['ПРОБЛЕМА', '#fff'], ['С DP0?', RED]];
+  lines.forEach(([s, col], i) => pop(s, W / 2, 800 + i * 96, 70, col, a + 0.25 + i * 0.12, t, 'UB', 10));
+  if (lt > 1.0) {
+    g.save(); g.globalAlpha = clamp((lt - 1.0) / 0.2);
+    text('ПИШИТЕ В КОММЕНТАРИЯХ', W / 2, 1240, 36, 'rgba(255,255,255,0.92)', 'UE');
+    const bob = Math.sin(lt * 6) * 14; g.strokeStyle = RED; g.lineWidth = 12; g.lineCap = 'round'; g.lineJoin = 'round';
+    for (let i = 0; i < 2; i++) { g.beginPath(); g.moveTo(500, 1290 + i * 40 + bob); g.lineTo(540, 1325 + i * 40 + bob); g.lineTo(580, 1290 + i * 40 + bob); g.stroke(); }
+    g.restore();
+  }
+}
+
+function drawFrame(t) {
+  g.clearRect(0, 0, W, H);
+  drawScheme(t); drawRing(t); drawCooler(t); drawClog(t); drawReasons(t); drawCard(t); drawOil(t); drawFree(t); drawAddress(t); drawEnd(t);
+  drawFlash(t);
+}
+window.setup = async (tl) => { T = tl; await document.fonts.load('900 40px UB'); await document.fonts.load('800 40px UE'); await document.fonts.load('500 40px Inter'); await document.fonts.load('600 32px Inter'); if (!logo.complete) await new Promise(r => logo.onload = r); return true; };
+window.frame = (i) => { drawFrame(i / T.fps); return c.toDataURL('image/png'); };
+</script></body></html>

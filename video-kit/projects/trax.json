@@ -1,0 +1,736 @@
+{
+ "name": "trax",
+ "language": "ru",
+ "sources": {
+  "drive_folder": "https://drive.google.com/drive/folders/1jrD-GOcwiELqMhSlkWbGIUw8UQvCledG",
+  "dir": "work/trax/src"
+ },
+ "output": "out/trax.mp4",
+ "theme": {
+  "accent": "#E3152B",
+  "accent_light": "#FF4A5C",
+  "dark": "#22080B",
+  "light": "#FFFFFF",
+  "on_accent": "#FFFFFF",
+  "on_light": "#22080B",
+  "link": "#FF6B78",
+  "flash": "#FFE3E6",
+  "paper": "#FFFFFF",
+  "glow": 5,
+  "vignette": 0.2,
+  "3d": {
+   "front": "#ED2232",
+   "side": "#6E0812",
+   "metallic": 0.55,
+   "roughness": 0.22,
+   "white": "#FFFFFF",
+   "dark": "#22080B"
+  }
+ },
+ "grade": {
+  "lut": "assets/luts/refive_light.cube",
+  "lut_mix": 0.5,
+  "gamma": 0.98,
+  "contrast": 1.1,
+  "saturation": 1.04,
+  "warmth": 0.0,
+  "cool_shadows": 0.03
+ },
+ "subtitles": {
+  "enabled": true,
+  "size": 64,
+  "y": 1330,
+  "color": "#FFFFFF",
+  "highlight": "accent",
+  "highlight_text": "#FFFFFF",
+  "mode": "karaoke",
+  "max_words": 3,
+  "max_chars": 17,
+  "uppercase": false,
+  "replace": {
+   "1250": "1 250",
+   "1200": "1 200",
+   "Следи": "Следит",
+   "новичку": "новичку."
+  },
+  "merge": [
+   [
+    "то",
+    "что"
+   ]
+  ]
+ },
+ "music": {
+  "file": "work/trax/music.m4a",
+  "start": 0.0,
+  "volume": 0.14,
+  "end_volume": 0.42
+ },
+ "voice": {
+  "target_lufs": -17.5
+ },
+ "aroll": [
+  {
+   "clip": "IMG_3543.MOV",
+   "in": 0.0,
+   "out": 7.9,
+   "zoom": [
+    1.0,
+    1.06
+   ]
+  },
+  {
+   "clip": "IMG_3545.MOV",
+   "in": 0.4,
+   "out": 5.75,
+   "zoom": [
+    1.0,
+    1.06
+   ]
+  },
+  {
+   "clip": "IMG_3550.MOV",
+   "in": 0.55,
+   "out": 5.45,
+   "zoom": [
+    1.0,
+    1.05
+   ]
+  },
+  {
+   "clip": "IMG_3553.MOV",
+   "in": 0.0,
+   "out": 8.0,
+   "zoom": [
+    1.0,
+    1.08
+   ]
+  }
+ ],
+ "cutaways": [
+  {
+   "clip": "IMG_3560.MOV",
+   "src": 0.0,
+   "at": 0.0,
+   "until": 1.9,
+   "zoom": [
+    1.45,
+    1.08
+   ]
+  },
+  {
+   "clip": "IMG_3559.MOV",
+   "src": 0.2,
+   "at": 1.9,
+   "until": 3.42,
+   "zoom": [
+    1.12,
+    1.0
+   ],
+   "tout": "zoom"
+  },
+  {
+   "clip": "IMG_3556.MOV",
+   "src": 0.0,
+   "at": 5.0,
+   "until": 6.5,
+   "zoom": [
+    1.14,
+    1.04
+   ],
+   "tin": "zoom"
+  },
+  {
+   "clip": "IMG_3554.MOV",
+   "src": 0.3,
+   "at": 6.5,
+   "until": 7.9,
+   "zoom": [
+    1.04,
+    1.12
+   ],
+   "tout": "zoom"
+  },
+  {
+   "clip": "IMG_3558.MOV",
+   "src": 0.2,
+   "at": 8.3,
+   "until": 9.55,
+   "zoom": [
+    1.14,
+    1.04
+   ],
+   "tin": "zoom"
+  },
+  {
+   "clip": "IMG_3557.MOV",
+   "src": 0.2,
+   "at": 9.55,
+   "until": 10.9,
+   "zoom": [
+    1.04,
+    1.12
+   ],
+   "drift": [
+    -20,
+    20
+   ],
+   "tout": "zoom"
+  },
+  {
+   "clip": "IMG_3569.MOV",
+   "src": 0.0,
+   "at": 11.6,
+   "until": 13.25,
+   "zoom": [
+    1.12,
+    1.03
+   ],
+   "tin": "zoom",
+   "tout": "zoom"
+  },
+  {
+   "clip": "IMG_3568.MOV",
+   "src": 0.3,
+   "at": 15.5,
+   "until": 16.6,
+   "zoom": [
+    1.12,
+    1.03
+   ],
+   "tin": "zoom",
+   "tout": "zoom"
+  },
+  {
+   "clip": "IMG_3555.MOV",
+   "src": 0.0,
+   "at": 20.2,
+   "until": 21.55,
+   "zoom": [
+    1.14,
+    1.04
+   ],
+   "tin": "zoom",
+   "tout": "zoom"
+  },
+  {
+   "clip": "IMG_3570.MOV",
+   "src": 15.6,
+   "at": 24.1,
+   "until": 26.15,
+   "zoom": [
+    1.04,
+    1.12
+   ],
+   "tin": "zoom"
+  }
+ ],
+ "endcard": {
+  "clip": "IMG_3554.MOV",
+  "src": 0.3,
+  "duration": 2.6,
+  "speed": 0.55,
+  "zoom": [
+   1.06,
+   1.14
+  ],
+  "blur": 14,
+  "tint": "accent",
+  "darken": 0.45,
+  "tin": "flash"
+ },
+ "punch": [
+  {
+   "at": "w:1200",
+   "amount": 0.06
+  }
+ ],
+ "mask_cleanup": {},
+ "elements": [
+  {
+   "type": "pill",
+   "text": "ЭТО НЕ ОПЕЧАТКА",
+   "size": 52,
+   "style": "light",
+   "at": 0.15,
+   "until": 3.42,
+   "x": 540,
+   "y": 330
+  },
+  {
+   "type": "pill",
+   "text": "ПРОБЕГ",
+   "size": 44,
+   "style": "dark",
+   "at": "w:1250-0.05",
+   "until": 3.42,
+   "x": 540,
+   "y": 450
+  },
+  {
+   "type": "counter",
+   "to": 1250,
+   "suffix": " КМ",
+   "style": "gold",
+   "size": 150,
+   "dur": 1.2,
+   "bar": 640,
+   "at": "w:1250-0.05",
+   "until": 3.42,
+   "x": 540,
+   "y": 590
+  },
+  {
+   "type": "3d",
+   "kind": "rise",
+   "text": "CHEVROLET",
+   "layer": "behind",
+   "at": "w:машина-0.05",
+   "until": 5.0,
+   "x": 540,
+   "y": 565,
+   "scale": 0.85,
+   "canvas": [
+    1080,
+    400
+   ],
+   "frac": 0.62,
+   "fade_bottom": 0.0
+  },
+  {
+   "type": "3d",
+   "kind": "rise",
+   "text": "TRAX",
+   "layer": "behind",
+   "at": "w:машина-0.05",
+   "until": 5.0,
+   "x": 540,
+   "y": 720,
+   "scale": 0.78,
+   "frac": 0.52,
+   "canvas": [
+    1080,
+    640
+   ]
+  },
+  {
+   "type": "gold",
+   "text": "2025",
+   "size": 120,
+   "at": "w:2025-0.05",
+   "until": 5.0,
+   "x": 540,
+   "y": 400
+  },
+  {
+   "type": "pill",
+   "text": "ПОЧТИ НОВАЯ",
+   "size": 60,
+   "style": "accent",
+   "at": "w:проехала-0.05",
+   "until": 7.9,
+   "x": 540,
+   "y": 330
+  },
+  {
+   "type": "pill",
+   "text": "МЕНЬШЕ, ЧЕМ ЗА МЕСЯЦ",
+   "size": 44,
+   "style": "dark",
+   "at": "w:многие-0.05",
+   "until": 7.9,
+   "x": 540,
+   "y": 440
+  },
+  {
+   "type": "pill",
+   "text": "КОЖАНЫЙ САЛОН",
+   "size": 58,
+   "style": "light",
+   "at": "w:кожа-0.05",
+   "until": 9.55,
+   "x": 540,
+   "y": 330
+  },
+  {
+   "type": "pill",
+   "text": "ПОДОГРЕВ РУЛЯ И СИДЕНИЙ",
+   "size": 48,
+   "style": "accent",
+   "at": "w:подогрев-0.05",
+   "until": 10.9,
+   "x": 540,
+   "y": 440
+  },
+  {
+   "type": "gold",
+   "text": "КЛИМАТ",
+   "size": 110,
+   "at": "w:климат-0.05",
+   "until": 11.6,
+   "x": 540,
+   "y": 330
+  },
+  {
+   "type": "pill",
+   "text": "НА НЕСКОЛЬКО ЗОН",
+   "size": 46,
+   "style": "dark",
+   "at": "w:несколько-0.05",
+   "until": 11.6,
+   "x": 540,
+   "y": 460
+  },
+  {
+   "type": "pill",
+   "text": "БОЛЬШОЙ ЭКРАН",
+   "size": 56,
+   "style": "light",
+   "at": "w:большой-0.05",
+   "until": 13.25,
+   "x": 540,
+   "y": 330
+  },
+  {
+   "type": "pill",
+   "text": "CARPLAY · ANDROID AUTO",
+   "size": 46,
+   "style": "accent",
+   "at": "w:carplay-0.1",
+   "until": 13.25,
+   "x": 540,
+   "y": 440
+  },
+  {
+   "type": "pill",
+   "text": "КОНТРОЛЬ СЛЕПЫХ ЗОН",
+   "size": 48,
+   "style": "accent",
+   "at": "w:следи-0.05",
+   "until": "w:держит-0.05",
+   "x": 540,
+   "y": 1020
+  },
+  {
+   "type": "pill",
+   "text": "УДЕРЖАНИЕ В ПОЛОСЕ",
+   "size": 48,
+   "style": "light",
+   "at": "w:держит-0.05",
+   "until": 15.5,
+   "x": 540,
+   "y": 1020
+  },
+  {
+   "type": "pill",
+   "text": "ПОМОЩЬ ПРИ ПАРКОВКЕ",
+   "size": 50,
+   "style": "accent",
+   "at": "w:помогает-0.05",
+   "until": 16.6,
+   "x": 540,
+   "y": 330
+  },
+  {
+   "type": "gold",
+   "text": "НОВИЧКУ",
+   "size": 104,
+   "at": "w:новичку-0.05",
+   "until": "we:надо",
+   "x": 540,
+   "y": 1100
+  },
+  {
+   "type": "pill",
+   "text": "1.2 ТУРБО",
+   "size": 60,
+   "style": "accent",
+   "at": "w:турбомотор-0.05",
+   "until": 20.2,
+   "x": 540,
+   "y": 330
+  },
+  {
+   "type": "counter",
+   "to": 137,
+   "suffix": " Л.С.",
+   "style": "gold",
+   "size": 150,
+   "dur": 0.8,
+   "at": "w:137-0.05",
+   "until": 20.2,
+   "x": 540,
+   "y": 470
+  },
+  {
+   "type": "pill",
+   "text": "БЕЗ ПРОБЕГА ПО РБ",
+   "size": 56,
+   "style": "light",
+   "at": "w:минску-0.05",
+   "until": 21.55,
+   "x": 540,
+   "y": 330
+  },
+  {
+   "type": "3d",
+   "kind": "rise",
+   "text": "1 200",
+   "layer": "behind",
+   "extrude": 0.22,
+   "stagger": 3,
+   "canvas": [
+    1080,
+    820
+   ],
+   "frac": 0.9,
+   "fade_bottom": 0.3,
+   "at": "w:1200-0.05",
+   "until": 24.1,
+   "x": 540,
+   "y": 770,
+   "scale": 0.76
+  },
+  {
+   "type": "pill",
+   "text": "В КРЕДИТ",
+   "size": 40,
+   "style": "dark",
+   "at": "w:кредит-0.05",
+   "until": 24.1,
+   "x": 276,
+   "y": 470
+  },
+  {
+   "type": "pill",
+   "text": "БЕЗ ПЕРВОГО ВЗНОСА",
+   "size": 40,
+   "style": "accent",
+   "at": "w:кредит+0.1",
+   "until": 24.1,
+   "x": 678,
+   "y": 470
+  },
+  {
+   "type": "pill",
+   "text": "BYN / мес",
+   "size": 48,
+   "style": "accent",
+   "at": "w:1200+0.3",
+   "until": 24.1,
+   "x": 760,
+   "y": 900
+  },
+  {
+   "type": "pill",
+   "text": "ПЕРВЫЕ КИЛОМЕТРЫ — ВАШИ",
+   "size": 46,
+   "style": "accent",
+   "at": "w:первые-0.05",
+   "until": 26.15,
+   "x": 540,
+   "y": 330
+  },
+  {
+   "type": "logo",
+   "file": "assets/belavto_logo.png",
+   "at": 26.4,
+   "until": "end",
+   "x": 540,
+   "y": 380,
+   "scale": 0.82
+  },
+  {
+   "type": "gold",
+   "text": "CHEVROLET TRAX 2025",
+   "size": 56,
+   "at": 26.549999999999997,
+   "until": "end",
+   "x": 540,
+   "y": 600
+  },
+  {
+   "type": "3d",
+   "kind": "spin",
+   "text": "1 250 КМ",
+   "at": "speech_end",
+   "until": "end",
+   "x": 540,
+   "y": 760,
+   "scale": 0.8
+  },
+  {
+   "type": "pill",
+   "text": "1 200 BYN/мес",
+   "size": 50,
+   "style": "accent",
+   "at": 26.75,
+   "until": "end",
+   "x": 540,
+   "y": 975
+  },
+  {
+   "type": "pill",
+   "text": "без первого взноса  ·  без пробега по РБ",
+   "size": 34,
+   "style": "dark",
+   "at": 26.95,
+   "until": "end",
+   "x": 540,
+   "y": 1075,
+   "font": "bold"
+  },
+  {
+   "type": "label",
+   "text": "Минск, ул. Рыбалко, 13А",
+   "size": 40,
+   "at": 27.15,
+   "until": "end",
+   "x": 540,
+   "y": 1175
+  },
+  {
+   "type": "label",
+   "text": "belautocenter.by",
+   "size": 50,
+   "font": "black",
+   "color": "link",
+   "at": 27.299999999999997,
+   "until": "end",
+   "x": 540,
+   "y": 1250
+  }
+ ],
+ "sfx": [
+  {
+   "file": "assets/sfx/swish_soft.wav",
+   "at": 3.42,
+   "peak": 0.2,
+   "gain": 0.05
+  },
+  {
+   "file": "assets/sfx/swish_soft.wav",
+   "at": 7.9,
+   "peak": 0.2,
+   "gain": 0.05
+  },
+  {
+   "file": "assets/sfx/swish_soft.wav",
+   "at": 13.25,
+   "peak": 0.2,
+   "gain": 0.05
+  },
+  {
+   "file": "assets/sfx/swish_soft.wav",
+   "at": 18.15,
+   "peak": 0.2,
+   "gain": 0.05
+  },
+  {
+   "file": "assets/sfx/swish_soft.wav",
+   "at": "speech_end",
+   "peak": 0.2,
+   "gain": 0.05
+  },
+  {
+   "file": "assets/sfx/belavto_click5.wav",
+   "at": "w:1250-0.016",
+   "gain": 0.043
+  },
+  {
+   "file": "assets/sfx/belavto_click5.wav",
+   "at": "w:1250+0.021",
+   "gain": 0.042
+  },
+  {
+   "file": "assets/sfx/belavto_click5.wav",
+   "at": "w:1250+0.060",
+   "gain": 0.04
+  },
+  {
+   "file": "assets/sfx/belavto_click5.wav",
+   "at": "w:1250+0.102",
+   "gain": 0.039
+  },
+  {
+   "file": "assets/sfx/belavto_click5.wav",
+   "at": "w:1250+0.147",
+   "gain": 0.038
+  },
+  {
+   "file": "assets/sfx/belavto_click5.wav",
+   "at": "w:1250+0.198",
+   "gain": 0.036
+  },
+  {
+   "file": "assets/sfx/belavto_click5.wav",
+   "at": "w:1250+0.254",
+   "gain": 0.035
+  },
+  {
+   "file": "assets/sfx/belavto_click5.wav",
+   "at": "w:1250+0.318",
+   "gain": 0.034
+  },
+  {
+   "file": "assets/sfx/belavto_click5.wav",
+   "at": "w:1250+0.394",
+   "gain": 0.033
+  },
+  {
+   "file": "assets/sfx/belavto_click5.wav",
+   "at": "w:1250+0.490",
+   "gain": 0.031
+  },
+  {
+   "file": "assets/sfx/belavto_click5.wav",
+   "at": "w:137-0.016",
+   "gain": 0.043
+  },
+  {
+   "file": "assets/sfx/belavto_click5.wav",
+   "at": "w:137+0.021",
+   "gain": 0.042
+  },
+  {
+   "file": "assets/sfx/belavto_click5.wav",
+   "at": "w:137+0.060",
+   "gain": 0.04
+  },
+  {
+   "file": "assets/sfx/belavto_click5.wav",
+   "at": "w:137+0.102",
+   "gain": 0.039
+  },
+  {
+   "file": "assets/sfx/belavto_click5.wav",
+   "at": "w:137+0.147",
+   "gain": 0.038
+  },
+  {
+   "file": "assets/sfx/belavto_click5.wav",
+   "at": "w:137+0.198",
+   "gain": 0.036
+  },
+  {
+   "file": "assets/sfx/belavto_click5.wav",
+   "at": "w:137+0.254",
+   "gain": 0.035
+  },
+  {
+   "file": "assets/sfx/belavto_click5.wav",
+   "at": "w:137+0.318",
+   "gain": 0.034
+  },
+  {
+   "file": "assets/sfx/belavto_click5.wav",
+   "at": "w:137+0.394",
+   "gain": 0.033
+  },
+  {
+   "file": "assets/sfx/belavto_click5.wav",
+   "at": "w:137+0.490",
+   "gain": 0.031
+  }
+ ]
+}

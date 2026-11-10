@@ -1,0 +1,8 @@
+numpy
+opencv-python-headless
+pillow
+faster-whisper
+rembg[cpu]
+bpy
+gdown
+yt-dlp

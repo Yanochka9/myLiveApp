@@ -1,0 +1,9 @@
+Фото Geely EX2 — Wikimedia Commons (подсъёмы рилса «Акция Geely EX2»). Файлы *.jpg в git не кладём.
+full0.jpg | File:2025 Geely EX2 Max.jpg | CC BY-SA 4.0 | автор: Chanokchon | https://commons.wikimedia.org/wiki/File:2025_Geely_EX2_Max.jpg
+full4.jpg | File:Geely EX2 E22H Pro Comet Gray 01.jpg | CC BY-SA 4.0 | автор: Ethan Llamas | https://commons.wikimedia.org/wiki/File:Geely_EX2_E22H_Pro_Comet_Gray_01.jpg
+full5.jpg | File:Geely EX2 E22H Pro Comet Gray 02.jpg | CC BY-SA 4.0 | автор: Ethan Llamas | https://commons.wikimedia.org/wiki/File:Geely_EX2_E22H_Pro_Comet_Gray_02.jpg
+full6.jpg | File:Geely Xingyuan 001.jpg | CC0 | автор: JustAnotherCarDesigner | https://commons.wikimedia.org/wiki/File:Geely_Xingyuan_001.jpg
+full7.jpg | File:Geely Xingyuan 002.jpg | CC0 | автор: JustAnotherCarDesigner | https://commons.wikimedia.org/wiki/File:Geely_Xingyuan_002.jpg
+
+Подпись для описания рилса (обязательна для CC BY-SA):
+Фото Geely EX2: Chanokchon, Ethan Llamas / Wikimedia Commons, CC BY-SA 4.0

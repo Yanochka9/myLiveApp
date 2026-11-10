@@ -28,17 +28,40 @@ PLATE_HOLD = 2.5             # сколько висит плашка темы (
 PLATE_FADE = 0.3
 
 
+CLIENT_GRADE = open(f"{A}/grade_client.txt").read().replace("ASSETS/", f"{A}/").split("\n")   # [HDR→SDR, цвет]
+
+
+def use_client(cfg):
+    """Цвет клиента (утверждён 03.11.2026, снят с её правки в CapCut) — по умолчанию,
+    если в конфиге не задан свой `lut` (старые ролики) или `"grade": "legacy"` / `"grade": "<файл в assets>"`."""
+    return not cfg.get("lut") and cfg.get("grade", "client") == "client"
+
+
 def grade(cfg):
-    """LUT с силой lut_mix (1.0 — как Leopard; под другой свет обычно 0.4–0.6)."""
+    """Цвет клиента (assets/grade_client.txt), свой фильтр из файла (`"grade": "grade_xxx.txt"`)
+    или LUT (`lut` в конфиге) с силой lut_mix."""
+    g = cfg.get("grade", "client")
+    if g.endswith(".txt"):
+        return open(f"{A}/{g}").read().strip().replace("ASSETS/", f"{A}/") + ",unsharp=5:5:0.4"
+    if use_client(cfg):
+        return f"{CLIENT_GRADE[1].strip()},unsharp=5:5:0.4"
     mix = cfg.get("lut_mix", 1.0)
+    lut = f"{A}/{cfg['lut']}" if cfg.get("lut") else f"{A}/look.cube"
+    if cfg.get("lut") and mix >= 1:
+        return f"lut3d={lut},unsharp=5:5:0.4"
     if mix >= 1:
         return GRADE
-    return (f"split[g0][g1];[g1]lut3d={A}/look.cube[g2];[g0][g2]blend=all_mode=normal:all_opacity={mix},"
+    return (f"split[g0][g1];[g1]lut3d={lut}[g2];[g0][g2]blend=all_mode=normal:all_opacity={mix},"
             f"eq=contrast=1.05,unsharp=5:5:0.4")
-SUB_Y, PLATE_Y = 1205, 1268
+
+
+SUB_Y, PLATE_Y = 1205, 1290
+SAFE_X, SAFE_W = 540, 720    # субтитры и плашки по центру; ширина ≤720, чтобы правый край не заходил под кнопки (x≈900)
 GAP, KEEP = 0.50, 0.14       # паузы длиннее GAP сжимаем, у слова оставляем KEEP
 ENDCARD = 1.6
 FLASH_LEAD = 1.4             # длина нарастания «вжуха» до вспышки
+SUB_LEAD = 0.08              # субтитр чуть раньше звука — глаз успевает
+TITLE_Y = 360                # заголовок хука — на потолке, не на машине
 FIX = {"ее": "её", "пленки": "плёнки", "пленка": "плёнка", "пленочку": "плёнку", "идем": "идём",
        "антимоникюрчики": "антиманикюр", "антимуникюрчики": "антиманикюр"}
 
@@ -67,12 +90,63 @@ def load(cfg_path):
 
 
 # ---------------- prep ----------------
+def pre_filter(cfg, src):
+    """HDR→SDR (iPhone HLG) + подравнивание под эталон (autograde) — для исходника и каждого подсъёма."""
+    hlg = "arib-std-b67" in subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries",
+                                            "stream=color_transfer", "-of", "csv=p=0", src], capture_output=True, text=True).stdout
+    pre = f"{CLIENT_GRADE[0].strip()}," if hlg else ""   # iPhone HDR → SDR до цвета (для любого цвета)
+    if use_client(cfg) and cfg.get("autograde", True):
+        # подравнять свет/баланс/насыщенность исходника под эталон, чтобы стиль клиента лёг одинаково
+        sys.path.insert(0, HERE)            # запуск с -I не добавляет папку скрипта
+        import autograde
+        nf, info = autograde.norm_filter(src)
+        pre += nf + ","
+        print("autograde:", os.path.basename(src), info)
+    return pre
+
+
+def prep_broll(cfg):
+    """Подсъёмы: cfg["broll"] = {"имя": drive_id}. Proxy 1080×1920 в work/broll/<имя>.mov + листы broll_XX.jpg.
+    В edl v_start = ["имя", t] — картинка из подсъёма, голос из основного видео."""
+    br = cfg.get("broll") or {}
+    if not br:
+        return
+    d = f"{cfg['work']}/broll"
+    os.makedirs(d, exist_ok=True)
+    for name, ref in br.items():
+        src = f"{d}/{name}_src.mov"
+        drive_download(ref, src)
+        if not os.path.exists(f"{d}/{name}.mov"):
+            run(f"ffmpeg -v error -y -i '{src}' -map 0:v:0 -vf {pre_filter(cfg, src)}scale={W}:{H}:flags=lanczos,fps={FPS} "
+                f"-c:v libx264 -preset veryfast -crf 14 -pix_fmt yuv420p -an {d}/{name}.mov")
+            if name in cfg.get("broll_plates", {}):  # замазать гос-номер на подсъёме
+                sys.path.insert(0, HERE)
+                import plate_blur
+                os.replace(f"{d}/{name}.mov", f"{d}/{name}_orig.mov")
+                plate_blur.blur(f"{d}/{name}_orig.mov", f"{HERE}/{cfg['broll_plates'][name]}", f"{d}/{name}.mov")
+    names = sorted(br)
+    for i in range(0, len(names), 12):
+        grp = names[i:i + 12]
+        ins = " ".join(f"-i {d}/{n}.mov" for n in grp)
+        fc = ";".join(f"[{j}]fps=2,scale=120:-1,drawtext=fontfile={FONTS}/Inter-Bold.otf:text='{n} %{{pts\\:flt\\:1}}':"
+                      f"fontcolor=yellow:fontsize=16:x=3:y=3,tile=1x8[t{j}]" for j, n in enumerate(grp))
+        stack = f";{''.join(f'[t{j}]' for j in range(len(grp)))}hstack=inputs={len(grp)}" if len(grp) > 1 else ""
+        run(f"ffmpeg -v error -y {ins} -filter_complex \"{fc}{stack}\" -frames:v 1 {cfg['work']}/broll_{i // 12:02d}.jpg")
+
+
 def prep(cfg):
     w = cfg["work"]
     src = f"{w}/source.mov"
     drive_download(cfg["source_drive_id"], src)
-    run(f"ffmpeg -v error -y -i '{src}' -map 0:v:0 -map 0:a:0 -vf scale={W}:{H}:flags=lanczos,fps={FPS} "
+    prep_broll(cfg)
+    pre = pre_filter(cfg, src)
+    run(f"ffmpeg -v error -y -i '{src}' -map 0:v:0 -map 0:a:0 -vf {pre}scale={W}:{H}:flags=lanczos,fps={FPS} "
         f"-c:v libx264 -preset veryfast -crf 14 -pix_fmt yuv420p -c:a pcm_s16le {w}/proxy.mov")
+    if cfg.get("plate_boxes"):  # замазать гос-номер (боксы по кадрам proxy, см. plate_blur.py)
+        sys.path.insert(0, HERE)
+        import plate_blur
+        os.replace(f"{w}/proxy.mov", f"{w}/proxy_orig.mov")
+        plate_blur.blur(f"{w}/proxy_orig.mov", f"{HERE}/{cfg['plate_boxes']}", f"{w}/proxy.mov")
     run(f"ffmpeg -v error -y -i {w}/proxy.mov -vn -ac 1 -ar 16000 {w}/audio.wav")
     from faster_whisper import WhisperModel
     wf = wave.open(f"{w}/audio.wav")
@@ -95,7 +169,17 @@ def prep(cfg):
 
 # ---------------- build ----------------
 def words_all(cfg):
-    return [x for s in json.load(open(f"{cfg['work']}/words.json")) for x in s["words"]]
+    ws = [x for s in json.load(open(f"{cfg['work']}/words.json")) for x in s["words"]]
+    fa = cfg.get("fix_at", {})  # {"20.18": "что"} — правка одного слова по времени начала
+    out = []
+    for x in ws:
+        x = dict(x)
+        if f"{x['s']:.2f}" in fa:
+            x["w"] = " " + fa[f"{x['s']:.2f}"]
+        if out and x["w"].strip().startswith("-") and len(x["w"].strip()) > 1:  # «где» + «-то» → «где-то»
+            out[-1]["w"] += x["w"].strip(); out[-1]["e"] = x["e"]; continue
+        out.append(x)
+    return out
 
 
 def split_pauses(a, b, allw):
@@ -118,16 +202,42 @@ def ass_time(t):
     return f"{int(t // 3600)}:{int(t % 3600 // 60):02d}:{t % 60:05.2f}"
 
 
-def build_subs(timeline, allw, fix, path):
+def onsets(wav):
+    """Энергия голоса по 10 мс (дБ) — уточнять начало слов: Whisper ставит их на 0.1–0.5 с позже."""
+    wf = wave.open(wav)
+    a = np.frombuffer(wf.readframes(wf.getnframes()), dtype=np.int16).astype(np.float32) / 32768
+    hop = wf.getframerate() // 100
+    e = np.sqrt(np.mean(a[: len(a) // hop * hop].reshape(-1, hop) ** 2, axis=1))
+    return 20 * np.log10(e + 1e-6)
+
+
+def snap(t, db, lo):
+    """Начало звука перед словом: первый громкий кадр после тишины в окне [t-0.6, t+0.05], не раньше lo."""
+    i0, i1 = max(int((t - 0.6) * 100), int(lo * 100), 0), min(int((t + 0.05) * 100), len(db) - 1)
+    quiet = None
+    for i in range(i0, i1):
+        if db[i] < -40:
+            quiet = i
+        elif db[i] > -34 and quiet is not None:
+            return min(t, i / 100)
+    return t
+
+
+def build_subs(timeline, allw, fix, path, db, n_words=1, hook_end=0.0, title=None):
     items = []
     for si, (a, b, o) in enumerate(timeline):
+        prev = None  # не залезать на предыдущее слово
         for x in allw:
             if a <= (x["s"] + x["e"]) / 2 <= b:
-                items.append([o + max(x["s"], a) - a, o + min(x["e"], b) - a, norm(x["w"], fix), si])
+                s0 = snap(max(x["s"], a), db, a if prev is None else prev + 0.15)
+                shown = max(s0 - SUB_LEAD, a if prev is None else prev + 0.12)
+                items.append([o + shown - a, o + min(x["e"], b) - a, norm(x["w"], fix), si])
+                prev = s0
     items = [i for i in items if i[2]]
     groups, cur = [], []
-    for it in items:  # 1–2 слова, не через склейку
-        if cur and (len(cur) == 2 or it[3] != cur[-1][3] or len(" ".join(c[2] for c in cur + [it])) > 14 or it[0] - cur[-1][1] > 0.3):
+    for it in items:  # n_words слов, не через склейку
+        short = it[0] - cur[-1][0] < 0.15 if cur else False  # слишком быстрое слово — вместе со следующим
+        if cur and ((len(cur) >= n_words and not short) or it[3] != cur[-1][3] or len(" ".join(c[2] for c in cur + [it])) > 14 or it[0] - cur[-1][1] > 0.3):
             groups.append(cur); cur = []
         cur.append(it)
     if cur:
@@ -139,7 +249,13 @@ def build_subs(timeline, allw, fix, path):
         en = groups[gi + 1][0][0] if gi + 1 < len(groups) else g[-1][1] + 0.3
         en = min(en, g[-1][1] + 0.5, end_body)
         txt = " ".join(w[2] for w in g).lower()
-        lines.append(f"Dialogue: 0,{ass_time(st)},{ass_time(en)},Sub,,0,0,0,,{{\\q2\\pos(540,{SUB_Y})\\fscx94\\fscy94\\t(0,90,\\fscx100\\fscy100)}}{txt}")
+        big = st < hook_end  # на хуке крупнее
+        sc0, sc1 = (112, 120) if big else (94, 100)
+        lines.append(f"Dialogue: 0,{ass_time(st)},{ass_time(en)},Sub,,0,0,0,,{{\\q2\\pos({SAFE_X},{SUB_Y})\\fscx{sc0}\\fscy{sc0}\\t(0,90,\\fscx{sc1}\\fscy{sc1})}}{txt}")
+    if title:  # заголовок хука сверху: белый капс с тёмной обводкой, низ золотом; гаснет к вспышке
+        en = hook_end - 0.05
+        txt = f"{title[0]}\\N{{\\c&H{GOLD[2]:02X}{GOLD[1]:02X}{GOLD[0]:02X}&}}{title[1]}"
+        lines.append(f"Dialogue: 1,{ass_time(0)},{ass_time(en)},Title,,0,0,0,,{{\\q2\\pos(540,{TITLE_Y})\\fad(0,250)\\fscx80\\fscy80\\t(0,160,\\fscx100\\fscy100)}}{txt}")
     head = f"""[Script Info]
 PlayResX: {W}
 PlayResY: {H}
@@ -148,6 +264,7 @@ ScaledBorderAndShadow: yes
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
 Style: Sub,Montserrat ExtraBold,74,&H00FFFFFF,&H00FFFFFF,&H50000000,&H64000000,0,0,0,0,100,100,0,0,1,1.2,2.5,5,60,60,0,1
+Style: Title,Montserrat ExtraBold,124,&H00FFFFFF,&H00FFFFFF,&H00101010,&H78000000,0,0,0,0,100,100,0,0,1,6,5,5,50,50,0,1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
@@ -158,19 +275,22 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 def plate_png(lines, path):
     """Тёмная плашка с золотой рамкой: верхняя строка белая, нижняя золотая."""
     from PIL import ImageFilter
-    f1 = ImageFont.truetype(f"{FONTS}/Inter-Black.otf", 58)
-    pad_x, pad_y, gap = 54, 34, 14
+    pad_x, pad_y, gap = 34, 20, 8
     tmp = ImageDraw.Draw(Image.new("RGBA", (10, 10)))
-    sizes = [tmp.textbbox((0, 0), l, font=f1) for l in lines]
-    tw = max(b[2] - b[0] for b in sizes)
+    for fs in range(44, 28, -2):  # длинная строка — шрифт меньше, но плашка не шире SAFE_W
+        f1 = ImageFont.truetype(f"{FONTS}/Inter-Black.otf", fs)
+        sizes = [tmp.textbbox((0, 0), l, font=f1) for l in lines]
+        tw = max(b[2] - b[0] for b in sizes)
+        if tw + pad_x * 2 <= SAFE_W:
+            break
     th = sum(b[3] - b[1] for b in sizes) + gap * (len(lines) - 1)
-    bw, bh = min(tw + pad_x * 2, W - 120), th + pad_y * 2
+    bw, bh = min(tw + pad_x * 2, SAFE_W), th + pad_y * 2
     img = Image.new("RGBA", (bw + 24, bh + 24), (0, 0, 0, 0))
     sh = Image.new("RGBA", img.size, (0, 0, 0, 0))
-    ImageDraw.Draw(sh).rounded_rectangle((12, 16, bw + 12, bh + 16), 36, fill=(0, 0, 0, 110))
+    ImageDraw.Draw(sh).rounded_rectangle((12, 16, bw + 12, bh + 16), 24, fill=(0, 0, 0, 90))
     img = Image.alpha_composite(img, sh.filter(ImageFilter.GaussianBlur(10)))
     d = ImageDraw.Draw(img)
-    d.rounded_rectangle((12, 12, bw + 12, bh + 12), 36, fill=(14, 14, 16, 205), outline=GOLD + (255,), width=3)
+    d.rounded_rectangle((12, 12, bw + 12, bh + 12), 24, fill=(14, 14, 16, 185), outline=GOLD + (255,), width=2)
     y = 12 + pad_y
     for i, (l, b) in enumerate(zip(lines, sizes)):
         col = GOLD + (255,) if i == len(lines) - 1 else (255, 255, 255, 255)
@@ -185,18 +305,22 @@ def build(cfg):
     allw = words_all(cfg)
     fix = {**FIX, **cfg.get("fix_words", {})}
     tag = cfg["name"]
+    mini = cfg.get("minimal", False)  # «как в жизни»: только субтитры, текст в начале/конце, музыка
 
     segs = []
     for a, b, v, z, part, plate in cfg["edl"]:
         for pa, pb in split_pauses(a, b, allw):
-            segs.append((pa, pb, None if v is None else v + (pa - a), z, part, plate))
+            if isinstance(v, list):  # ["подсъём", t]
+                segs.append((pa, pb, [v[0], v[1] + (pa - a)], z, part, plate))
+            else:
+                segs.append((pa, pb, None if v is None else v + (pa - a), z, part, plate))
     files, timeline, meta, o = [], [], [], 0.0
     for i, (a, b, v, z, part, plate) in enumerate(segs):
         d = b - a
         f = f"{w}/seg/s{i:03d}.mov"
-        vs = a if v is None else v
-        run(f"ffmpeg -v error -y -ss {vs:.3f} -t {d:.3f} -i {proxy} -ss {a:.3f} -t {d:.3f} -i {proxy} -map 0:v -map 1:a "
-            f"-vf \"crop=iw/{z}:ih/{z},scale={W}:{H}:flags=lanczos,setsar=1,fps={FPS},{grade(cfg)}\" "
+        vsrc, vs = (f"{w}/broll/{v[0]}.mov", v[1]) if isinstance(v, list) else (proxy, a if v is None else v)
+        run(f"ffmpeg -v error -y -ss {vs:.3f} -t {d:.3f} -i {vsrc} -ss {a:.3f} -t {d:.3f} -i {proxy} -map 0:v -map 1:a "
+            f"-vf \"crop=iw/{z}:ih/{z},scale={W}:{H}:flags=lanczos,setsar=1,fps={FPS},tpad=stop_mode=clone:stop_duration=10,{grade(cfg)}\" "
             f"-af afade=t=in:d=0.015,afade=t=out:st={max(d - 0.025, 0):.3f}:d=0.025 "
             f"-c:v libx264 -preset fast -crf 15 -pix_fmt yuv420p -c:a pcm_s16le -ar 48000 -ac 2 -shortest {f}")
         dd = dur(f)
@@ -204,17 +328,17 @@ def build(cfg):
     body = o
 
     # заставка: размытый кадр + логотип
-    run(f"ffmpeg -v error -y -ss {cfg.get('endcard_bg_time', segs[-1][0])} -i {proxy} -frames:v 1 -vf \"{grade(cfg)}\" {w}/last.png")
-    run(f"ffmpeg -v error -y -loop 1 -t {ENDCARD} -i {w}/last.png -loop 1 -t {ENDCARD} -i {A}/endcard.png "
-        f"-f lavfi -t {ENDCARD} -i anullsrc=r=48000:cl=stereo "
-        f"-filter_complex \"[0]scale={W}:{H},boxblur=30:3,eq=brightness=-0.3,fps={FPS}[bg];[1]format=rgba,fade=t=in:st=0:d=0.35:alpha=1[l];[bg][l]overlay=0:0,format=yuv420p[v]\" "
-        f"-map [v] -map 2:a -c:v libx264 -preset fast -crf 15 -c:a pcm_s16le {w}/endcard.mov")
-    files.append(f"{w}/endcard.mov")
+    if not mini:
+        run(f"ffmpeg -v error -y -ss {cfg.get('endcard_bg_time', segs[-1][0])} -i {proxy} -frames:v 1 -vf \"{grade(cfg)}\" {w}/last.png")
+        run(f"ffmpeg -v error -y -loop 1 -t {ENDCARD} -i {w}/last.png -loop 1 -t {ENDCARD} -i {A}/endcard.png "
+            f"-f lavfi -t {ENDCARD} -i anullsrc=r=48000:cl=stereo "
+            f"-filter_complex \"[0]scale={W}:{H},boxblur=30:3,eq=brightness=-0.3,fps={FPS}[bg];[1]format=rgba,fade=t=in:st=0:d=0.35:alpha=1[l];[bg][l]overlay=0:0,format=yuv420p[v]\" "
+            f"-map [v] -map 2:a -c:v libx264 -preset fast -crf 15 -c:a pcm_s16le {w}/endcard.mov")
+        files.append(f"{w}/endcard.mov")
     with open(f"{w}/list.txt", "w") as fh:
         fh.writelines(f"file '{f}'\n" for f in files)
     run(f"ffmpeg -v error -y -f concat -safe 0 -i {w}/list.txt -c copy {w}/joined.mov")
-    total = body + ENDCARD
-    build_subs(timeline, allw, fix, f"{w}/subs.ass")
+    total = body + (0 if mini else ENDCARD)
 
     spans, firsts = {}, []
     for st, en, part, plate in meta:
@@ -224,19 +348,21 @@ def build(cfg):
             s0, e0 = spans.get(plate, (st, en))
             spans[plate] = (min(s0, st), max(e0, en))
     hook = cfg.get("hook_plate", "hook")
-    hook_end = spans[hook][1]
+    hook_end = spans[hook][1] if hook in spans else min(cfg.get("hook_text_dur", 5.0), body)
+    build_subs(timeline, allw, fix, f"{w}/subs.ass", onsets(f"{w}/audio.wav"), cfg.get("sub_words", 1),
+               0.0 if mini else hook_end, cfg.get("hook_title"))
 
     music = f"{w}/music.wav"
     if not os.path.exists(music):
         drive_download(cfg["music_drive_id"], f"{w}/music_src.mov")
         run(f"ffmpeg -v error -y -i {w}/music_src.mov -vn -ac 2 -ar 48000 {music}")
     inputs = [f"-i {w}/joined.mov", f"-ss {cfg.get('music_start', 8)} -i {music}", f"-i {A}/sfx/flash.mp3"]
-    pops = [t for t in firsts if t > hook_end + 0.5] + [body]
+    pops = [] if mini else [t for t in firsts if t > hook_end + 0.5] + [body]
     for k in range(len(pops)):
         inputs.append(f"-i {A}/sfx/{'s5' if k == len(pops) - 1 else ('s2' if k % 2 == 0 else 's4')}.mp3")
     chain, last, n = [], "[0:v]", len(inputs)
-    last_plate = max(spans, key=lambda g: spans[g][0])
-    for grp, lines in cfg["plates"].items():
+    last_plate = max(spans, key=lambda g: spans[g][0]) if spans else None
+    for grp, lines in ({} if mini else cfg.get("plates", {})).items():
         if grp not in spans:
             continue
         p = f"{w}/plate_{grp}.png"
@@ -253,24 +379,38 @@ def build(cfg):
         if grp != last_plate:
             fade += f",fade=t=out:st={en - PLATE_FADE:.2f}:d={PLATE_FADE}:alpha=1"
         chain.append(f"[{n}:v]format=rgba{fade}[p{n}]")
-        chain.append(f"{last}[p{n}]overlay=(W-w)/2:{PLATE_Y}:enable='between(t,{st:.2f},{en:.2f})'[v{n}]")
+        chain.append(f"{last}[p{n}]overlay={SAFE_X}-w/2:{PLATE_Y}:enable='between(t,{st:.2f},{en:.2f})'[v{n}]")
         last = f"[v{n}]"; n += 1
-    for k, (t, peak, din, dout) in enumerate([(hook_end, 1.0, 0.12, 0.30)] + [(t, 0.6, 0.06, 0.22) for t in pops]):
+    if mini:  # текст в начале и в конце — та же тёмная плашка с золотой рамкой, мягко появляется и гаснет
+        for key, st, en in [("hook_text", 0.0, hook_end), ("end_text", max(total - cfg.get("end_text_dur", 3.0), 0), total)]:
+            if not cfg.get(key):
+                continue
+            p = f"{w}/{key}.png"
+            plate_png([l.upper() for l in cfg[key]], p)
+            inputs.append(f"-loop 1 -t {total:.2f} -i {p}")
+            fade = f",fade=t=out:st={en - PLATE_FADE:.2f}:d={PLATE_FADE}:alpha=1" if en < total else ""
+            chain.append(f"[{n}:v]format=rgba,fade=t=in:st={st:.2f}:d=0.2:alpha=1{fade}[p{n}]")
+            chain.append(f"{last}[p{n}]overlay={SAFE_X}-w/2:{PLATE_Y}:enable='between(t,{st:.2f},{en:.2f})'[v{n}]")
+            last = f"[v{n}]"; n += 1
+    for k, (t, peak, din, dout) in enumerate(([] if mini else [(hook_end, 1.0, 0.12, 0.30)]) + [(t, 0.6, 0.06, 0.22) for t in pops]):
         chain.append(f"color=c=white:s={W}x{H}:d={total:.2f}:r={FPS},format=rgba,"
                      f"fade=t=in:st={max(t - din, 0):.2f}:d={din}:alpha=1,fade=t=out:st={t:.2f}:d={dout}:alpha=1,colorchannelmixer=aa={peak}[fl{k}]")
         chain.append(f"{last}[fl{k}]overlay=0:0:enable='between(t,{max(t - din - 0.01, 0):.2f},{t + dout + 0.02:.2f})'[vf{k}]")
         last = f"[vf{k}]"
     chain.append(f"{last}ass={w}/subs.ass:fontsdir={FONTS}[vout]")
-    # голос без шумодава; aresample после loudnorm обязателен (иначе 192 кГц и обрезанный конец)
-    chain.append("[0:a]highpass=f=95,acompressor=threshold=-22dB:ratio=2.5:attack=8:release=120:makeup=2,"
+    # шумодав RNNoise (assets/sh.rnnn): фон −10 дБ, голос держит loudnorm; denoise: 0 — выключить.
+    # aresample после loudnorm обязателен (иначе 192 кГц и обрезанный конец)
+    dn = cfg.get("denoise", 0.85)
+    dn = f"arnndn=m={A}/sh.rnnn:mix={dn}," if dn else ""
+    chain.append(f"[0:a]highpass=f=95,{dn}acompressor=threshold=-22dB:ratio=2.5:attack=8:release=120:makeup=2,"
                  "loudnorm=I=-13:TP=-1.5:LRA=8,aresample=48000,asplit=2[voice][sc]")
     chain.append(f"[1:a]aresample=48000,atrim=0:{total:.2f},volume={cfg.get('music_vol', 0.22)},"
                  f"afade=t=in:d=1.0,afade=t=out:st={total - 1.5:.2f}:d=1.5[mus]")
     chain.append("[mus][sc]sidechaincompress=threshold=0.05:ratio=2.5:attack=40:release=600[duck]")
     fl = int((hook_end - FLASH_LEAD) * 1000)
-    fx = [f"[2:a]aresample=48000,volume=0.45,adelay={fl}|{fl}[fx0]"]
+    fx = [] if mini else [f"[2:a]aresample=48000,volume=0.45,adelay={fl}|{fl}[fx0]"]
     for k, t in enumerate(pops):
-        fx.append(f"[{3 + k}:a]aresample=48000,volume={0.32 if k == len(pops) - 1 else 0.24},adelay={int(t * 1000)}|{int(t * 1000)}[fx{k + 1}]")
+        fx.append(f"[{3 + k}:a]aresample=48000,volume={0.32 if k == len(pops) - 1 else 0.24},adelay={int(t * 1000)}|{int(t * 1000)}[fx{len(fx)}]")
     chain += fx
     labels = "".join(f"[fx{k}]" for k in range(len(fx)))
     chain.append(f"[voice][duck]{labels}amix=inputs={2 + len(fx)}:duration=longest:normalize=0,atrim=0:{total:.2f},alimiter=limit=0.95[aout]")
