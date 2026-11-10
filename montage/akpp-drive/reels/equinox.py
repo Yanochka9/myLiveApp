@@ -3,6 +3,7 @@ import sys
 import lib
 
 NAME = 'equinox'
+MUSIC, MUSIC_IN = 'FA00.mov', 0.0
 PROMPT = 'Вариатор Chevrolet Equinox, течь сальника, дифференциал, цепь, насос, валы, выработка корпуса.'
 HOOK = dict(src='4040', a=0.55, b=4.30, face=(0.5, 0.2), zoom_from=1.0, zoom_to=1.45)
 
@@ -46,23 +47,21 @@ def gfx(R):
     w58 = next(s for s in R.shots() if s['src'] and s['src'].endswith('4058.MOV'))
     return [
         # hook: three beats pop up while he says them
-        dict(type='label', t0=m('4040', 0.75), t1=R.HOOK_END, text='1 УДАР В КОЛЕСО', y=300, size=50, bg='#2b2f36'),
-        dict(type='label', t0=m('4040', 2.1), t1=R.HOOK_END, text='1 ПОТЁКШИЙ САЛЬНИК', y=420, size=50, bg='#2b2f36'),
-        dict(type='label', t0=m('4040', 3.15), t1=R.HOOK_END, text='= КАПИТАЛКА ВАРИАТОРА', y=540, size=52),
+        dict(type='label', t0=m('4040', 0.75), t1=R.HOOK_END, text='1 УДАР В КОЛЕСО', y=900, size=42, bg='#2b2f36'),
+        dict(type='label', t0=m('4040', 2.1), t1=R.HOOK_END, text='1 ПОТЁКШИЙ САЛЬНИК', y=1010, size=42, bg='#2b2f36'),
+        dict(type='label', t0=m('4040', 3.15), t1=R.HOOK_END, text='= КАПИТАЛКА ВАРИАТОРА', y=1120, size=42),
         dict(type='flash', t=R.HOOK_END),
         dict(type='header', t0=R.HOOK_END + 0.1, t1=m('4043', 14.5), text='CHEVROLET EQUINOX', sub='ВАРИАТОР'),
         dict(type='leak', t0=m('4043', 14.6), t1=m('4043', 16.0), x=600, y=700, label='ТЕЧЬ САЛЬНИКА', lt=m('4043', 14.7)),
-        dict(type='label', t0=m('4043', 24.3), t1=m('4043', 26.0), text='СТОРОННИЙ СЕРВИС', y=360, size=50, bg='#2b2f36'),
-        dict(type='label', t0=m('4043', 26.0), t1=m('4043', 26.95), text='ТЕЧЬ НЕ УШЛА', y=360, size=56),
+        dict(type='label', t0=m('4043', 24.3), t1=m('4043', 26.0), text='СТОРОННИЙ СЕРВИС', size=50, bg='#2b2f36'),
+        dict(type='label', t0=m('4043', 26.0), t1=m('4043', 26.95), text='ТЕЧЬ НЕ УШЛА'),
         dict(type='flash', t=m('4043', 77.3)),
-        dict(type='label', t0=m('4043', 79.3), t1=m('4043', 81.35), text='ДИФФЕРЕНЦИАЛ', y=360, size=60),
+        dict(type='label', t0=m('4043', 79.3), t1=m('4043', 81.35), text='ДИФФЕРЕНЦИАЛ'),
         dict(type='leak', t0=m('4044', 15.4), t1=m('4044', 17.2), x=540, y=760, label='МАСЛО УШЛО', lt=m('4044', 15.6)),
-        dict(type='brackets', t0=w58['o0'] + 0.1, t1=w58['o1'], box=[150, 620, 930, 1350], label='НЕОБРАТИМЫЕ ПОВРЕЖДЕНИЯ',
-             ly=500, size=40),
-        dict(type='checklist', t0=m('4044', 34.3), t1=m('4044', 38.2) + 0.3, y=240, title='ПОВРЕЖДЕНО',
+        dict(type='checklist', t0=m('4044', 34.3), t1=m('4044', 38.2) + 0.3, y=860, title='ПОВРЕЖДЕНО',
              rows=[['ЦЕПЬ', m('4044', 35.15)], ['НАСОС', m('4044', 36.1)], ['ВАЛЫ', m('4044', 37.5)]]),
-        dict(type='label', t0=m('4045', 25.8), t1=m('4045', 27.9), text='ВЫРАБОТКА КОРПУСА', y=360, size=52),
-        dict(type='checklist', t0=m('4046', 24.6), t1=m('4046', 28.4), y=240, title='ИТОГ РЕМОНТА',
+        dict(type='label', t0=m('4045', 25.8), t1=m('4045', 27.9), text='ВЫРАБОТКА КОРПУСА'),
+        dict(type='checklist', t0=m('4046', 24.6), t1=m('4046', 28.4), y=860, title='ИТОГ РЕМОНТА',
              rows=[['ДЕТАЛИ — ЗАМЕНА', m('4046', 25.6)], ['КОРПУС — РЕМОНТ', m('4046', 27.5)]]),
         dict(type='address', t0=m('4046', 40.2), t1=R.MAIN),
     ]
@@ -89,5 +88,5 @@ def sfx(R):
 
 if __name__ == '__main__':
     R0 = lib.Reel(sys.modules[__name__])
-    HIDE = [(0.0, R0.HOOK_END), (R0.m('4044', 34.3), R0.m('4044', 38.2))]   # the list shows the same words
+    HIDE = [(0.0, R0.HOOK_END), (R0.m('4044', 34.3), R0.m('4044', 38.2)), (R0.m('4046', 24.6), R0.m('4046', 28.4))]   # the list shows the same words
     lib.main(sys.modules[__name__])

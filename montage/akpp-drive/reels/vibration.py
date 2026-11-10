@@ -3,6 +3,7 @@ import sys
 import lib
 
 NAME = 'vibration'
+MUSIC, MUSIC_IN = '6549.mov', 0.0
 PROMPT = 'Т5 автомат, вибрация при разгоне. Гидротрансформатор, планетарные механизмы, гидроблок, поддон, бронзовая стружка.'
 # hook: he reads the subscriber's question; slow push-in, question bubble on top
 HOOK = dict(src='3990', a=3.0, b=6.80, face=(0.5, 0.22), zoom_from=1.0, zoom_to=1.22)
@@ -55,20 +56,16 @@ def gfx(R):
     m = R.m
     sch = next(s for s in R.shots() if s['kind'] == 'scheme')
     return [
-        dict(type='question', t0=0.15, t1=R.HOOK_END, lines=['Т5 АВТОМАТ, ВИБРАЦИЯ', 'ПРИ РАЗГОНЕ ДО 4-Й.', 'ПРОБЛЕМА В КОРОБКЕ?']),
+        dict(type='question', t0=0.15, t1=R.HOOK_END, y=1060, lines=['Т5 АВТОМАТ, ВИБРАЦИЯ', 'ПРИ РАЗГОНЕ ДО 4-Й.', 'ПРОБЛЕМА В КОРОБКЕ?']),
         dict(type='flash', t=R.HOOK_END),
         dict(type='header', t0=R.HOOK_END + 0.1, t1=m('3990', 9.7), text='ДВИГАТЕЛЬ ИЛИ КОРОБКА?'),
-        dict(type='label', t0=m('3990', 10.8), t1=m('3990', 12.5), text='ПОДУШКИ ДВИГАТЕЛЯ', y=380),
         dict(type='gears', t0=sch['o0'], t1=sch['o1'], upto=4, lt=sch['o0'] + 1.0, label='ДО 4-Й → ПРОВЕРЯЕМ КОРОБКУ'),
-        dict(type='label', t0=m('3990', 59.6), t1=m('3990', 61.1), text='ГИДРОТРАНСФОРМАТОР', y=380, size=46),
-        dict(type='label', t0=m('3990', 61.6), t1=m('3990', 63.65), text='ПЛАНЕТАРНЫЕ МЕХАНИЗМЫ', y=380, size=44),
-        dict(type='checklist', t0=m('3990', 82.4), t1=m('3990', 92.5), y=240, title='ЧТО ПРОВЕРИТЬ',
+        dict(type='checklist', t0=m('3990', 82.4), t1=m('3990', 92.5), y=860, title='ЧТО ПРОВЕРИТЬ',
              rows=[['МАСЛО В ПОДДОНЕ', m('3990', 82.4)], ['БРОНЗОВАЯ СТРУЖКА', m('3990', 83.5)],
                    ['МЕТАЛЛ. ВКЛЮЧЕНИЯ', m('3990', 85.8)]]),
-        dict(type='label', t0=m('3990', 102.0), t1=m('3990', 106.0), text='ПИНКИ ПРИ ПЕРЕКЛЮЧЕНИИ', y=380, size=46),
-        dict(type='label', t0=m('3990', 107.5), t1=m('3990', 109.4), text='ГИДРОБЛОК', y=380, size=60),
+        dict(type='label', t0=m('3990', 107.5), t1=m('3990', 109.4), text='ГИДРОБЛОК'),
         dict(type='flash', t=m('3990', 144.55)),
-        dict(type='label', t0=m('3990', 254.0), t1=m('3990', 255.35), text='ДИАГНОСТИКА БЕСПЛАТНО', y=380, size=48),
+        dict(type='label', t0=m('3990', 254.0), t1=m('3990', 255.35), text='ДИАГНОСТИКА БЕСПЛАТНО'),
         dict(type='address', t0=m('3990', 255.3), t1=R.MAIN, text='Дзержинского, 82А'),
     ]
 
@@ -96,5 +93,5 @@ def sfx(R):
 
 if __name__ == '__main__':
     R0 = lib.Reel(sys.modules[__name__])
-    HIDE = [(0.0, R0.HOOK_END)]          # the question is shown in the bubble
+    HIDE = [(0.0, R0.HOOK_END), (R0.m('3990', 82.4), R0.m('3990', 92.5))]   # bubble / checklist show the text
     lib.main(sys.modules[__name__])

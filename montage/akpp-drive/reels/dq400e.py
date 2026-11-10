@@ -3,6 +3,7 @@ import sys
 import lib
 
 NAME = 'dq400e'
+MUSIC, MUSIC_IN = '0EEE.mov', 0.0
 PROMPT = 'DQ400E, робот-гибрид, мехатроник, сцепление, гидравлика, КПП, трансмиссии.'
 HOOK = dict(src='4062', a=0.70, b=2.40, face=(0.5, 0.25), zoom_from=1.0, zoom_to=1.5)
 
@@ -45,21 +46,20 @@ def gfx(R):
     w79 = next(s for s in R.shots() if s['src'] and s['src'].endswith('4079.MOV'))
     w80 = next(s for s in R.shots() if s['src'] and s['src'].endswith('4080.MOV'))
     return [
-        dict(type='label', t0=m('4062', 1.35), t1=R.HOOK_END, text='ИЗ США', y=330, size=60),
+        dict(type='label', t0=m('4062', 1.35), t1=R.HOOK_END, text='ИЗ США', y=1050, size=60),
         dict(type='flash', t=R.HOOK_END),
         dict(type='header', t0=R.HOOK_END + 0.1, t1=m('4068', 4.85), text='DQ400E', sub='РОБОТ-ГИБРИД'),
-        dict(type='label', t0=m('4068', 5.7), t1=m('4068', 7.3), text='УДАР В ПЕРЕДНЮЮ ЧАСТЬ', y=360, size=46),
+        dict(type='label', t0=m('4068', 5.7), t1=m('4068', 7.3), text='УДАР В ПЕРЕДНЮЮ ЧАСТЬ'),
         dict(type='leak', t0=m('4068', 7.45), t1=m('4068', 8.45), x=540, y=640, label='ПОТЕРЯ МАСЛА', lt=m('4068', 7.5)),
-        dict(type='label', t0=m('4068', 9.9), t1=m('4068', 11.0), text='НЕ ЕДЕТ', y=360, size=64),
+        dict(type='label', t0=m('4068', 9.9), t1=m('4068', 11.0), text='НЕ ЕДЕТ'),
         dict(type='flash', t=m('4068', 17.85)),
-        dict(type='brackets', t0=w79['o0'] + 0.1, t1=w79['o1'], box=[170, 700, 910, 1400], label='МЕХАТРОНИК', ly=580),
-        dict(type='ellipse', t0=w80['o0'] + 0.1, t1=w80['o1'], cx=560, cy=1050, rx=420, ry=230, rot=-0.08,
-             label='СЦЕПЛЕНИЕ СОЖЖЕНО', lx=540, ly=560, lt=w80['o0'] + 0.5, size=48),
-        dict(type='checklist', t0=m('4068', 63.2), t1=m('4068', 65.95) + 0.2, y=240, title='РЕМОНТ',
+        dict(type='ellipse', t0=w80['o0'] + 0.1, t1=w80['o1'], cx=540, cy=1050, rx=360, ry=210, rot=-0.08,
+             label='СЦЕПЛЕНИЕ СОЖЖЕНО', lx=540, ly=1360, lt=w80['o0'] + 0.5, size=48),
+        dict(type='checklist', t0=m('4068', 63.2), t1=m('4068', 65.95) + 0.2, y=860, title='РЕМОНТ',
              rows=[['ГИДРАВЛИКА', m('4068', 64.0)], ['СЦЕПЛЕНИЕ — ЗАМЕНА', m('4068', 64.9)]]),
-        dict(type='label', t0=m('4070', 11.1), t1=m('4070', 13.75), text='НЕ ЧИНИТЕ САМИ', y=360, size=60),
-        dict(type='label', t0=m('4070', 14.3), t1=m('4070', 15.9), text='ДОРОГОЙ РЕМОНТ', y=360, size=60),
-        dict(type='header', t0=m('4074', 6.9), t1=m('4074', 9.05), text='РЕМОНТ ГИБРИДНЫХ КПП', y=220),
+        dict(type='label', t0=m('4070', 11.1), t1=m('4070', 13.75), text='НЕ ЧИНИТЕ САМИ'),
+        dict(type='label', t0=m('4070', 14.3), t1=m('4070', 15.9), text='ДОРОГОЙ РЕМОНТ'),
+        dict(type='header', t0=m('4074', 6.9), t1=m('4074', 9.05), text='РЕМОНТ ГИБРИДНЫХ КПП'),
         dict(type='address', t0=m('4075', 0.05), t1=R.MAIN),
     ]
 

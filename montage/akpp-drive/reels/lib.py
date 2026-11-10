@@ -14,8 +14,10 @@ STK = SP + '/stock'
 HERE = os.path.dirname(os.path.abspath(__file__))
 ASSETS = os.path.join(HERE, '..', 'assets')
 FPS = 30
-PAD = 0.05          # air kept before speech at every cut
-PAD_END = 0.11      # air kept after speech (soft word endings)
+PAD = 0.06          # air kept before speech at every cut
+PAD_END = 0.13      # air kept after speech (soft word endings)
+PHRASE_TAIL = 0.18  # extra pause kept after every phrase (between sentences)
+QUIET_PIECE = -42   # pieces whose loudest 50 ms is below this are background (prompter, noise): dropped
 MIN_GAP = 0.16      # silences shorter than this stay
 END_PLATE = 3.0
 
@@ -85,6 +87,33 @@ def cut_phrase(name, a, b, thr=-44, keep=()):
     return [(fr(x), fr(y)) for x, y in res if y - x > 0.06]
 
 
+_wav = {}
+
+
+def _audio(name):
+    if name not in _wav:
+        import wave, numpy as np
+        w = wave.open(f'{SP}/wav/IMG_{name}.wav')
+        _wav[name] = np.frombuffer(w.readframes(w.getnframes()), np.int16).astype('float32') / 32768
+    return _wav[name]
+
+
+def piece_peak(name, a, b):
+    import numpy as np
+    x = _audio(name)[int(a * 16000):int(b * 16000)]
+    if len(x) < 800:
+        return -99
+    return max(20 * np.log10(np.sqrt((x[i:i + 800] ** 2).mean()) + 1e-9) for i in range(0, len(x) - 800, 400))
+
+
+def next_speech(name, t):
+    """start of the next speech after t (end of the silence t is in)."""
+    for s0, s1 in silences(name):
+        if s0 - 0.2 <= t <= s1:
+            return s1
+    return t + 0.3
+
+
 def make_gap(name, dur):
     w = f'{SP}/wav/IMG_{name}.wav'
     if not os.path.exists(w):
@@ -113,7 +142,15 @@ class Reel:
                 make_gap(name, b)
                 self.segs.append((name, 0.0, fr(b), i))
                 continue
-            for x, y in cut_phrase(name, a, b, opt.get('thr', -44), opt.get('keep', ())):
+            pcs = [pc for pc in cut_phrase(name, a, b, opt.get('thr', -44), opt.get('keep', ()))
+                   if piece_peak(name, *pc) > QUIET_PIECE]
+            if not pcs:
+                continue
+            tail = opt.get('tail', PHRASE_TAIL)
+            pcs[-1] = (pcs[-1][0], fr(min(pcs[-1][1] + tail, next_speech(name, pcs[-1][1]) - 0.04)))
+            if opt.get('head'):
+                pcs[0] = (fr(max(0, pcs[0][0] - opt['head'])), pcs[0][1])
+            for x, y in pcs:
                 self.segs.append((name, x, y, i))
         self.outs, t = [], 0.0
         for s in self.segs:
@@ -296,8 +333,10 @@ class Reel:
 # ---------------------------------------------------------------- video
 GRADE = ("eq=saturation=0.82:contrast=1.06:brightness=-0.01,"
          "curves=all='0/0.03 0.25/0.22 0.75/0.78 1/0.97',colorbalance=bs=0.03:bm=0.01:rh=0.01")
-TONEMAP = ("zscale=t=linear:npl=203,format=gbrpf32le,zscale=p=bt709,tonemap=mobius:desat=0:param=0.4,"
-           "zscale=t=bt709:m=bt709:r=tv,format=yuv420p")
+# approved colour (DP0 v2): HLG -> SDR matched to the variator's SDR iPhone export, then the variator GRADE on top
+TONEMAP = ("zscale=t=linear:npl=700,format=gbrpf32le,zscale=p=bt709,tonemap=mobius:desat=0:param=0.3,"
+           "zscale=t=bt709:m=bt709:r=tv,format=yuv420p,"
+           "eq=contrast=1.12:saturation=1.35,curves=all='0/0.05 1/1',colorbalance=rm=-0.03:bm=0.02:bs=0.02")
 
 
 def motion(kind, n, cx='iw/2', cy='ih/2'):
@@ -321,7 +360,7 @@ def shot_cmd(R, i, s):
         # aggressive push-in toward the face while the line is said
         z1 = o.get('zoom_to', 1.55)
         fx, fy = o.get('face', (0.5, 0.2))
-        ease = f"pow(({s['o0']:.3f}+on/{FPS})/{R.HOOK_END:.3f}\\,1.6)"
+        ease = f"pow(({s['o0']:.3f}+on/{FPS})/{R.HOOK_END:.3f}\\,{o.get('ease', 1.6)})"
         shake = o.get('shake_at')
         sh = ''
         if shake is not None:
@@ -367,7 +406,7 @@ def shot_cmd(R, i, s):
         if isinstance(cx, float): cx = f'iw*{cx}'
         if isinstance(cy, float): cy = f'ih*{cy}'
         sc = o.get('scale', 1296)
-        sp = f"setpts={o['slow']}*PTS," if o.get('slow') else ''
+        sp = ''   # no slow motion: client wants the original speed (short clips hold their last frame)
         vf = (f"{sp}{TONEMAP},fps={FPS},scale={sc}:{int(sc * 16 / 9)}:flags=lanczos,{GRADE}{o.get('extra', '')},"
               f"{motion(s['motion'], n, cx, cy)}")
     elif k == 'endplate':
@@ -447,6 +486,18 @@ def tokens(R):
     return toks
 
 
+_font = {}
+
+
+def sub_size(w, k=1.0, maxw=720, base=92):
+    """font size so the word (with its outline) stays within ~740 px of the 150..930 safe zone."""
+    from PIL import ImageFont
+    if 'f' not in _font:
+        _font['f'] = ImageFont.truetype(os.path.expanduser('~/.fonts/Unbounded-Black.ttf'), 100)
+    wid = _font['f'].getlength(w) / 100     # width per 1 px of font size
+    return int(min(base * k, maxw / max(wid, 0.01)))
+
+
 def ts(t):
     cs = round(t * 100)
     return f"{cs // 360000}:{cs // 6000 % 60:02d}:{cs // 100 % 60:02d}.{cs % 100:02d}"
@@ -466,9 +517,7 @@ def subs(R):
         t1 = min(nxt, t0 + 1.3)
         if t1 - t0 < 0.05:
             continue
-        size = 96 if len(w) <= 10 else int(96 * 10 / len(w))
-        if red:
-            size = int(size * 1.12)
+        size = sub_size(w, 1.12 if red else 1.0)
         style = 'R' if red else 'W'
         anim = r"{\fscx78\fscy78\t(0,90,\fscx106\fscy106)\t(90,170,\fscx100\fscy100)}"
         ev.append(f"Dialogue: 0,{ts(t0)},{ts(t1)},{style},,0,0,0,,{{\\pos(540,1190)\\fs{size}}}{anim}{w}")
@@ -507,6 +556,8 @@ PEAK = {'riser': 4.0, 'click1': .11, 'click2': .13, 'click3': .10, 'click4': .16
 
 
 def sfx_path(sid):
+    if sid == 'riser_hook':
+        return f'{SP}/web/riser_hook.wav'
     if sid == 'yakubovich':
         return f'{SP}/web/yakubovich.wav'
     if sid == 'boom':
@@ -556,9 +607,14 @@ def mix(R, music=None):
         chains.append(f"[{i}:a]aformat=channel_layouts=stereo,volume=0.05,adelay={int(ca * 1000)}:all=1[b{n}]")
         labels.append(f'[b{n}]')
     if music:
+        vl = voice_lufs(R)
+        ml = music_lufs(music, getattr(C, 'MUSIC_IN', 0))
+        bed = 10 ** ((vl - 17.0 - ml) / 20)
+        top = 10 ** ((vl - 1.0 - ml) / 20)
+        print(f'voice {vl:.1f} LUFS, music {ml:.1f} LUFS -> bed {bed:.3f}, end plate {top:.3f}')
         i = add(music, ('-ss', str(getattr(C, 'MUSIC_IN', 0))))
         md = R.TOTAL - R.HOOK_END
-        vol = f"0.10+(0.4-0.10)*clip((t-{R.MAIN - R.HOOK_END - 0.3:.3f})/0.6\\,0\\,1)"
+        vol = f"{bed:.4f}+({top:.4f}-{bed:.4f})*clip((t-{R.MAIN - R.HOOK_END - 0.3:.3f})/0.6\\,0\\,1)"
         chains.append(f"[{i}:a]atrim=0:{md:.3f},aresample=48000,aformat=channel_layouts=stereo,highpass=f=110,"
                       f"volume='{vol}':eval=frame,afade=t=out:st={md - 0.8:.3f}:d=0.8,"
                       f"adelay={int(R.HOOK_END * 1000)}:all=1[mus]")
@@ -586,6 +642,19 @@ def voice_only(R):
     subprocess.run(['ffmpeg', '-loglevel', 'error', '-y', *inputs, '-filter_complex', ';'.join(chains),
                     '-map', '[out]', '-ac', '1', '-ar', '16000', out], check=True)
     return out
+
+
+def _lufs(args, af='ebur128'):
+    r = subprocess.run(['ffmpeg', *args, '-af', af, '-f', 'null', '-'], capture_output=True, text=True).stderr
+    return float(re.findall(r'I:\s+(-?[\d.]+) LUFS', r)[-1])
+
+
+def voice_lufs(R):
+    return _lufs(['-i', voice_only(R)])
+
+
+def music_lufs(path, start):
+    return _lufs(['-ss', str(start), '-t', '60', '-i', path], 'highpass=f=110,ebur128')
 
 
 def loudness_gain(wav, target=-15.0):
@@ -639,10 +708,17 @@ def main(C):
         wav = mix(R)
         final(R, wav, f'{SP}/out/{C.NAME}_nomusic.mp4')
         contact(R, f'{SP}/out/{C.NAME}_nomusic.mp4', f'{R.B}/contact.jpg', 0.5 if R.TOTAL < 40 else 1.0)
-    elif cmd in ('all', 'post'):
+    elif cmd in ('all', 'post', 'audio'):
         if cmd == 'all':
             render_shots(R)
-        subs(R); render_gfx(R)
+        if cmd != 'audio':
+            subs(R); render_gfx(R)
+        mus = getattr(C, 'MUSIC', None)
+        os.makedirs(SP + '/out', exist_ok=True)
+        if mus:
+            final(R, mix(R, f'{SP}/music/{mus}'), f'{SP}/out/{C.NAME}.mp4')
+        if cmd == 'audio':
+            final(R, mix(R), f'{SP}/out/{C.NAME}_nomusic.mp4'); return R
         os.makedirs(SP + '/out', exist_ok=True)
         wav = mix(R)
         final(R, wav, f'{SP}/out/{C.NAME}_nomusic.mp4')

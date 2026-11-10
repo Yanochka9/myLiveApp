@@ -60,7 +60,7 @@ D.header = (e, t) => {
   const k = easeOut((t - e.t0) / 0.35), en = env(t, e.t0, e.t1, 0.2, 0.2);
   g.save(); g.globalAlpha = en; g.translate(0, (1 - k) * -60);
   const size = e.size || 46; g.font = `900 ${size}px UB`; const w = g.measureText(e.text).width + 70;
-  const y = e.y || 200;
+  const y = e.y || 960;
   g.shadowColor = 'rgba(0,0,0,0.45)'; g.shadowBlur = 30; g.fillStyle = RED; rrect((W - w) / 2, y, w, size + 50, 22); g.fill();
   g.shadowBlur = 0; text(e.text, W / 2, y + (size + 50) / 2 + 2, size, '#fff');
   if (e.sub) { g.globalAlpha = en * clamp((t - e.t0 - 0.3) / 0.2); text(e.sub, W / 2, y + size + 100, 38, '#fff', 'UE', 'center', 8); }
@@ -69,7 +69,7 @@ D.header = (e, t) => {
 D.label = (e, t) => {
   if (!inWin(t, e.t0, e.t1)) return;
   g.save(); g.globalAlpha = clamp((e.t1 - t) / 0.12);
-  labelBox(e.text, e.x || W / 2, e.y || 330, e.t0, t, e.size || 50, e.bg || RED, e.fg || '#fff'); g.restore();
+  labelBox(e.text, e.x || W / 2, e.y || 1050, e.t0, t, e.size || 50, e.bg || RED, e.fg || '#fff'); g.restore();
 };
 D.ellipse = (e, t) => {
   if (!inWin(t, e.t0, e.t1)) return;
@@ -105,8 +105,7 @@ D.counter = (e, t) => {
   const en = env(t, e.t0, e.t1, 0.15, 0.2);
   g.save(); g.globalAlpha = en;
   const y = e.y || 1490;
-  const sh = g.createLinearGradient(0, y - 300, 0, y + 430); sh.addColorStop(0, 'rgba(0,0,0,0)'); sh.addColorStop(0.5, 'rgba(0,0,0,0.55)'); sh.addColorStop(1, 'rgba(0,0,0,0)');
-  g.fillStyle = sh; g.fillRect(0, y - 300, W, 730);
+
   const p = clamp((t - e.t0) / (e.hit - e.t0));
   let n = Math.round((e.from || 0) + (e.to - (e.from || 0)) * Math.pow(p, 0.8));
   if (e.step) n = Math.round(n / e.step) * e.step;
@@ -121,42 +120,42 @@ D.interval = (e, t) => {   // old value crossed out -> new value
   if (!inWin(t, e.t0, e.t1)) return;
   const en = env(t, e.t0, e.t1, 0.15, 0.2), k = easeOut((t - e.t0) / 0.35);
   g.save(); g.globalAlpha = en; g.translate(0, (1 - k) * 80);
-  const x = 90, y = e.y || 260, w = 900, h = 330;
-  g.shadowColor = 'rgba(0,0,0,0.5)'; g.shadowBlur = 40; g.fillStyle = 'rgba(14,14,16,0.86)'; rrect(x, y, w, h, 36); g.fill(); g.shadowBlur = 0;
+  const x = 160, y = e.y || 800, w = 760, h = 330;
+  g.shadowColor = 'rgba(0,0,0,0.5)'; g.shadowBlur = 8; g.fillStyle = 'rgba(14,14,16,0.86)'; rrect(x, y, w, h, 36); g.fill(); g.shadowBlur = 0;
   text(e.title, W / 2, y + 58, 34, 'rgba(255,255,255,0.7)', 'UE');
-  text(e.old, W / 2, y + 145, 64, 'rgba(255,255,255,0.85)', 'UB');
+  text(e.old, W / 2, y + 145, 58, 'rgba(255,255,255,0.85)', 'UB');
   if (t > e.tx) { // strike
     const q = easeOut((t - e.tx) / 0.25); g.strokeStyle = RED; g.lineWidth = 12; g.lineCap = 'round';
-    g.font = '900 64px UB'; const tw = g.measureText(e.old).width;
+    g.font = '900 58px UB'; const tw = g.measureText(e.old).width;
     g.beginPath(); g.moveTo(W / 2 - tw / 2 - 20, y + 150); g.lineTo(W / 2 - tw / 2 - 20 + (tw + 40) * q, y + 140); g.stroke();
   }
   g.restore();
-  g.save(); g.globalAlpha = en; pop(e.new, W / 2, (e.y || 260) + 245 + (1 - k) * 80, 70, GREEN, e.tn, t, 'UB', 0); g.restore();
+  g.save(); g.globalAlpha = en; pop(e.new, W / 2, (e.y || 800) + 245 + (1 - k) * 80, 62, GREEN, e.tn, t, 'UB', 0); g.restore();
 };
 D.address = (e, t) => {
   if (!inWin(t, e.t0, e.t1 + 0.01)) return;
   const k = easeOut((t - e.t0) / 0.4);
-  g.save(); g.globalAlpha = clamp((t - e.t0) / 0.15); g.translate(0, (1 - k) * 260);
-  const x = 60, y = 1450, w = 960, h = 230;
-  g.shadowColor = 'rgba(0,0,0,0.5)'; g.shadowBlur = 40; g.fillStyle = 'rgba(14,14,16,0.86)'; rrect(x, y, w, h, 36); g.fill();
-  g.shadowBlur = 0; g.fillStyle = RED; rrect(x, y, 16, h, 8); g.fill();
-  g.drawImage(logo, x + 44, y + 25, 180, 180);
-  text('АКПП ДРАЙВ', x + 256, y + 82, 60, '#fff', 'UB', 'left');
-  const px = x + 270, py = y + 162; g.fillStyle = RED; g.beginPath(); g.arc(px, py - 8, 15, Math.PI, 0); g.lineTo(px, py + 20); g.closePath(); g.fill();
-  g.fillStyle = '#0e0e10'; g.beginPath(); g.arc(px, py - 8, 6, 0, 7); g.fill();
-  text(e.text || 'Дзержинского, 82А', x + 300, py, 40, 'rgba(255,255,255,0.9)', 'UE', 'left');
+  g.save(); g.globalAlpha = clamp((t - e.t0) / 0.15); g.translate(0, (1 - k) * 12);
+  const x = 160, y = e.y || 1240, w = 760, h = 160;
+  g.shadowColor = 'rgba(0,0,0,0.5)'; g.shadowBlur = 8; g.fillStyle = 'rgba(14,14,16,0.88)'; rrect(x, y, w, h, 30); g.fill();
+  g.shadowBlur = 0; g.fillStyle = RED; rrect(x, y, 12, h, 6); g.fill();
+  g.drawImage(logo, x + 30, y + 18, 124, 124);
+  text('АКПП ДРАЙВ', x + 178, y + 58, 50, '#fff', 'UB', 'left');
+  const px = x + 190, py = y + 112; g.fillStyle = RED; g.beginPath(); g.arc(px, py - 7, 13, Math.PI, 0); g.lineTo(px, py + 17); g.closePath(); g.fill();
+  g.fillStyle = '#0e0e10'; g.beginPath(); g.arc(px, py - 7, 5, 0, 7); g.fill();
+  text(e.text || 'Дзержинского, 82А', x + 216, py, 34, 'rgba(255,255,255,0.9)', 'UE', 'left');
   g.restore();
 };
 D.question = (e, t) => {  // subscriber question bubble (hook)
   if (!inWin(t, e.t0, e.t1)) return;
   const k = easeBack((t - e.t0) / 0.35), en = clamp((e.t1 - t) / 0.15);
-  g.save(); g.globalAlpha = en; g.translate(W / 2, 300); g.scale(k, k);
-  const w = 940, lines = e.lines, h = 110 + lines.length * 66;
+  g.save(); g.globalAlpha = en; g.translate(W / 2, e.y || 300); g.scale(k, k);
+  const w = 780, lines = e.lines, h = 110 + lines.length * 60;
   g.shadowColor = 'rgba(0,0,0,0.45)'; g.shadowBlur = 40; g.fillStyle = '#ffffff'; rrect(-w / 2, -60, w, h, 40); g.fill();
   g.beginPath(); g.moveTo(-w / 2 + 90, h - 62); g.lineTo(-w / 2 + 60, h + 10); g.lineTo(-w / 2 + 170, h - 62); g.fill();
   g.shadowBlur = 0; g.fillStyle = RED; rrect(-w / 2 + 40, -34, 330, 56, 16); g.fill();
   text('ВОПРОС', -w / 2 + 205, -5, 32, '#fff', 'UB');
-  lines.forEach((s, i) => text(s, -w / 2 + 44, 70 + i * 66, 46, '#111', 'UB', 'left'));
+  lines.forEach((s, i) => text(s, -w / 2 + 40, 70 + i * 60, 40, '#111', 'UB', 'left'));
   g.restore();
 };
 
@@ -173,6 +172,49 @@ D.meme = (e, t) => {
   g.restore();
 };
 
+// big extruded "3D" number with a glass caption: pops up, depth grows, a shine sweeps across, floats gently
+D.big3d = (e, t) => {
+  if (!inWin(t, e.t0, e.t1)) return;
+  const lt = t - e.t0, en = clamp((e.t1 - t) / 0.15), k = easeBack(lt / 0.45), dep = easeOut((lt - 0.1) / 0.35);
+  const size = e.size || 230, y = e.y || 980, N = 22;
+  g.save(); g.globalAlpha = en * clamp(lt / 0.08);
+  g.translate(W / 2, y + Math.sin(lt * 2.4) * 6); g.rotate(-0.06 + 0.02 * Math.sin(lt * 1.7));
+  g.scale(k, k * (0.6 + 0.4 * easeOut(lt / 0.3)));
+  g.font = `900 ${size}px UB`; g.textAlign = 'center'; g.textBaseline = 'middle';
+  // soft floor shadow
+  g.save(); g.globalAlpha *= 0.55; g.fillStyle = '#000'; g.filter = 'blur(18px)';
+  g.beginPath(); g.ellipse(0, size * 0.62, g.measureText(e.text).width * 0.5, 26, 0, 0, 7); g.fill(); g.restore();
+  // extrusion (back to front)
+  for (let i = N; i >= 1; i--) {
+    const q = i / N * dep, c = Math.round(70 + 90 * (1 - i / N));
+    g.fillStyle = `rgb(${c + 40},${Math.round(c * 0.12)},${Math.round(c * 0.15)})`;
+    g.fillText(e.text, q * 10, q * 14);
+  }
+  // front face: glossy red gradient
+  const gr = g.createLinearGradient(0, -size * 0.5, 0, size * 0.5);
+  gr.addColorStop(0, '#ff8a8d'); gr.addColorStop(0.45, RED); gr.addColorStop(1, '#a50f16');
+  g.fillStyle = gr; g.fillText(e.text, 0, 0);
+  g.lineWidth = 3; g.strokeStyle = 'rgba(255,255,255,0.55)'; g.strokeText(e.text, 0, 0);
+  // shine sweep clipped to the glyphs
+  const sp = clamp((lt - 0.45) / 0.6);
+  if (sp > 0 && sp < 1) {
+    g.save(); g.globalCompositeOperation = 'source-atop';
+    const tw = g.measureText(e.text).width, sx = -tw / 2 - 120 + (tw + 240) * sp;
+    const sg = g.createLinearGradient(sx - 60, 0, sx + 60, 0);
+    sg.addColorStop(0, 'rgba(255,255,255,0)'); sg.addColorStop(0.5, 'rgba(255,255,255,0.85)'); sg.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = sg; g.fillText(e.text, 0, 0); g.restore();
+  }
+  g.restore();
+  if (e.sub && lt > 0.3) {   // glass caption under the number
+    const q = easeBack((lt - 0.3) / 0.3);
+    g.save(); g.globalAlpha = en; g.translate(W / 2, y + size * 0.78); g.scale(q, q);
+    g.font = `900 ${e.subsize || 44}px UB`; const w = Math.min(760, g.measureText(e.sub).width + 64), h = (e.subsize || 44) + 36;
+    g.shadowColor = 'rgba(0,0,0,0.45)'; g.shadowBlur = 24; g.fillStyle = 'rgba(16,16,20,0.78)'; rrect(-w / 2, -h / 2, w, h, h / 2); g.fill();
+    g.shadowBlur = 0; g.strokeStyle = 'rgba(255,255,255,0.25)'; g.lineWidth = 2; rrect(-w / 2, -h / 2, w, h, h / 2); g.stroke();
+    text(e.sub, 0, 2, e.subsize || 44, '#fff'); g.restore();
+  }
+};
+
 // ---------------- schemes ----------------
 function schemeBg(t, e, title) {
   const bg = g.createRadialGradient(W / 2, 700, 100, W / 2, 900, 1300);
@@ -180,7 +222,7 @@ function schemeBg(t, e, title) {
   g.strokeStyle = 'rgba(255,255,255,0.04)'; g.lineWidth = 2;
   for (let x = 0; x < W; x += 60) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x, H); g.stroke(); }
   for (let y = 0; y < H; y += 60) { g.beginPath(); g.moveTo(0, y); g.lineTo(W, y); g.stroke(); }
-  if (title) text(title, W / 2, 230, 40, 'rgba(255,255,255,0.6)', 'UE');
+  if (title) text(title, W / 2, 340, 40, 'rgba(255,255,255,0.6)', 'UE');
 }
 function wheel(x, y, r, ang) {
   g.save(); g.translate(x, y);
@@ -263,11 +305,11 @@ D.garage = (e, t) => {
   const shake = hot > 0 && s > 0.02 && s < 0.98 ? Math.sin(t * 70) * 3 : 0;
   // facing left: draw mirrored
   g.save(); g.translate(x, y + shake); g.scale(-1, 1); car(0, 0, -a, s * 40, hot * (s > 0.02 && s < 0.98 ? 1 : 0.4)); g.restore();
-  if (t < ta) { if (t > e.t0 + 0.4) labelBox('ЗАЕЗД ПЕРЕДОМ', W / 2, 1420, e.t0 + 0.4, t, 46, '#2b2f36'); }
+  if (t < ta) { if (t > e.t0 + 0.4) labelBox('ЗАЕЗД ПЕРЕДОМ', W / 2, 1200, e.t0 + 0.4, t, 46, '#2b2f36'); }
   else {
-    labelBox('ВЫЕЗД ЗАДОМ', W / 2, 1420, ta + 0.05, t, 46);
+    labelBox('ВЫЕЗД ЗАДОМ', W / 2, 1200, ta + 0.05, t, 46);
     if (s > 0.05 && s < 0.95) { g.save(); g.globalAlpha = en * (0.6 + 0.4 * Math.sin(t * 20)); arrow(x + 60, y - 160, x + 60 + Math.cos(ang + Math.PI) * -200, y - 160 + Math.sin(ang + Math.PI) * -200, '#ffb02e', 14); g.restore(); }
-    if (e.tr && t > e.tr) labelBox('НАГРУЗКА НА ПАКЕТ «R»', W / 2, 1560, e.tr, t, 40, '#ffb02e', '#111');
+    if (e.tr && t > e.tr) labelBox('НАГРУЗКА НА ПАКЕТ «R»', W / 2, 1330, e.tr, t, 38, '#ffb02e', '#111');
   }
   g.restore();
 };
@@ -276,7 +318,7 @@ D.gears = (e, t) => {
   if (!inWin(t, e.t0, e.t1)) return;
   const en = clamp((e.t1 - t) / 0.15);
   g.save(); schemeBg(t, e, e.title || 'ВИБРАЦИЯ ПРИ РАЗГОНЕ'); g.globalAlpha = en;
-  const n = 6, x0 = 140, bw = 110, gap = 28, base = 1040;
+  const n = 6, x0 = 192, bw = 96, gap = 24, base = 1040;
   for (let i = 0; i < n; i++) {
     const appear = clamp((t - e.t0 - 0.15 - i * 0.12) / 0.25);
     const vib = i < e.upto ? 1 : 0;
@@ -292,7 +334,7 @@ D.gears = (e, t) => {
     g.restore();
   }
   text('ПЕРЕДАЧА', W / 2, base + 140, 34, 'rgba(255,255,255,0.6)', 'UE');
-  if (e.lt && t > e.lt) labelBox(e.label || 'ЗАВИСИТ ОТ ПЕРЕДАЧИ → КОРОБКА', W / 2, 1380, e.lt, t, 40);
+  if (e.lt && t > e.lt) labelBox(e.label || 'ЗАВИСИТ ОТ ПЕРЕДАЧИ → КОРОБКА', W / 2, 1320, e.lt, t, 36);
   g.restore();
 };
 // check-list card: rows appear one by one
@@ -300,7 +342,7 @@ D.checklist = (e, t) => {
   if (!inWin(t, e.t0, e.t1)) return;
   const en = env(t, e.t0, e.t1, 0.15, 0.2), k = easeOut((t - e.t0) / 0.35);
   g.save(); g.globalAlpha = en; g.translate(0, (1 - k) * 80);
-  const x = 70, y = e.y || 240, w = 940, rh = 112, h = 120 + e.rows.length * rh;
+  const x = 150, y = e.y || 700, w = 780, rh = 100, h = 120 + e.rows.length * rh;
   g.shadowColor = 'rgba(0,0,0,0.5)'; g.shadowBlur = 40; g.fillStyle = 'rgba(14,14,16,0.88)'; rrect(x, y, w, h, 36); g.fill(); g.shadowBlur = 0;
   g.fillStyle = RED; rrect(x, y, 16, h, 8); g.fill();
   text(e.title, x + 60, y + 66, 40, '#fff', 'UB', 'left');
@@ -312,7 +354,7 @@ D.checklist = (e, t) => {
     text(String(i + 1), 0, 2, 30, '#fff', 'UB');
     g.restore();
     g.save(); g.globalAlpha = en * clamp((t - r[1]) / 0.15);
-    text(r[0], x + 140, y + 162 + i * rh, 40, '#fff', 'UE', 'left'); g.restore();
+    text(r[0], x + 140, y + 162 + i * rh, 34, '#fff', 'UE', 'left'); g.restore();
   });
   g.restore();
 };
@@ -342,21 +384,21 @@ function drawEnd(t) {
   const lt = t - a;
   g.save(); const k = easeBack(lt / 0.45);
   g.translate(W / 2, 560); g.scale(k, k);
-  g.shadowColor = 'rgba(240,41,47,0.45)'; g.shadowBlur = 40; g.drawImage(logo, -190, -190, 380, 380);
+  g.shadowColor = 'rgba(240,41,47,0.45)'; g.shadowBlur = 40; g.drawImage(logo, -170, -170, 340, 340);
   g.restore();
   const lines = T.end_q;
-  lines.forEach((s, i) => pop(s, W / 2, 900 + i * 104, 78, i === lines.length - 1 ? RED : '#fff', a + 0.25 + i * 0.12, t, 'UB', 10));
+  lines.forEach((s, i) => pop(s, W / 2, 850 + i * 94, 68, i === lines.length - 1 ? RED : '#fff', a + 0.25 + i * 0.12, t, 'UB', 10));
   if (lt > 1.0) {
-    const yb = 900 + lines.length * 104 + 70;
+    const yb = 850 + (lines.length - 1) * 94 + 100;
     g.save(); g.globalAlpha = clamp((lt - 1.0) / 0.2);
-    text('ПИШИТЕ В КОММЕНТАРИЯХ', W / 2, yb, 42, 'rgba(255,255,255,0.92)', 'UE');
+    text('ПИШИТЕ В КОММЕНТАРИЯХ', W / 2, yb, 38, 'rgba(255,255,255,0.92)', 'UE');
     const bob = Math.sin(lt * 6) * 14; g.strokeStyle = RED; g.lineWidth = 12; g.lineCap = 'round'; g.lineJoin = 'round';
-    for (let i = 0; i < 2; i++) { g.beginPath(); g.moveTo(W / 2 - 40, yb + 70 + i * 40 + bob); g.lineTo(W / 2, yb + 105 + i * 40 + bob); g.lineTo(W / 2 + 40, yb + 70 + i * 40 + bob); g.stroke(); }
+    for (let i = 0; i < 2; i++) { g.beginPath(); g.moveTo(W / 2 - 34, yb + 50 + i * 34 + bob * 0.6); g.lineTo(W / 2, yb + 80 + i * 34 + bob * 0.6); g.lineTo(W / 2 + 34, yb + 50 + i * 34 + bob * 0.6); g.stroke(); }
     g.restore();
   }
 }
 
-const ORDER = ['garage', 'gears', 'leak', 'ellipse', 'brackets', 'counter', 'interval', 'checklist', 'question', 'header', 'label', 'address', 'meme'];
+const ORDER = ['garage', 'gears', 'leak', 'ellipse', 'brackets', 'counter', 'interval', 'checklist', 'question', 'header', 'label', 'address', 'meme', 'big3d'];
 function drawFrame(t) {
   g.clearRect(0, 0, W, H);
   for (const ty of ORDER) for (const e of T.ev) if (e.type === ty) D[ty](e, t);
