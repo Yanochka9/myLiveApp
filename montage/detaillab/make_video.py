@@ -343,7 +343,7 @@ def build(cfg):
     spans, firsts = {}, []
     for st, en, part, plate in meta:
         if plate:
-            if plate not in spans:
+            if plate not in spans and plate not in cfg.get("no_pop", []):  # no_pop: плашка без щелчка и вспышки
                 firsts.append(st)
             s0, e0 = spans.get(plate, (st, en))
             spans[plate] = (min(s0, st), max(e0, en))
