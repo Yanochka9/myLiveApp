@@ -569,6 +569,8 @@ PEAK = {'riser': 4.0, 'click1': .11, 'click2': .13, 'click3': .10, 'click4': .16
 
 
 def sfx_path(sid):
+    if sid == 'beep':
+        return f'{SP}/web/beep.wav'
     if sid == 'riser_hook':
         return f'{SP}/web/riser_hook.wav'
     if sid == 'yakubovich':
