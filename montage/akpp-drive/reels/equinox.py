@@ -47,12 +47,12 @@ def gfx(R):
     w58 = next(s for s in R.shots() if s['src'] and s['src'].endswith('4058.MOV'))
     return [
         # hook: three beats pop up while he says them
-        dict(type='label', t0=m('4040', 0.75), t1=R.HOOK_END, text='1 УДАР В КОЛЕСО', y=900, size=42, bg='#2b2f36'),
-        dict(type='label', t0=m('4040', 2.1), t1=R.HOOK_END, text='1 ПОТЁКШИЙ САЛЬНИК', y=1010, size=42, bg='#2b2f36'),
-        dict(type='label', t0=m('4040', 3.15), t1=R.HOOK_END, text='= КАПИТАЛКА ВАРИАТОРА', y=1120, size=42),
+        dict(type='label', t0=m('4040', 0.75), t1=R.HOOK_END, text='1 УДАР В КОЛЕСО', y=960, size=42, bg='#2b2f36'),
+        dict(type='label', t0=m('4040', 2.1), t1=R.HOOK_END, text='1 ПОТЁКШИЙ САЛЬНИК', y=1060, size=42, bg='#2b2f36'),
+        dict(type='label', t0=m('4040', 3.15), t1=R.HOOK_END, text='= КАПИТАЛКА ВАРИАТОРА', y=1160, size=42),
         dict(type='flash', t=R.HOOK_END),
         dict(type='header', t0=R.HOOK_END + 0.1, t1=m('4043', 14.5), text='CHEVROLET EQUINOX', sub='ВАРИАТОР'),
-        dict(type='leak', t0=m('4043', 14.6), t1=m('4043', 16.0), x=600, y=700, label='ТЕЧЬ САЛЬНИКА', lt=m('4043', 14.7)),
+        dict(type='leak', t0=m('4043', 14.6), t1=m('4043', 16.0), x=540, y=700, label='ТЕЧЬ САЛЬНИКА', lt=m('4043', 14.7)),
         dict(type='label', t0=m('4043', 24.3), t1=m('4043', 26.0), text='СТОРОННИЙ СЕРВИС', size=50, bg='#2b2f36'),
         dict(type='label', t0=m('4043', 26.0), t1=m('4043', 26.95), text='ТЕЧЬ НЕ УШЛА'),
         dict(type='flash', t=m('4043', 77.3)),

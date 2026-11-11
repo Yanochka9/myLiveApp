@@ -40,8 +40,10 @@ function labelBox(s, x, y, t0, t, size = 46, bg = RED, fg = '#fff') {
   if (t < t0) return;
   const k = easeBack((t - t0) / 0.28);
   g.save(); g.translate(x, y); g.scale(k, k);
-  g.font = `900 ${size}px UB`; const w = g.measureText(s).width + 56, h = size + 38;
-  g.shadowColor = 'rgba(0,0,0,0.5)'; g.shadowBlur = 24; g.fillStyle = bg; rrect(-w / 2, -h / 2, w, h, 18); g.fill();
+  g.font = `900 ${size}px UB`;
+  if (g.measureText(s).width + 56 > 680) { size = Math.floor(size * 624 / g.measureText(s).width); g.font = `900 ${size}px UB`; }
+  const w = g.measureText(s).width + 56, h = size + 38;
+  g.shadowColor = 'rgba(0,0,0,0.5)'; g.shadowBlur = 8; g.fillStyle = bg; rrect(-w / 2, -h / 2, w, h, 18); g.fill();
   g.shadowBlur = 0; text(s, 0, 2, size, fg); g.restore();
 }
 
@@ -59,9 +61,11 @@ D.header = (e, t) => {
   if (!inWin(t, e.t0, e.t1)) return;
   const k = easeOut((t - e.t0) / 0.35), en = env(t, e.t0, e.t1, 0.2, 0.2);
   g.save(); g.globalAlpha = en; g.translate(0, (1 - k) * -60);
-  const size = e.size || 46; g.font = `900 ${size}px UB`; const w = g.measureText(e.text).width + 70;
+  let size = e.size || 46; g.font = `900 ${size}px UB`;
+  if (g.measureText(e.text).width + 70 > 700) { size = Math.floor(size * 630 / g.measureText(e.text).width); g.font = `900 ${size}px UB`; }
+  const w = g.measureText(e.text).width + 70;
   const y = e.y || 960;
-  g.shadowColor = 'rgba(0,0,0,0.45)'; g.shadowBlur = 30; g.fillStyle = RED; rrect((W - w) / 2, y, w, size + 50, 22); g.fill();
+  g.shadowColor = 'rgba(0,0,0,0.45)'; g.shadowBlur = 8; g.fillStyle = RED; rrect((W - w) / 2, y, w, size + 50, 22); g.fill();
   g.shadowBlur = 0; text(e.text, W / 2, y + (size + 50) / 2 + 2, size, '#fff');
   if (e.sub) { g.globalAlpha = en * clamp((t - e.t0 - 0.3) / 0.2); text(e.sub, W / 2, y + size + 100, 38, '#fff', 'UE', 'center', 8); }
   g.restore();
@@ -136,7 +140,7 @@ D.address = (e, t) => {
   if (!inWin(t, e.t0, e.t1 + 0.01)) return;
   const k = easeOut((t - e.t0) / 0.4);
   g.save(); g.globalAlpha = clamp((t - e.t0) / 0.15); g.translate(0, (1 - k) * 12);
-  const x = 160, y = e.y || 1240, w = 760, h = 160;
+  const x = 160, y = e.y || 1225, w = 760, h = 160;
   g.shadowColor = 'rgba(0,0,0,0.5)'; g.shadowBlur = 8; g.fillStyle = 'rgba(14,14,16,0.88)'; rrect(x, y, w, h, 30); g.fill();
   g.shadowBlur = 0; g.fillStyle = RED; rrect(x, y, 12, h, 6); g.fill();
   g.drawImage(logo, x + 30, y + 18, 124, 124);
@@ -148,10 +152,10 @@ D.address = (e, t) => {
 };
 D.question = (e, t) => {  // subscriber question bubble (hook)
   if (!inWin(t, e.t0, e.t1)) return;
-  const k = easeBack((t - e.t0) / 0.35), en = clamp((e.t1 - t) / 0.15);
+  const k = easeOut((t - e.t0) / 0.35), en = clamp((e.t1 - t) / 0.15);
   g.save(); g.globalAlpha = en; g.translate(W / 2, e.y || 300); g.scale(k, k);
-  const w = 780, lines = e.lines, h = 110 + lines.length * 60;
-  g.shadowColor = 'rgba(0,0,0,0.45)'; g.shadowBlur = 40; g.fillStyle = '#ffffff'; rrect(-w / 2, -60, w, h, 40); g.fill();
+  const w = 740, lines = e.lines, h = 110 + lines.length * 60;
+  g.shadowColor = 'rgba(0,0,0,0.45)'; g.shadowBlur = 8; g.fillStyle = '#ffffff'; rrect(-w / 2, -60, w, h, 40); g.fill();
   g.beginPath(); g.moveTo(-w / 2 + 90, h - 62); g.lineTo(-w / 2 + 60, h + 10); g.lineTo(-w / 2 + 170, h - 62); g.fill();
   g.shadowBlur = 0; g.fillStyle = RED; rrect(-w / 2 + 40, -34, 330, 56, 16); g.fill();
   text('ВОПРОС', -w / 2 + 205, -5, 32, '#fff', 'UB');
@@ -342,8 +346,8 @@ D.checklist = (e, t) => {
   if (!inWin(t, e.t0, e.t1)) return;
   const en = env(t, e.t0, e.t1, 0.15, 0.2), k = easeOut((t - e.t0) / 0.35);
   g.save(); g.globalAlpha = en; g.translate(0, (1 - k) * 80);
-  const x = 150, y = e.y || 700, w = 780, rh = 100, h = 120 + e.rows.length * rh;
-  g.shadowColor = 'rgba(0,0,0,0.5)'; g.shadowBlur = 40; g.fillStyle = 'rgba(14,14,16,0.88)'; rrect(x, y, w, h, 36); g.fill(); g.shadowBlur = 0;
+  const x = 160, y = e.y || 700, w = 760, rh = 100, h = 120 + e.rows.length * rh;
+  g.shadowColor = 'rgba(0,0,0,0.5)'; g.shadowBlur = 8; g.fillStyle = 'rgba(14,14,16,0.88)'; rrect(x, y, w, h, 36); g.fill(); g.shadowBlur = 0;
   g.fillStyle = RED; rrect(x, y, 16, h, 8); g.fill();
   text(e.title, x + 60, y + 66, 40, '#fff', 'UB', 'left');
   e.rows.forEach((r, i) => {
@@ -387,7 +391,8 @@ function drawEnd(t) {
   g.shadowColor = 'rgba(240,41,47,0.45)'; g.shadowBlur = 40; g.drawImage(logo, -170, -170, 340, 340);
   g.restore();
   const lines = T.end_q;
-  lines.forEach((s, i) => pop(s, W / 2, 850 + i * 94, 68, i === lines.length - 1 ? RED : '#fff', a + 0.25 + i * 0.12, t, 'UB', 10));
+  lines.forEach((s, i) => { g.font = '900 68px UB'; const fs = Math.min(68, Math.floor(68 * 600 / g.measureText(s).width));
+    pop(s, W / 2, 850 + i * 94, fs, i === lines.length - 1 ? RED : '#fff', a + 0.25 + i * 0.12, t, 'UB', 10); });
   if (lt > 1.0) {
     const yb = 850 + (lines.length - 1) * 94 + 100;
     g.save(); g.globalAlpha = clamp((lt - 1.0) / 0.2);

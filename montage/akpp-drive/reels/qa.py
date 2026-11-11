@@ -16,8 +16,8 @@ bad = []
 gdir = R.B + '/gfx'
 for f in sorted(glob.glob(gdir + '/*.png'))[::3]:
     n = int(os.path.basename(f)[:5])
-    if n / lib.FPS >= R.MAIN:          # end plate is checked separately below
-        pass
+    if n >= round(R.TOTAL * lib.FPS):  # stale frame beyond the cut
+        continue
     a = np.asarray(Image.open(f))[:, :, 3] > 24
     # full-frame elements (flash, scheme background, end plate blur) are allowed edge to edge
     if a.mean() > 0.6:

@@ -49,16 +49,16 @@ def gfx(R):
         dict(type='label', t0=m('4062', 1.35), t1=R.HOOK_END, text='ИЗ США', y=1050, size=60),
         dict(type='flash', t=R.HOOK_END),
         dict(type='header', t0=R.HOOK_END + 0.1, t1=m('4068', 4.85), text='DQ400E', sub='РОБОТ-ГИБРИД'),
-        dict(type='label', t0=m('4068', 5.7), t1=m('4068', 7.3), text='УДАР В ПЕРЕДНЮЮ ЧАСТЬ'),
+        dict(type='label', t0=m('4068', 5.7), t1=m('4068', 7.3), text='УДАР В ПЕРЕДНЮЮ ЧАСТЬ', y=1320),
         dict(type='leak', t0=m('4068', 7.45), t1=m('4068', 8.45), x=540, y=640, label='ПОТЕРЯ МАСЛА', lt=m('4068', 7.5)),
-        dict(type='label', t0=m('4068', 9.9), t1=m('4068', 11.0), text='НЕ ЕДЕТ'),
+        dict(type='label', t0=m('4068', 9.9), t1=m('4068', 11.0), text='НЕ ЕДЕТ', y=1320),
         dict(type='flash', t=m('4068', 17.85)),
         dict(type='ellipse', t0=w80['o0'] + 0.1, t1=w80['o1'], cx=540, cy=1050, rx=360, ry=210, rot=-0.08,
              label='СЦЕПЛЕНИЕ СОЖЖЕНО', lx=540, ly=1360, lt=w80['o0'] + 0.5, size=48),
-        dict(type='checklist', t0=m('4068', 63.2), t1=m('4068', 65.95) + 0.2, y=860, title='РЕМОНТ',
+        dict(type='checklist', t0=m('4068', 63.2), t1=m('4068', 65.95), y=980, title='РЕМОНТ',
              rows=[['ГИДРАВЛИКА', m('4068', 64.0)], ['СЦЕПЛЕНИЕ — ЗАМЕНА', m('4068', 64.9)]]),
-        dict(type='label', t0=m('4070', 11.1), t1=m('4070', 13.75), text='НЕ ЧИНИТЕ САМИ'),
-        dict(type='label', t0=m('4070', 14.3), t1=m('4070', 15.9), text='ДОРОГОЙ РЕМОНТ'),
+        dict(type='label', t0=m('4070', 11.1), t1=m('4070', 13.75), text='НЕ ЧИНИТЕ САМИ', y=1320),
+        dict(type='label', t0=m('4070', 14.3), t1=m('4070', 15.9), text='ДОРОГОЙ РЕМОНТ', y=1320),
         dict(type='header', t0=m('4074', 6.9), t1=m('4074', 9.05), text='РЕМОНТ ГИБРИДНЫХ КПП'),
         dict(type='address', t0=m('4075', 0.05), t1=R.MAIN),
     ]
@@ -87,5 +87,5 @@ def sfx(R):
 
 if __name__ == '__main__':
     R0 = lib.Reel(sys.modules[__name__])
-    HIDE = [(R0.m('4068', 63.2), R0.m('4068', 65.95))]
+    HIDE = [(R0.m('4068', 63.2), R0.m('4068', 65.95)), (R0.m('4075', 0.0), R0.MAIN)]   # address said aloud = card
     lib.main(sys.modules[__name__])

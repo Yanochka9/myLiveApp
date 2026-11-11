@@ -93,5 +93,5 @@ def sfx(R):
 
 if __name__ == '__main__':
     R0 = lib.Reel(sys.modules[__name__])
-    HIDE = [(0.0, R0.HOOK_END), (R0.m('3990', 82.4), R0.m('3990', 92.5))]   # bubble / checklist show the text
+    HIDE = [(0.0, R0.HOOK_END), (R0.m('3990', 82.4), R0.m('3990', 92.5)), (R0.m('3990', 255.3), R0.MAIN)]   # bubble / checklist show the text
     lib.main(sys.modules[__name__])

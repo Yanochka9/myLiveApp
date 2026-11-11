@@ -503,9 +503,18 @@ def ts(t):
     return f"{cs // 360000}:{cs // 6000 % 60:02d}:{cs // 100 % 60:02d}.{cs % 100:02d}"
 
 
+AUTOHIDE = ('header', 'big3d', 'counter', 'interval', 'checklist', 'meme', 'garage', 'gears', 'question')
+
+
+def auto_hide(R):
+    """subtitles are hidden while a big graphic already shows the same words"""
+    return [(e['t0'], e['t1']) for e in R.C.gfx(R) if e['type'] in AUTOHIDE]
+
+
 def subs(R):
+    R.C.HIDE = list(getattr(R.C, 'HIDE', [])) + auto_hide(R)
     toks = tokens(R)
-    hide = getattr(R.C, 'HIDE', [])
+    hide = R.C.HIDE
     ev = []
     for i, (t0, w, red) in enumerate(toks):
         nxt = toks[i + 1][0] if i + 1 < len(toks) else R.MAIN
@@ -546,6 +555,10 @@ def render_gfx(R, frames=()):
     tl = dict(fps=FPS, total=R.TOTAL, main=R.MAIN, hook_end=R.HOOK_END, ev=R.C.gfx(R),
               end_q=R.C.END_Q, logo=os.path.abspath(os.path.join(ASSETS, 'logo.png')))
     json.dump(tl, open(R.B + '/gfx.json', 'w'), ensure_ascii=False, indent=1)
+    if not frames:      # full render: drop stale frames of an older, longer cut
+        import glob as _g
+        for f in _g.glob(R.B + '/gfx/*.png'):
+            os.remove(f)
     subprocess.run(['node', os.path.join(HERE, 'render_gfx.cjs'), R.B, *map(str, frames)], check=True)
 
 
