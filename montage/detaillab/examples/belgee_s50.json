@@ -282,10 +282,13 @@
    "cta"
   ]
  ],
- "grade": "grade_v3_dl.txt",
+ "grade": "grade_v5_dl.txt",
  "broll_plates": {
   "3432": "examples/belgee_s50_plate_3432.json",
   "3433": "examples/belgee_s50_plate_3433.json"
  },
- "hook_plate_show": true
+ "hook_plate_show": true,
+ "no_pop": [
+  "door"
+ ]
 }

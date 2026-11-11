@@ -87,6 +87,10 @@ class Reel:
         self.AUTO = g[0].strip() == 'AUTO'
         self.GRADE = g[0].strip() if not self.AUTO else None
         self.GEXTRA = g[1].strip() if self.AUTO and len(g) > 1 else ''
+        # 3-я строка «MIX k <цепочка>»: смесь AUTO (доля k) с другой цепочкой (1-k)
+        self.MIX = None
+        if self.AUTO and len(g) > 2 and g[2].startswith('MIX '):
+            k, chain = g[2][4:].split(' ', 1); self.MIX = (float(k), chain.strip())
         self._norm = {}
         self.ZC = 1.42; self.TAIL = 0.2; self.END_DUR = 3.4
         self.hook_z = (1.36, 1.46)
@@ -180,6 +184,10 @@ class Reel:
             nf, _ = autograde.norm_filter(src)
             self._norm[src] = (P + autograde.HDR + "," + nf + "," + autograde.STYLE.replace("ASSETS/", ASSETS + "/")
                                + ("," + self.GEXTRA if self.GEXTRA else ""))
+            if self.MIX:
+                k, chain = self.MIX; auto = self._norm[src][len(P):]
+                self._norm[src] = (P + f"split[ga][gb];[ga]{auto},format=yuv420p[ga2];[gb]{chain},format=yuv420p[gb2];"
+                                   f"[ga2][gb2]blend=all_mode=normal:all_opacity={k}")
         return self._norm[src]
 
     def render(self, src, ss, nfr, vf, post=''):
