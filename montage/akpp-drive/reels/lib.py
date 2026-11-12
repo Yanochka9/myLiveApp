@@ -360,6 +360,9 @@ GRADES = {
                            "colorbalance=bs=0.03:rm=0.02:gm=0.005:rh=0.015:bh=-0.01,unsharp=5:5:0.3"),
     'C3': (_tm(650, 0.32), "eq=contrast=1.08:saturation=1.03:brightness=-0.025:gamma=0.96,curves=all='0/0.015 0.25/0.19 0.5/0.47 0.75/0.77 1/0.96',"
                            "colorbalance=bs=0.025:rm=0.015:rh=0.01,unsharp=5:5:0.35"),
+    'N': (_tm(600, 0.35), "eq=contrast=1.03:saturation=0.95:brightness=-0.02,curves=all='0/0.03 0.5/0.48 1/0.96',colorbalance=rs=0.01:bs=0.008:rm=0.008"),
+    'W': (_tm(650, 0.34), "eq=contrast=1.04:saturation=0.92:brightness=-0.028:gamma=0.98,curves=all='0/0.03 0.25/0.215 0.5/0.47 0.75/0.75 1/0.95',"
+                          "colorbalance=bs=0.012:rm=0.01:gm=-0.006:rh=0.01"),
     'D': (_tm(650, 0.35), "eq=contrast=1.0:saturation=0.94:brightness=-0.025,curves=all='0/0.05 0.5/0.47 1/0.93',colorbalance=bs=0.018:rm=0.005"),
 }
 
@@ -386,7 +389,9 @@ def shot_cmd(R, i, s):
         # aggressive push-in toward the face while the line is said
         z1 = o.get('zoom_to', 1.55)
         fx, fy = o.get('face', (0.5, 0.2))
-        ease = f"pow(({s['o0']:.3f}+on/{FPS})/{R.HOOK_END:.3f}\\,{o.get('ease', 1.6)})"
+        X = f"(({s['o0']:.3f}+on/{FPS})/{R.HOOK_END:.3f})"
+        ease = (f"(3*pow({X}\\,2)-2*pow({X}\\,3))" if o.get('ease') == 'smooth'
+                else f"pow({X}\\,{o.get('ease', 1.6)})")
         shake = o.get('shake_at')
         sh = ''
         if shake is not None:
@@ -534,7 +539,7 @@ def ts(t):
     return f"{cs // 360000}:{cs // 6000 % 60:02d}:{cs // 100 % 60:02d}.{cs % 100:02d}"
 
 
-AUTOHIDE = ('qcard', 'header', 'big3d', 'counter', 'interval', 'checklist', 'meme', 'garage', 'gears', 'question')
+AUTOHIDE = ('qcard', 'shift', 'steps', 'versus', 'header', 'big3d', 'counter', 'interval', 'checklist', 'meme', 'garage', 'gears', 'question')
 
 
 def auto_hide(R):
@@ -600,6 +605,8 @@ PEAK = {'riser': 4.0, 'click1': .11, 'click2': .13, 'click3': .10, 'click4': .16
 
 
 def sfx_path(sid):
+    if os.path.exists(f'{SP}/web/{sid}.wav'):
+        return f'{SP}/web/{sid}.wav'
     if sid == 'beep':
         return f'{SP}/web/beep.wav'
     if sid == 'riser_hook':

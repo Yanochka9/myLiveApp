@@ -8,7 +8,7 @@ SUB_MIN = 0.27         # he starts talking ~0.4 s into the hook (lead-in)       
 PROMPT = 'К нам в работу приехал Lifan X60. Пакет сцепления задней передачи, АКПП, вариатор.'
 MUSIC, MUSIC_IN = 'FCD0.mov', 3.41          # client's track from «музыка и звуки» (as in DP0), hit on the cut
 # hook: slow push-in while he says the line, then ~0.8 s of silence (kept from the take), click, main part
-HOOK = dict(src='3994', pieces=[(0.60, 3.35)], face=(0.43, 0.28), zoom_from=1.0, zoom_to=1.28, ease=1.0)
+HOOK = dict(src='3994', pieces=[(0.60, 3.35)], face=(0.43, 0.28), zoom_from=1.0, zoom_to=1.14, ease='smooth')
 BLEEP = [('3994', 2.14, 2.60)]
 
 A = dict(crop=(0.44, 0.07))          # crop centre for the 1.35x framing (face at ~44 % width)
@@ -22,7 +22,7 @@ PHRASES = [
     ('4005', 36.00, 44.00, A),       # И секрет такого долголетия ... по регламенту
     ('4007', 20.80, 25.45, A),       # Но клиент не учёл ... условия эксплуатации
     ('4009', 0.00, 19.50, dict(A, tail=0.15)),   # ... явился гараж клиента, a short beat
-    ('gap_meme', 0.0, 2.01),          # Якубович: two whole «Да ладно» (0.95–2.96 of the client's clip, silence on both ends)
+    ('gap_meme', 0.0, 1.35),          # Якубович: exactly two whole «Да ладно» (1.32–2.67 of the clip; one rep = «Да»+«ладно» ≈ 0.7 s)
     ('4011', 4.55, 21.95, dict(A, head=0.25)),    # short pause, then: Въезд в гараж ... по несколько раз на день
     ('4014', 0.90, 13.10, A),        # Если бы интервал ... пакета сцепления
     ('4016', 0.00, 5.25, dict(A, tail=0.45)),    # Поэтому меняйте масло своевременно, а лучше чуть чаще — pause
@@ -48,7 +48,7 @@ BROLL = [
     ('4007', 3.7, 6.7, '2675.mp4', 3.5, 'in', dict(cx=0.5)),         # 200 тысяч км (counter on top)
     ('4005', 31.7, 35.1, '15056.mp4', 4.0, 'out', dict(cx=0.42)),    # замена масла в двигателе и в коробке
     ('4009', 5.5, 9.0, '41571.mp4', 4.4, 'in', dict(cx=0.5)),          # по загородным и проселочным дорогам
-    ('gap_meme', 0.0, 2.01, 'yakubovich2.mp4', 0.0, 'in', dict(letterbox=True)),  # meme insert
+    ('gap_meme', 0.0, 1.35, 'yakubovich2.mp4', 0.0, 'in', dict(letterbox=True)),  # meme insert
     ('4011', 6.2, 16.0, 'scheme', 0, None),                          # garage on a slope (2D scheme)
     ('4011', 16.3, 19.3, '4022', 0.4, 'in'),                         # пакет задней передачи — нагрузка
     ('4014', 7.3, 9.7, '0792', 1.4, 'out'),                           # последствий для валов (4026 is iPhone slow-mo)
@@ -93,7 +93,7 @@ def _hide(R):
     d = _shot(R, '4019.MOV')
     return [(R.HOOK_END, m('4004', 8.1)), (d['o0'], d['o1']), (m('4004', 64.3), m('4004', 70.6)),
             (m('4007', 3.7), m('4007', 6.75)), (m('4014', 1.5), m('4014', 7.2)), (sch['o0'], sch['o1']),
-            (m('gap_meme', 0.0), m('gap_meme', 2.01))]
+            (m('gap_meme', 0.0), m('gap_meme', 1.35))]
 
 
 def sfx(R):
@@ -101,7 +101,7 @@ def sfx(R):
     sch = next(s for s in R.shots() if s['kind'] == 'scheme')
     d = _shot(R, '4019.MOV')
     ev = [
-        (0.0, 'riser_hook2', 0.023),                             # DP0-style intrigue bed: audible from the first frame, rises to the cut, ~-32 LUFS final
+        (0.0, 'riser_hook2', 0.06),                              # DP0-style intrigue bed: audible from the first frame, rises to the cut, ~-32 LUFS final
         (m('3994', 2.14), 'beep', 0.18),                         # classic quiet censor «пик» over the swear word
         (R.HOOK_END, 'click1', 0.045),                           # click after the pause, no riser
         (d['o0'] + 0.6, 'click4', 0.045),                        # ЗУБЬЯ СЛИЗАНЫ

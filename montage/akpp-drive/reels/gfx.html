@@ -460,7 +460,7 @@ D.planet = (e, t) => {
 // words turn from grey to black as he reads them, key facts get a red marker, flies off on the flash.
 // e: {t0, t1, words: [[t, word, key], ...]}; placed as low as the safe zone allows.
 function qcardLayout(e) {
-  const x = 50, w = 980, pad = 38, size = 32, lh = 44, maxW = w - pad * 2;
+  const x = 50, w = 980, pad = 38, size = e.size || 32, lh = Math.round(size * 1.38), maxW = w - pad * 2;
   g.font = `500 ${size}px Inter, -apple-system, Arial`;
   const sp = g.measureText(' ').width;
   let cx = 0, line = 0; const items = [];
@@ -509,6 +509,73 @@ D.qcard = (e, t) => {
   g.restore();
 };
 
+
+// gear shifts with jolts: big gear digit 1->2->3->4 like a dashboard, every shift jerks the frame and pops «ПИНОК»,
+// a G-force trace below spikes at each shift. e: {t0, t1, shifts:[t,...]}
+D.shift = (e, t) => {
+  if (!inWin(t, e.t0, e.t1)) return;
+  const lt = t - e.t0, en = clamp((e.t1 - t) / 0.15), k = easeOut(lt / 0.35);
+  g.save(); schemeBg(t, e, e.title || 'ПЕРЕКЛЮЧЕНИЯ'); g.globalAlpha = en * k;
+  const sh = e.shifts; let gi = 0; for (const s of sh) if (t >= s) gi++;
+  let jolt = 0; for (const s of sh) { const d = t - s; if (d >= 0 && d < 0.35) jolt = Math.max(jolt, 1 - d / 0.35); }
+  g.save(); g.translate(Math.sin(t * 80) * 14 * jolt, Math.cos(t * 70) * 8 * jolt);
+  // gauge ring
+  const cx = W / 2, cy = 760, r = 230;
+  g.lineWidth = 22; g.strokeStyle = '#2e3138'; g.beginPath(); g.arc(cx, cy, r, Math.PI * 0.75, Math.PI * 2.25); g.stroke();
+  const rpm = 0.25 + 0.6 * ((lt * 1.7) % 1);
+  g.strokeStyle = RED; g.shadowColor = RED; g.shadowBlur = 20;
+  g.beginPath(); g.arc(cx, cy, r, Math.PI * 0.75, Math.PI * 0.75 + Math.PI * 1.5 * rpm); g.stroke(); g.shadowBlur = 0;
+  // gear digit
+  const gear = String(Math.min(gi + 1, 6)), pk = jolt > 0 ? 1 + 0.18 * jolt : 1;
+  g.save(); g.translate(cx, cy + 10); g.scale(pk, pk);
+  text(gear, 0, 0, 230, '#fff', 'UB', 'center', 0); g.restore();
+  text('ПЕРЕДАЧА', cx, cy + 165, 32, 'rgba(255,255,255,0.6)', 'UE');
+  g.restore();
+  // G-force trace with spikes
+  const x0 = 180, x1 = 900, yb = 1150, span = e.t1 - e.t0;
+  g.strokeStyle = 'rgba(255,255,255,0.25)'; g.lineWidth = 3; g.beginPath(); g.moveTo(x0, yb); g.lineTo(x1, yb); g.stroke();
+  g.strokeStyle = '#ffb02e'; g.lineWidth = 6; g.lineJoin = 'round'; g.beginPath();
+  const now = Math.min(1, lt / span);
+  for (let i = 0; i <= 160 * now; i++) {
+    const u = i / 160, tt = e.t0 + u * span; let v = Math.sin(u * 40) * 4;
+    for (const s of sh) { const d = (tt - s) / 0.12; if (d > -1 && d < 3) v -= 90 * Math.exp(-d * d) * (d < 0 ? 0.3 : 1) * Math.cos(d * 3); }
+    const px = x0 + (x1 - x0) * u; i ? g.lineTo(px, yb + v) : g.moveTo(px, yb + v);
+  }
+  g.stroke();
+  text('ТОЛЧКИ', x0, yb + 60, 28, 'rgba(255,255,255,0.55)', 'UE', 'left');
+  if (jolt > 0.2) { g.save(); g.globalAlpha = en * jolt; labelBox('ПИНОК!', W / 2, 1320, sh.filter(s => s <= t).pop(), t, 52); g.restore(); }
+  g.restore();
+};
+// numbered steps as stacked 3D plates, low near the subtitles. e: {t0, t1, rows:[[text, t], ...], y}
+D.steps = (e, t) => {
+  if (!inWin(t, e.t0, e.t1)) return;
+  const en = clamp((e.t1 - t) / 0.18), y0 = e.y || 1010, dy = e.dy || 112;
+  g.save(); g.globalAlpha = en;
+  if (e.title) { g.save(); g.globalAlpha *= clamp((t - e.t0) / 0.2); text(e.title, W / 2, y0 - 82, 34, '#fff', 'UE', 'center', 8); g.restore(); }
+  e.rows.forEach(([s, ts, bg], i) => {
+    if (t < ts) return;
+    const y = y0 + i * dy, q = easeBack((t - ts) / 0.3);
+    plate(s, W / 2 + 34, y, ts, t, 40, bg || (i === e.rows.length - 1 && e.lastRed ? RED : '#22252c'), '#fff', { tilt: 0 });
+    g.save(); g.translate(W / 2 - 300, y); g.scale(q, q);
+    g.fillStyle = RED; g.shadowColor = 'rgba(240,41,47,0.7)'; g.shadowBlur = 16; g.beginPath(); g.arc(0, 0, 34, 0, 7); g.fill(); g.shadowBlur = 0;
+    text(String(i + 1), 0, 3, 38, '#fff', 'UB'); g.restore();
+  });
+  g.restore();
+};
+// two-sided duel: «A vs B», B wins (red) when t > e.tw
+D.versus = (e, t) => {
+  if (!inWin(t, e.t0, e.t1)) return;
+  const en = env(t, e.t0, e.t1, 0.15, 0.2), y = e.y || 1120;
+  g.save(); g.globalAlpha = en;
+  const win = e.tw && t > e.tw;
+  plate(e.a, W / 2 - 190, y, e.t0, t, 40, win ? '#22252c' : '#3a3e47', '#fff', { tilt: -0.04 });
+  plate(e.b, W / 2 + 190, y, e.t0 + 0.12, t, 40, win ? RED : '#3a3e47', '#fff', { tilt: 0.04 });
+  const q = easeBack((t - e.t0 - 0.2) / 0.3);
+  if (t > e.t0 + 0.2) { g.save(); g.translate(W / 2, y); g.scale(q, q); g.fillStyle = '#fff'; g.beginPath(); g.arc(0, 0, 42, 0, 7); g.fill();
+    text('VS', 0, 3, 34, RED, 'UB'); g.restore(); }
+  g.restore();
+};
+
 // ---------- end plate ----------
 function drawEnd(t) {
   const a = T.main; if (t < a) return;
@@ -530,7 +597,7 @@ function drawEnd(t) {
   }
 }
 
-const ORDER = ['qcard', 'planet', 'garage', 'gears', 'leak', 'ellipse', 'brackets', 'counter', 'interval', 'checklist', 'question', 'header', 'label', 'address', 'meme', 'big3d'];
+const ORDER = ['qcard', 'shift', 'planet', 'steps', 'versus', 'garage', 'gears', 'leak', 'ellipse', 'brackets', 'counter', 'interval', 'checklist', 'question', 'header', 'label', 'address', 'meme', 'big3d'];
 function drawFrame(t) {
   g.clearRect(0, 0, W, H);
   for (const ty of ORDER) for (const e of T.ev) if (e.type === ty) D[ty](e, t);
