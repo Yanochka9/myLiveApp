@@ -508,6 +508,9 @@ def tokens(R):
     for t, w, r in getattr(C, 'EXTRA_TOKENS', []):
         toks.append((t, w, r))
     toks.sort()
+    smin = getattr(C, 'SUB_MIN', None)      # no subtitle before the speaker actually starts talking
+    if smin is not None:
+        toks = [(max(t, smin), w, r) for t, w, r in toks]
     toks = [x for x in toks if not any(a <= x[0] < b for a, b in hide)]
     return toks
 

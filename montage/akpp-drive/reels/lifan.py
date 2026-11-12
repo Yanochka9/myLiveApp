@@ -2,8 +2,9 @@
 import lib
 
 NAME = 'lifan'
-GRADE = 'dp0'          # colour variant (lib.GRADES): client is choosing between dp0 / B / C / D
-SFX_GAIN = 0.55        # all transition/plate sounds ~5 dB quieter (client)
+GRADE = 'C+'           # colour chosen by the client (lib.GRADES): C (cold dark) made a touch livelier
+SFX_GAIN = 0.55
+SUB_MIN = 0.42         # he starts talking ~0.4 s into the hook (lead-in)        # all transition/plate sounds ~5 dB quieter (client)
 PROMPT = 'К нам в работу приехал Lifan X60. Пакет сцепления задней передачи, АКПП, вариатор.'
 MUSIC, MUSIC_IN = 'FCD0.mov', 3.41          # client's track from «музыка и звуки» (as in DP0), hit on the cut
 # hook: slow push-in while he says the line, then ~0.8 s of silence (kept from the take), click, main part
