@@ -604,6 +604,8 @@ def sfx_path(sid):
         return f'{SP}/web/beep.wav'
     if sid == 'riser_hook':
         return f'{SP}/web/riser_hook.wav'
+    if sid in ('yakubovich2', 'riser_hook2'):
+        return f'{SP}/web/{sid}.wav'
     if sid == 'yakubovich1':
         return f'{SP}/web/yakubovich1.wav'
     if sid == 'yakubovich':
