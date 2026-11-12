@@ -350,6 +350,12 @@ GRADES = {
     'B': (_tm(600, 0.35), "eq=contrast=1.02:saturation=1.0:brightness=-0.015,curves=all='0/0.03 0.5/0.48 1/0.96',colorbalance=bs=0.012"),
     'C': (_tm(650, 0.32), "eq=contrast=1.04:saturation=0.88:brightness=-0.035:gamma=0.97,curves=all='0/0.035 0.5/0.46 1/0.94',"
                           "colorbalance=bs=0.025:bm=0.008:rh=0.008"),
+    'C1': (_tm(650, 0.32), "eq=contrast=1.05:saturation=0.97:brightness=-0.03:gamma=0.97,curves=all='0/0.025 0.25/0.21 0.5/0.47 0.75/0.75 1/0.95',"
+                           "colorbalance=bs=0.025:bm=0.005:rm=0.012:rh=0.012,unsharp=5:5:0.25"),
+    'C2': (_tm(650, 0.32), "eq=contrast=1.06:saturation=0.95:brightness=-0.03:gamma=0.97,curves=all='0/0.02 0.25/0.2 0.5/0.47 0.75/0.76 1/0.95',"
+                           "colorbalance=bs=0.03:rm=0.02:gm=0.005:rh=0.015:bh=-0.01,unsharp=5:5:0.3"),
+    'C3': (_tm(650, 0.32), "eq=contrast=1.08:saturation=1.03:brightness=-0.025:gamma=0.96,curves=all='0/0.015 0.25/0.19 0.5/0.47 0.75/0.77 1/0.96',"
+                           "colorbalance=bs=0.025:rm=0.015:rh=0.01,unsharp=5:5:0.35"),
     'D': (_tm(650, 0.35), "eq=contrast=1.0:saturation=0.94:brightness=-0.025,curves=all='0/0.05 0.5/0.47 1/0.93',colorbalance=bs=0.018:rm=0.005"),
 }
 
