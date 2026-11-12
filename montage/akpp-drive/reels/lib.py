@@ -27,7 +27,7 @@ def fr(x):
 
 
 def path(name):
-    for k in ('reels', 'broll'):
+    for k in ('reels', 'broll', 'broll2'):
         p = f'{SRC}/{k}/IMG_{name}.MOV'
         if os.path.exists(p):
             return p
