@@ -339,6 +339,21 @@ TONEMAP = ("zscale=t=linear:npl=700,format=gbrpf32le,zscale=p=bt709,tonemap=mobi
            "eq=contrast=1.12:saturation=1.35,curves=all='0/0.05 1/1',colorbalance=rm=-0.03:bm=0.02:bs=0.02")
 
 
+def _tm(npl, p):
+    return (f"zscale=t=linear:npl={npl},format=gbrpf32le,zscale=p=bt709,tonemap=mobius:desat=0:param={p},"
+            "zscale=t=bt709:m=bt709:r=tv,format=yuv420p")
+
+
+# colour variants (client compares them on stills): name -> (HLG->SDR tonemap, grade applied to every shot)
+GRADES = {
+    'dp0': (TONEMAP, GRADE),
+    'B': (_tm(600, 0.35), "eq=contrast=1.02:saturation=1.0:brightness=-0.015,curves=all='0/0.03 0.5/0.48 1/0.96',colorbalance=bs=0.012"),
+    'C': (_tm(650, 0.32), "eq=contrast=1.04:saturation=0.88:brightness=-0.035:gamma=0.97,curves=all='0/0.035 0.5/0.46 1/0.94',"
+                          "colorbalance=bs=0.025:bm=0.008:rh=0.008"),
+    'D': (_tm(650, 0.35), "eq=contrast=1.0:saturation=0.94:brightness=-0.025,curves=all='0/0.05 0.5/0.47 1/0.93',colorbalance=bs=0.018:rm=0.005"),
+}
+
+
 def motion(kind, n, cx='iw/2', cy='ih/2'):
     punch = "0.16*pow(max(0\\,1-on/6)\\,2)"
     drift = f"0.07*on/{n}" if kind == 'in' else f"0.07*(1-on/{n})"
@@ -348,6 +363,7 @@ def motion(kind, n, cx='iw/2', cy='ih/2'):
 
 def shot_cmd(R, i, s):
     n = round((s['o1'] - s['o0']) * FPS)
+    TM, GR = GRADES[getattr(R.C, 'GRADE', 'dp0')]
     out = f"{R.B}/shots/{i:03d}.mp4"
     k, o = s['kind'], s.get('opt', {})
     pre = ['ffmpeg', '-loglevel', 'error', '-y']
@@ -366,10 +382,10 @@ def shot_cmd(R, i, s):
         if shake is not None:
             f0 = round((shake - s['o0']) * FPS)
             sh = f"+12*sin(on*2.1)*between(on\\,{f0}\\,{f0 + 8})"
-        vf = (f"{TONEMAP},fps={FPS},scale=1440:2560:flags=lanczos,"
+        vf = (f"{TM},fps={FPS},scale=1440:2560:flags=lanczos,"
               f"zoompan=z='{o.get('zoom_from', 1.0)}+({z1}-{o.get('zoom_from', 1.0)})*{ease}':d=1:"
               f"x='iw*{fx}-(iw/zoom/2){sh}':y='ih*{fy}-(ih/zoom*{fy})':s=1080x1920:fps={FPS},"
-              f"{GRADE},eq=contrast=1.08:saturation=0.9,vignette=PI/4.5,unsharp=5:5:0.4")
+              f"{GR},eq=contrast=1.08:saturation=0.9,vignette=PI/4.5,unsharp=5:5:0.4")
     elif k == 'aroll':
         cw, ch = 1600, 2844
         cx, cy = o.get('crop', (0.5, 0.06))   # crop centre x (fraction), top y (fraction)
@@ -388,7 +404,7 @@ def shot_cmd(R, i, s):
             x = max(0, min(2160 - cw, int(2160 * cx - cw / 2)))
             y = max(0, min(3840 - ch, int(3840 * cy)))
             crop = f"crop={cw}:{ch}:{x}:{y},scale=1080:1920"
-        vf = f"{TONEMAP},fps={FPS},{crop}:flags=lanczos,{GRADE},unsharp=5:5:0.35"
+        vf = f"{TM},fps={FPS},{crop}:flags=lanczos,{GR},unsharp=5:5:0.35"
     elif k == 'stock':
         cx = o.get('cx', 0.5)
         extra = o.get('extra', '')
@@ -400,17 +416,17 @@ def shot_cmd(R, i, s):
                   f"zoompan=z='1+0.12*pow(max(0\\,1-on/5)\\,2)':d=1:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s=1080x1920:fps={FPS}")
         else:
           vf = (f"fps={FPS},crop='min(iw\\,ih*9/16)':'min(ih\\,iw*16/9)':'(iw-min(iw\\,ih*9/16))*{cx}':'(ih-min(ih\\,iw*16/9))/2'{extra},"
-                f"scale=1296:2304:flags=lanczos,unsharp=5:5:0.5,{GRADE},noise=alls=6:allf=t,{motion(s['motion'], n)}")
+                f"scale=1296:2304:flags=lanczos,unsharp=5:5:0.5,{GR},noise=alls=6:allf=t,{motion(s['motion'], n)}")
     elif k == 'hlg':
         cx, cy = o.get('c', ('iw/2', 'ih/2'))
         if isinstance(cx, float): cx = f'iw*{cx}'
         if isinstance(cy, float): cy = f'ih*{cy}'
         sc = o.get('scale', 1296)
         sp = ''   # no slow motion: client wants the original speed (short clips hold their last frame)
-        vf = (f"{sp}{TONEMAP},fps={FPS},scale={sc}:{int(sc * 16 / 9)}:flags=lanczos,{GRADE}{o.get('extra', '')},"
+        vf = (f"{sp}{TM},fps={FPS},scale={sc}:{int(sc * 16 / 9)}:flags=lanczos,{GR}{o.get('extra', '')},"
               f"{motion(s['motion'], n, cx, cy)}")
     elif k == 'endplate':
-        vf = (f"{TONEMAP},trim=end_frame=1,loop=loop=-1:size=1,setpts=N/{FPS}/TB,fps={FPS},scale=1080:1920,"
+        vf = (f"{TM},trim=end_frame=1,loop=loop=-1:size=1,setpts=N/{FPS}/TB,fps={FPS},scale=1080:1920,"
               "gblur=sigma=28,eq=brightness=-0.22:saturation=0.5")
     vf += ',tpad=stop_mode=clone:stop_duration=6'
     return pre + inp + ['-vf', vf] + enc, out
@@ -573,6 +589,8 @@ def sfx_path(sid):
         return f'{SP}/web/beep.wav'
     if sid == 'riser_hook':
         return f'{SP}/web/riser_hook.wav'
+    if sid == 'yakubovich1':
+        return f'{SP}/web/yakubovich1.wav'
     if sid == 'yakubovich':
         return f'{SP}/web/yakubovich.wav'
     if sid == 'boom':
@@ -612,6 +630,7 @@ def mix(R, music=None):
         i = add(sfx_path(sid))
         d = max(0, t - PEAK.get(sid, 0))
         tr = f"atrim=0:{dur},afade=t=out:st={max(0, dur - 0.06)}:d=0.06," if dur else ''
+        vol = vol * getattr(C, 'SFX_GAIN', 1.0)
         chains.append(f"[{i}:a]{tr}aresample=48000,aformat=channel_layouts=stereo,volume={vol},"
                       f"adelay={int(d * 1000)}:all=1[e{n}]")
         labels.append(f'[e{n}]')

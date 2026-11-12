@@ -98,7 +98,7 @@ D.ellipse = (e, t) => {
   if (!inWin(t, e.t0, e.t1)) return;
   const p = easeOut((t - e.t0) / 0.45), en = clamp((e.t1 - t) / 0.12);
   let cy = e.cy;
-  if (Array.isArray(cy)) { const k = cy, u = t - e.t0; let i = 0; while (i < k.length - 2 && u > k[i + 1][0]) i++;
+  if (Array.isArray(cy)) { const k = cy, u = t - (e.kt0 ?? e.t0); let i = 0; while (i < k.length - 2 && u > k[i + 1][0]) i++;
     const f = clamp((u - k[i][0]) / (k[i + 1][0] - k[i][0])); cy = k[i][1] + (k[i + 1][1] - k[i][1]) * f; }
   g.save(); g.globalAlpha = en; g.translate(e.cx, cy); g.rotate(e.rot || 0);
   g.strokeStyle = e.color || RED; g.lineWidth = 12; g.lineCap = 'round'; g.shadowColor = 'rgba(240,41,47,0.9)'; g.shadowBlur = 26;
