@@ -420,8 +420,10 @@ def shot_cmd(R, i, s):
         extra = o.get('extra', '')
         if s['src'].endswith(('.jpg', '.png')):
             inp = ['-loop', '1', '-i', s['src']]
+        if s['src'].endswith('.gif'):
+            inp = ['-ignore_loop', '0', '-i', s['src']]
         if o.get('letterbox'):   # whole frame centred over its own blurred, darkened copy (meme inserts)
-            vf = (f"fps={FPS},split[a][b];[a]scale=-2:1920,crop=1080:1920,gblur=sigma=40,eq=brightness=-0.25[bg];"
+            vf = (f"fps={FPS},format=yuv420p,{GR},split[a][b];[a]scale=-2:1920,crop=1080:1920,gblur=sigma=40,eq=brightness=-0.25[bg];"
                   f"[b]scale=1080:-2:flags=lanczos[fg];[bg][fg]overlay=0:(H-h)/2+{o.get('dy', 60)},"
                   f"zoompan=z='1+0.12*pow(max(0\\,1-on/5)\\,2)':d=1:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s=1080x1920:fps={FPS}")
         else:

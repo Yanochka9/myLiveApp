@@ -206,7 +206,8 @@ D.meme = (e, t) => {
 D.big3d = (e, t) => {
   if (!inWin(t, e.t0, e.t1)) return;
   const lt = t - e.t0, en = clamp((e.t1 - t) / 0.15), k = easeBack(lt / 0.45), dep = easeOut((lt - 0.1) / 0.35);
-  const size = e.size || 230, y = e.y || 980, N = 22;
+  let size = e.size || 230; const y = e.y || 980, N = 22;
+  g.font = `900 ${size}px UB`; { const w0 = g.measureText(e.text).width; if (w0 > 600) size = Math.floor(size * 600 / w0); }
   g.save(); g.globalAlpha = en * clamp(lt / 0.08);
   g.translate(W / 2, y + Math.sin(lt * 2.4) * 6); g.rotate(-0.06 + 0.02 * Math.sin(lt * 1.7));
   g.scale(k, k * (0.6 + 0.4 * easeOut(lt / 0.3)));
@@ -406,6 +407,54 @@ D.leak = (e, t) => {
   g.restore();
 };
 
+
+// planetary gear set: ring (internal teeth), sun, 3 planets on a carrier; worn -> shakes, red glow
+function gearPath(x, y, r, n, ang, depth, inner) {
+  g.beginPath();
+  for (let i = 0; i <= n * 4; i++) {
+    const a = ang + (i / (n * 4)) * Math.PI * 2, ph = i % 4;
+    const rr = (ph === 0 || ph === 3) ? r : r + (inner ? -depth : depth);
+    const px = x + Math.cos(a) * rr, py = y + Math.sin(a) * rr;
+    i ? g.lineTo(px, py) : g.moveTo(px, py);
+  }
+  g.closePath();
+}
+function metal(x, y, r) {
+  const gr = g.createRadialGradient(x - r * 0.3, y - r * 0.4, r * 0.1, x, y, r * 1.1);
+  gr.addColorStop(0, '#f2f4f7'); gr.addColorStop(0.55, '#9aa1aa'); gr.addColorStop(1, '#3d434b'); return gr;
+}
+D.planet = (e, t) => {
+  if (!inWin(t, e.t0, e.t1)) return;
+  const lt = t - e.t0, en = clamp((e.t1 - t) / 0.15), k = easeOut(lt / 0.4);
+  g.save(); schemeBg(t, e, e.title || 'ПЛАНЕТАРНЫЙ РЯД'); g.globalAlpha = en * k;
+  const cx = W / 2, cy = 800, R = 300, wear = e.wt ? clamp((t - e.wt) / 0.5) : 0;
+  const sh = wear ? Math.sin(t * 70) * 5 * wear : 0;
+  g.translate(sh, (1 - k) * 60);
+  const rot = lt * 0.9;
+  // ring gear
+  g.save(); g.shadowColor = 'rgba(0,0,0,0.7)'; g.shadowBlur = 40;
+  g.beginPath(); g.arc(cx, cy, R + 60, 0, 7); gearPath(cx, cy, R, 48, -rot * 0.35, 18, true); g.fillStyle = metal(cx, cy, R + 60); g.fill('evenodd'); g.restore();
+  // carrier
+  g.strokeStyle = 'rgba(255,255,255,0.18)'; g.lineWidth = 26; g.beginPath(); g.arc(cx, cy, R * 0.6, 0, 7); g.stroke();
+  // planets
+  const pr = R * 0.36;
+  for (let i = 0; i < 3; i++) {
+    const a = rot * 0.35 + i * Math.PI * 2 / 3, px = cx + Math.cos(a) * R * 0.6, py = cy + Math.sin(a) * R * 0.6;
+    g.save(); g.shadowColor = 'rgba(0,0,0,0.6)'; g.shadowBlur = 20;
+    gearPath(px, py, pr, 16, -rot * 1.6, 14, false); g.fillStyle = metal(px, py, pr); g.fill(); g.restore();
+    g.fillStyle = '#2a2e34'; g.beginPath(); g.arc(px, py, pr * 0.28, 0, 7); g.fill();
+    if (wear) { g.save(); g.globalAlpha *= 0.55 + 0.45 * Math.sin(t * 20 + i);
+      const rg = g.createRadialGradient(px, py, 5, px, py, pr * 1.2); rg.addColorStop(0, 'rgba(255,70,40,0.8)'); rg.addColorStop(1, 'rgba(255,40,20,0)');
+      g.fillStyle = rg; g.beginPath(); g.arc(px, py, pr * 1.2, 0, 7); g.fill(); g.restore(); }
+  }
+  // sun
+  g.save(); g.shadowColor = 'rgba(0,0,0,0.6)'; g.shadowBlur = 20;
+  gearPath(cx, cy, R * 0.22, 14, rot * 2.4, 12, false); g.fillStyle = metal(cx, cy, R * 0.22); g.fill(); g.restore();
+  g.fillStyle = '#c8ccd2'; g.beginPath(); g.arc(cx, cy, R * 0.07, 0, 7); g.fill();
+  g.restore();
+  if (e.wt && t > e.wt) { g.save(); g.globalAlpha = en; labelBox(e.label || 'ИЗНОС → ВИБРАЦИЯ', W / 2, 1300, e.wt, t, 44); g.restore(); }
+};
+
 // ---------- end plate ----------
 function drawEnd(t) {
   const a = T.main; if (t < a) return;
@@ -427,7 +476,7 @@ function drawEnd(t) {
   }
 }
 
-const ORDER = ['garage', 'gears', 'leak', 'ellipse', 'brackets', 'counter', 'interval', 'checklist', 'question', 'header', 'label', 'address', 'meme', 'big3d'];
+const ORDER = ['planet', 'garage', 'gears', 'leak', 'ellipse', 'brackets', 'counter', 'interval', 'checklist', 'question', 'header', 'label', 'address', 'meme', 'big3d'];
 function drawFrame(t) {
   g.clearRect(0, 0, W, H);
   for (const ty of ORDER) for (const e of T.ev) if (e.type === ty) D[ty](e, t);
