@@ -3,7 +3,7 @@ import sys
 import lib
 
 NAME = 'vibration'
-GRADE = 'C+'           # client's colour (as Lifan)
+GRADE = 'W'            # warmer soft garage for this location (client disliked C+ here; chosen from C+/B/N/W)
 SFX_GAIN = 0.55        # quieter sounds (client)
 MUSIC, MUSIC_IN = '8AEA.mov', 0.0     # new track from «музыка и звуки» (6549 was used too much)
 PROMPT = 'Т5 автомат, вибрация при разгоне. Гидротрансформатор, планетарные механизмы, гидроблок, поддон, бронзовая стружка.'
@@ -48,7 +48,7 @@ BROLL = [   # no drilling shots (client); own footage first, then CC images (Wik
     ('3990', 99.5, 104.8, 'scheme', 0, None),                        # качество включения передач / пинки: 2D shift scheme
     ('3990', 106.2, 109.4, '8842', 24.0, 'in'),                      # гидроблок (work on the unit)
     ('3990', 146.3, 148.7, '0786', 1.0, 'in'),                       # процесс разрушения запущен
-    ('3990', 133.0, 134.9, '12736.mp4', 30.0, 'in', dict(cx=1.0)),   # встать на дороге (car on the roadside, hazards on)
+    ('3990', 133.0, 134.9, '12736.mp4', 30.0, 'in', dict(cx=0.8)),   # встать на дороге (car on the roadside, hazards on)
     ('3990', 134.9, 136.2, '14986.mp4', 3.6, 'out', dict(cx=0.85)),  # с неработающей коробкой (hazard button)
     ('3990', 250.1, 253.4, '9186', 0.5, 'in'),                       # профильный сервис (own service footage)
 ]
@@ -68,6 +68,8 @@ def _card_words(R):
             break
         w = CARD_FIX.get(w, w)
         out.append([t, w, w.lower().strip('.,?!') in CARD_KEY or w.lower() in CARD_KEY])
+        if w.endswith('?'):          # the question ends here; the answer is not on the card
+            break
     return out
 
 

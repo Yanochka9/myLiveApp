@@ -42,7 +42,8 @@ function plate(s, x, y, t0, t, size = 46, bg = RED, fg = '#fff', o = {}) {
   const lt = t - t0, k = easeBack(lt / 0.34), fl = easeOut(lt / 0.3);
   g.save(); g.translate(x, y + (1 - fl) * 26); g.rotate(o.tilt ?? -0.025); g.scale(k, k * (0.35 + 0.65 * fl));
   g.font = `900 ${size}px UB`;
-  if (g.measureText(s).width + 70 > 680) { size = Math.floor(size * 610 / g.measureText(s).width); g.font = `900 ${size}px UB`; }
+  const mw = o.maxw || 680;
+  if (g.measureText(s).width + 70 > mw) { size = Math.floor(size * (mw - 70) / g.measureText(s).width); g.font = `900 ${size}px UB`; }
   const w = g.measureText(s).width + 70, h = size + 40, r = Math.min(22, h / 2), dep = 9;
   const dark = bg === RED ? '#7d0b10' : (o.dark || '#0b0b0d');
   g.shadowColor = 'rgba(0,0,0,0.55)'; g.shadowBlur = 8; g.shadowOffsetY = 4;
@@ -207,7 +208,7 @@ D.big3d = (e, t) => {
   if (!inWin(t, e.t0, e.t1)) return;
   const lt = t - e.t0, en = clamp((e.t1 - t) / 0.15), k = easeBack(lt / 0.45), dep = easeOut((lt - 0.1) / 0.35);
   let size = e.size || 230; const y = e.y || 980, N = 22;
-  g.font = `900 ${size}px UB`; { const w0 = g.measureText(e.text).width; if (w0 > 600) size = Math.floor(size * 600 / w0); }
+  g.font = `900 ${size}px UB`; { const w0 = g.measureText(e.text).width; if (w0 > 560) size = Math.floor(size * 560 / w0); }
   g.save(); g.globalAlpha = en * clamp(lt / 0.08);
   g.translate(W / 2, y + Math.sin(lt * 2.4) * 6); g.rotate(-0.06 + 0.02 * Math.sin(lt * 1.7));
   g.scale(k, k * (0.6 + 0.4 * easeOut(lt / 0.3)));
@@ -239,10 +240,11 @@ D.big3d = (e, t) => {
   if (e.sub && lt > 0.3) {   // glass caption under the number
     const q = easeBack((lt - 0.3) / 0.3);
     g.save(); g.globalAlpha = en; g.translate(W / 2, y + size * 0.78); g.scale(q, q);
-    g.font = `900 ${e.subsize || 44}px UB`; const w = Math.min(760, g.measureText(e.sub).width + 64), h = (e.subsize || 44) + 36;
+    let ss = e.subsize || 44; g.font = `900 ${ss}px UB`; if (g.measureText(e.sub).width + 64 > 640) { ss = Math.floor(ss * 576 / g.measureText(e.sub).width); g.font = `900 ${ss}px UB`; }
+    const w = g.measureText(e.sub).width + 64, h = ss + 36;
     g.shadowColor = 'rgba(0,0,0,0.45)'; g.shadowBlur = 24; g.fillStyle = 'rgba(16,16,20,0.78)'; rrect(-w / 2, -h / 2, w, h, h / 2); g.fill();
     g.shadowBlur = 0; g.strokeStyle = 'rgba(255,255,255,0.25)'; g.lineWidth = 2; rrect(-w / 2, -h / 2, w, h, h / 2); g.stroke();
-    text(e.sub, 0, 2, e.subsize || 44, '#fff'); g.restore();
+    text(e.sub, 0, 2, ss, '#fff'); g.restore();
   }
 };
 
@@ -555,8 +557,8 @@ D.steps = (e, t) => {
   e.rows.forEach(([s, ts, bg], i) => {
     if (t < ts) return;
     const y = y0 + i * dy, q = easeBack((t - ts) / 0.3);
-    plate(s, W / 2 + 34, y, ts, t, 40, bg || (i === e.rows.length - 1 && e.lastRed ? RED : '#22252c'), '#fff', { tilt: 0 });
-    g.save(); g.translate(W / 2 - 300, y); g.scale(q, q);
+    plate(s, W / 2 + 40, y, ts, t, 40, bg || (i === e.rows.length - 1 && e.lastRed ? RED : '#22252c'), '#fff', { tilt: 0, maxw: 560 });
+    g.save(); g.translate(W / 2 - 290, y); g.scale(q, q);
     g.fillStyle = RED; g.shadowColor = 'rgba(240,41,47,0.7)'; g.shadowBlur = 16; g.beginPath(); g.arc(0, 0, 34, 0, 7); g.fill(); g.shadowBlur = 0;
     text(String(i + 1), 0, 3, 38, '#fff', 'UB'); g.restore();
   });
@@ -568,8 +570,8 @@ D.versus = (e, t) => {
   const en = env(t, e.t0, e.t1, 0.15, 0.2), y = e.y || 1120;
   g.save(); g.globalAlpha = en;
   const win = e.tw && t > e.tw;
-  plate(e.a, W / 2 - 190, y, e.t0, t, 40, win ? '#22252c' : '#3a3e47', '#fff', { tilt: -0.04 });
-  plate(e.b, W / 2 + 190, y, e.t0 + 0.12, t, 40, win ? RED : '#3a3e47', '#fff', { tilt: 0.04 });
+  plate(e.a, W / 2 - 180, y, e.t0, t, 34, win ? '#22252c' : '#3a3e47', '#fff', { tilt: -0.04, maxw: 330 });
+  plate(e.b, W / 2 + 180, y, e.t0 + 0.12, t, 34, win ? RED : '#3a3e47', '#fff', { tilt: 0.04, maxw: 330 });
   const q = easeBack((t - e.t0 - 0.2) / 0.3);
   if (t > e.t0 + 0.2) { g.save(); g.translate(W / 2, y); g.scale(q, q); g.fillStyle = '#fff'; g.beginPath(); g.arc(0, 0, 42, 0, 7); g.fill();
     text('VS', 0, 3, 34, RED, 'UB'); g.restore(); }
