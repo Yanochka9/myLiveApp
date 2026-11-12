@@ -455,6 +455,60 @@ D.planet = (e, t) => {
   if (e.wt && t > e.wt) { g.save(); g.globalAlpha = en; labelBox(e.label || 'ИЗНОС → ВИБРАЦИЯ', W / 2, 1300, e.wt, t, 44); g.restore(); }
 };
 
+
+// subscriber's question card (approved in DP0): frosted message card, avatar + «Вопрос подписчика»,
+// words turn from grey to black as he reads them, key facts get a red marker, flies off on the flash.
+// e: {t0, t1, words: [[t, word, key], ...]}; placed as low as the safe zone allows.
+function qcardLayout(e) {
+  const x = 50, w = 980, pad = 38, size = 32, lh = 44, maxW = w - pad * 2;
+  g.font = `500 ${size}px Inter, -apple-system, Arial`;
+  const sp = g.measureText(' ').width;
+  let cx = 0, line = 0; const items = [];
+  for (const [t, wd, key] of e.words) {
+    const ww = g.measureText(wd).width;
+    if (cx > 0 && cx + ww > maxW) { cx = 0; line++; }
+    items.push({ t, wd, key, x: cx, line, w: ww }); cx += ww + sp;
+  }
+  const head = 82, foot = 30, h = head + (line + 1) * lh + foot, y = 1680 - h;
+  const sc = (930 - 150 - 40) / w;
+  e._L = { x, y, w, h, pad, size, lh, head, items, sc, Y: 1420 - 20 - h * sc };
+}
+D.qcard = (e, t) => {
+  const a = e.t0, b = e.t1; if (t < a || t >= b + 0.35) return;
+  if (!e._L) qcardLayout(e);
+  const { x, y, w, h, pad, size, lh, head, items, sc, Y } = e._L;
+  const kin = easeOut((t - a) / 0.5), kout = easeOut((t - b + 0.05) / 0.3);
+  g.save();
+  g.globalAlpha = clamp((t - a) / 0.25) * (1 - kout);
+  g.translate(0, (1 - kin) * 100 - kout * 200);
+  g.translate(W / 2, Y); g.scale(sc, sc); g.translate(-W / 2, -y);
+  const s2 = 0.94 + 0.06 * kin; g.translate(W / 2, y + h / 2); g.scale(s2, s2); g.translate(-W / 2, -(y + h / 2));
+  g.shadowColor = 'rgba(0,0,0,0.28)'; g.shadowBlur = 22; g.shadowOffsetY = 6;
+  g.fillStyle = 'rgba(246,246,248,0.94)'; rrect(x, y, w, h, 36); g.fill();
+  g.shadowBlur = 0; g.shadowOffsetY = 0;
+  g.strokeStyle = 'rgba(255,255,255,0.9)'; g.lineWidth = 2; rrect(x + 1, y + 1, w - 2, h - 2, 35); g.stroke();
+  const av = g.createLinearGradient(x + pad, y + 18, x + pad + 46, y + 64); av.addColorStop(0, '#c9ccd3'); av.addColorStop(1, '#9ea3ad');
+  g.fillStyle = av; g.beginPath(); g.arc(x + pad + 23, y + 44, 23, 0, 7); g.fill();
+  g.fillStyle = '#fff'; g.beginPath(); g.arc(x + pad + 23, y + 37, 8, 0, 7); g.fill();
+  g.beginPath(); g.ellipse(x + pad + 23, y + 58, 14, 9, 0, Math.PI, 0); g.fill();
+  g.font = '600 28px Inter, -apple-system, Arial'; g.textAlign = 'left'; g.textBaseline = 'middle'; g.fillStyle = '#1c1c1e';
+  g.fillText('Вопрос подписчика', x + pad + 60, y + 45);
+  g.font = `500 ${size}px Inter, -apple-system, Arial`;
+  for (const it of items) {
+    const px = x + pad + it.x, py = y + head + it.line * lh + lh / 2;
+    const r = clamp((t - it.t + 0.04) / 0.16);
+    if (it.key && r > 0) {
+      const mk = easeOut((t - it.t) / 0.25);
+      g.fillStyle = 'rgba(240,41,47,0.18)'; rrect(px - 5, py - 21, (it.w + 10) * mk, 42, 8); g.fill();
+    }
+    const grey = 168 - 140 * r;
+    g.fillStyle = it.key && r > 0 ? `rgb(${Math.round(150 + 90 * r)},${Math.round(grey * (1 - r) + 30 * r)},${Math.round(grey * (1 - r) + 36 * r)})`
+                                  : `rgb(${grey},${grey},${grey + 4})`;
+    g.fillText(it.wd, px, py + 2);
+  }
+  g.restore();
+};
+
 // ---------- end plate ----------
 function drawEnd(t) {
   const a = T.main; if (t < a) return;
@@ -476,7 +530,7 @@ function drawEnd(t) {
   }
 }
 
-const ORDER = ['planet', 'garage', 'gears', 'leak', 'ellipse', 'brackets', 'counter', 'interval', 'checklist', 'question', 'header', 'label', 'address', 'meme', 'big3d'];
+const ORDER = ['qcard', 'planet', 'garage', 'gears', 'leak', 'ellipse', 'brackets', 'counter', 'interval', 'checklist', 'question', 'header', 'label', 'address', 'meme', 'big3d'];
 function drawFrame(t) {
   g.clearRect(0, 0, W, H);
   for (const ty of ORDER) for (const e of T.ev) if (e.type === ty) D[ty](e, t);

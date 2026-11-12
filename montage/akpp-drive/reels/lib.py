@@ -534,7 +534,7 @@ def ts(t):
     return f"{cs // 360000}:{cs // 6000 % 60:02d}:{cs // 100 % 60:02d}.{cs % 100:02d}"
 
 
-AUTOHIDE = ('header', 'big3d', 'counter', 'interval', 'checklist', 'meme', 'garage', 'gears', 'question')
+AUTOHIDE = ('qcard', 'header', 'big3d', 'counter', 'interval', 'checklist', 'meme', 'garage', 'gears', 'question')
 
 
 def auto_hide(R):

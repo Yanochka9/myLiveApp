@@ -56,11 +56,26 @@ BROLL = [   # no drilling shots (client); own footage first, then CC images (Wik
 END_Q = ['А У ВАС', 'БЫЛА ВИБРАЦИЯ', 'ПРИ РАЗГОНЕ?']
 
 
+CARD_KEY = {'т5', 'вибрация', '4', '4.'}
+CARD_FIX = {'Проблем': 'Проблема', 'быть.': 'быть?'}
+
+
+def _card_words(R):
+    """the question exactly as he reads it, timed by the re-transcribed voice"""
+    out = []
+    for t, w, *_ in R.words():
+        if t >= R.HOOK_END - 0.05:
+            break
+        w = CARD_FIX.get(w, w)
+        out.append([t, w, w.lower().strip('.,?!') in CARD_KEY or w.lower() in CARD_KEY])
+    return out
+
+
 def gfx(R):
     m = R.m
     sch, pl = [s for s in R.shots() if s['kind'] == 'scheme'][:2]
     return [
-        dict(type='question', t0=0.15, t1=R.HOOK_END, y=1060, lines=['Т5 АВТОМАТ, ВИБРАЦИЯ', 'ПРИ РАЗГОНЕ ДО 4-Й.', 'ПРОБЛЕМА В КОРОБКЕ?']),
+        dict(type='qcard', t0=-0.5, t1=R.HOOK_END, words=_card_words(R)),   # DP0-style subscriber question card
         dict(type='flash', t=R.HOOK_END),
         dict(type='header', t0=R.HOOK_END + 0.1, t1=m('3990', 9.7), text='ДВИГАТЕЛЬ ИЛИ КОРОБКА?'),
         dict(type='planet', t0=pl['o0'], t1=pl['o1'], wt=pl['o0'] + 0.9, label='ИЗНОС → ВИБРАЦИЯ'),

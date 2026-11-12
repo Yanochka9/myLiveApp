@@ -11,3 +11,4 @@ description: Рилсы АКПП Драйв (команда /akpp-reels) — р�
 - Ассеты (логотип, шрифты Unbounded, звуки) — `montage/akpp-drive/assets/`.
 - Эталонные скрипты — `montage/akpp-drive/variator/` (README там же); второй пример — `montage/akpp-drive/dp0/`.
 - Безопасная зона TikTok/Reels и общие правила — в брифе и `montage/STYLE.md`.
+- Вопрос подписчика — всегда карточкой DP0 (`qcard`, см. бриф «Вопрос подписчика»). Цвет — `C+`. Ролики из нескольких дублей — движок `montage/akpp-drive/reels/` (README там же).
